@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "license": "MIT",
+  "author": "Shiaoming123",
+  "repository": "https://github.com/Shiaoming123/tauri-vue-desktop-template",
+  "homepage": "https://github.com/Shiaoming123/tauri-vue-desktop-template#readme",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",

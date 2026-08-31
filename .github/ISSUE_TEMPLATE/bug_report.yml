@@ -1,0 +1,36 @@
+name: 缺陷报告 / Bug Report
+description: 报告一个可复现的问题
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: 感谢反馈！请尽量提供可复现的信息，以便我们快速定位。
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境信息
+      description: 操作系统 / Tauri 版本 / Node 版本 / Rust 版本
+      placeholder: macOS 14 · Tauri 2.1 · Node 22 · Rust 1.80
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 一步步描述如何触发该问题
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+      description: 可附上报错日志或截图
+    validations:
+      required: true

@@ -1,8 +1,10 @@
 [package]
 name = "tauri-vue-desktop-template"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Tauri 2 + Vue 3 desktop app template with SQLite, tray, updater and CI"
+authors = ["Shiaoming123"]
+license = "MIT"
+repository = "https://github.com/Shiaoming123/tauri-vue-desktop-template"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
