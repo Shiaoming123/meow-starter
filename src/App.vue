@@ -4,7 +4,19 @@ import { listen } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { addTodo, listTodos, removeTodo, toggleTodo, type Todo } from './lib/db'
 import { checkForUpdates, IDLE_UPDATE_STATE, type UpdateState } from './lib/updater'
-import Icon from './components/Icon.vue'
+import {
+  Minus,
+  Plus,
+  RefreshCw,
+  Search,
+  FolderOpen,
+  Database,
+  Settings as SettingsIcon,
+  Bell,
+  CircleCheck,
+  CircleAlert,
+  Trash,
+} from '@lucide/vue'
 import { themes, setTheme, getSavedTheme } from './assets/themes/apply'
 
 /** 与 src-tauri/src/tray.rs 中的 CHECK_UPDATE_EVENT 保持一致 */
@@ -63,7 +75,11 @@ function hideToTray() {
 
 onMounted(async () => {
   await refreshTodos()
-  unlistenTray = await listen(CHECK_UPDATE_EVENT, () => runUpdateCheck(false))
+  try {
+    unlistenTray = await listen(CHECK_UPDATE_EVENT, () => runUpdateCheck(false))
+  } catch {
+    // 纯浏览器预览环境无 Tauri 事件系统，忽略即可
+  }
 })
 
 onUnmounted(() => unlistenTray?.())
@@ -77,7 +93,7 @@ onUnmounted(() => unlistenTray?.())
         <p class="sub">SQLite · 系统托盘 · 自动更新 · 三端打包</p>
       </div>
       <button class="ghost" @click="hideToTray">
-        <Icon name="minus" :size="14" />
+        <Minus :size="14" />
         隐藏到托盘
       </button>
     </header>
@@ -110,14 +126,14 @@ onUnmounted(() => unlistenTray?.())
         <code>src/assets/icons/catalog.ts</code>。
       </p>
       <div class="icon-row">
-        <Icon name="search" :size="18" />
-        <Icon name="folder-open" :size="18" />
-        <Icon name="database" :size="18" />
-        <Icon name="settings" :size="18" />
-        <Icon name="bell" :size="18" />
-        <Icon name="check-circle" :size="18" class="text-success" />
-        <Icon name="alert-circle" :size="18" class="text-warning" />
-        <Icon name="trash" :size="18" class="text-danger" />
+        <Search :size="18" />
+        <FolderOpen :size="18" />
+        <Database :size="18" />
+        <SettingsIcon :size="18" />
+        <Bell :size="18" />
+        <CircleCheck :size="18" class="text-success" />
+        <CircleAlert :size="18" class="text-warning" />
+        <Trash :size="18" class="text-danger" />
       </div>
     </section>
 
@@ -126,7 +142,7 @@ onUnmounted(() => unlistenTray?.())
       <form class="row" @submit.prevent="submitTodo">
         <input v-model="draft" placeholder="写点什么…" />
         <button type="submit" class="primary">
-          <Icon name="plus" :size="14" />
+          <Plus :size="14" />
           添加
         </button>
       </form>
@@ -138,7 +154,7 @@ onUnmounted(() => unlistenTray?.())
             <span>{{ todo.title }}</span>
           </label>
           <button class="ghost small" @click="drop(todo.id)">
-            <Icon name="trash" :size="13" />
+            <Trash :size="13" />
           </button>
         </li>
       </ul>
@@ -149,7 +165,7 @@ onUnmounted(() => unlistenTray?.())
       <h2>自动更新</h2>
       <div class="row">
         <button class="primary" :disabled="busy" @click="runUpdateCheck(false)">
-          <Icon name="refresh" :size="14" />
+          <RefreshCw :size="14" />
           检查更新
         </button>
         <span v-if="updateState.message" class="status">{{ updateState.message }}</span>

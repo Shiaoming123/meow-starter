@@ -11,6 +11,10 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?logo=typescript&logoColor=white)
 ![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
 
+<p align="center">
+  <img src="docs/preview.png" alt="Tauri 2 + Vue 3 模板演示" />
+</p>
+
 ## ✨ 特性
 
 - **前端**：Vue 3.5 + TypeScript + Vite 6，深色模式跟随系统
@@ -233,6 +237,10 @@ npm run tauri:signer
 ## 🤝 贡献
 
 欢迎 Issue 与 PR。提交前请阅读 [CONTRIBUTING.md](./CONTRIBUTING.md)，并遵守 [行为准则](./CODE_OF_CONDUCT.md)。安全相关请走 [SECURITY.md](./SECURITY.md) 的私下披露渠道。
+
+- 🐛 **Bug / 功能请求**：请提交 [Issue](https://github.com/Shiaoming123/tauri-vue-desktop-template/issues)，并选用对应的模板
+- 💬 **使用问答 / 想法交流**：请到 [Discussions](https://github.com/Shiaoming123/tauri-vue-desktop-template/discussions)
+- ❤️ **支持本项目**：若它对你有帮助，欢迎通过 [GitHub Sponsors](https://github.com/sponsors/Shiaoming123) 赞助（配置见 [FUNDING.yml](./FUNDING.yml)）
 
 ## 📄 许可证
 
