@@ -1,0 +1,70 @@
+/**
+ * 全局样式：定义主题 CSS 变量并接入基础样式。
+ * 主题由 applyTheme() 动态写入 data-theme 变量，这里提供默认值兜底。
+ */
+
+:root {
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    'PingFang SC',
+    'Microsoft YaHei',
+    sans-serif;
+  color-scheme: light dark;
+
+  /* 默认主题 token（海洋蓝·浅色），运行时会被 applyTheme 覆盖 */
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --surface-alt: #eef2f9;
+  --text: #1a2233;
+  --muted: #5c6b83;
+  --border: rgba(20, 40, 80, 0.12);
+  --accent: #2f6feb;
+  --accent-text: #ffffff;
+  --success: #18a058;
+  --warning: #d97b12;
+  --danger: #d64545;
+
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* 基础语义色工具类 */
+.text-success {
+  color: var(--success);
+}
+.text-warning {
+  color: var(--warning);
+}
+.text-danger {
+  color: var(--danger);
+}
+.text-muted {
+  color: var(--muted);
+}
+
+/* 基础滚动条（桌面端更精致） */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}

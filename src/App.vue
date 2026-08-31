@@ -4,6 +4,8 @@ import { listen } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { addTodo, listTodos, removeTodo, toggleTodo, type Todo } from './lib/db'
 import { checkForUpdates, IDLE_UPDATE_STATE, type UpdateState } from './lib/updater'
+import Icon from './components/Icon.vue'
+import { themes, setTheme, getSavedTheme } from './assets/themes/apply'
 
 /** 与 src-tauri/src/tray.rs 中的 CHECK_UPDATE_EVENT 保持一致 */
 const CHECK_UPDATE_EVENT = 'tray://check-update'
@@ -12,11 +14,17 @@ const todos = ref<Todo[]>([])
 const draft = ref('')
 const dbError = ref('')
 const updateState = ref<UpdateState>({ ...IDLE_UPDATE_STATE })
+const currentTheme = ref(getSavedTheme())
 let unlistenTray: (() => void) | undefined
 
 const busy = computed(() =>
   ['checking', 'downloading', 'installing'].includes(updateState.value.phase),
 )
+
+function pickTheme(id: string) {
+  currentTheme.value = id
+  setTheme(id)
+}
 
 async function refreshTodos() {
   try {
@@ -55,7 +63,6 @@ function hideToTray() {
 
 onMounted(async () => {
   await refreshTodos()
-  // 托盘菜单点「检查更新…」时 Rust 侧会广播这个事件
   unlistenTray = await listen(CHECK_UPDATE_EVENT, () => runUpdateCheck(false))
 })
 
@@ -69,14 +76,59 @@ onUnmounted(() => unlistenTray?.())
         <h1>Tauri 2 + Vue 3 模板</h1>
         <p class="sub">SQLite · 系统托盘 · 自动更新 · 三端打包</p>
       </div>
-      <button class="ghost" @click="hideToTray">隐藏到托盘</button>
+      <button class="ghost" @click="hideToTray">
+        <Icon name="minus" :size="14" />
+        隐藏到托盘
+      </button>
     </header>
+
+    <section class="card">
+      <h2>风格主题</h2>
+      <p class="hint">内置 {{ themes.length }} 套风格化主题，一键切换，自动适配深浅色。</p>
+      <div class="themes">
+        <button
+          v-for="t in themes"
+          :key="t.id"
+          class="theme"
+          :class="{ active: currentTheme === t.id }"
+          @click="pickTheme(t.id)"
+        >
+          <span class="theme__dot" :style="{ background: t.light.accent }" />
+          <span class="theme__meta">
+            <strong>{{ t.name }}</strong>
+            <small>{{ t.description }}</small>
+          </span>
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>图标库</h2>
+      <p class="hint">
+        统一使用 <code>@lucide/vue</code>（ISC 协议，1700+ 图标）。通过
+        <code>&lt;Icon name="..." /&gt;</code> 按需渲染，名称见
+        <code>src/assets/icons/catalog.ts</code>。
+      </p>
+      <div class="icon-row">
+        <Icon name="search" :size="18" />
+        <Icon name="folder-open" :size="18" />
+        <Icon name="database" :size="18" />
+        <Icon name="settings" :size="18" />
+        <Icon name="bell" :size="18" />
+        <Icon name="check-circle" :size="18" class="text-success" />
+        <Icon name="alert-circle" :size="18" class="text-warning" />
+        <Icon name="trash" :size="18" class="text-danger" />
+      </div>
+    </section>
 
     <section class="card">
       <h2>SQLite 数据层</h2>
       <form class="row" @submit.prevent="submitTodo">
         <input v-model="draft" placeholder="写点什么…" />
-        <button type="submit" class="primary">添加</button>
+        <button type="submit" class="primary">
+          <Icon name="plus" :size="14" />
+          添加
+        </button>
       </form>
       <p v-if="dbError" class="error">读取失败：{{ dbError }}</p>
       <ul v-else-if="todos.length" class="todos">
@@ -85,7 +137,9 @@ onUnmounted(() => unlistenTray?.())
             <input type="checkbox" :checked="todo.done === 1" @change="flip(todo)" />
             <span>{{ todo.title }}</span>
           </label>
-          <button class="ghost small" @click="drop(todo.id)">删除</button>
+          <button class="ghost small" @click="drop(todo.id)">
+            <Icon name="trash" :size="13" />
+          </button>
         </li>
       </ul>
       <p v-else class="empty">还没有数据，添加一条试试。</p>
@@ -94,7 +148,10 @@ onUnmounted(() => unlistenTray?.())
     <section class="card">
       <h2>自动更新</h2>
       <div class="row">
-        <button class="primary" :disabled="busy" @click="runUpdateCheck(false)">检查更新</button>
+        <button class="primary" :disabled="busy" @click="runUpdateCheck(false)">
+          <Icon name="refresh" :size="14" />
+          检查更新
+        </button>
         <span v-if="updateState.message" class="status">{{ updateState.message }}</span>
       </div>
       <div v-if="updateState.phase === 'downloading'" class="progress">
@@ -115,42 +172,6 @@ onUnmounted(() => unlistenTray?.())
     </section>
   </main>
 </template>
-
-<style>
-:root {
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    'PingFang SC',
-    'Microsoft YaHei',
-    sans-serif;
-  color-scheme: light dark;
-  --bg: #f7f7f8;
-  --surface: #ffffff;
-  --text: #1a1a1c;
-  --muted: #6b6b76;
-  --border: rgba(0, 0, 0, 0.1);
-  --accent: #2f6feb;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #17171a;
-    --surface: #1f1f23;
-    --text: #ececee;
-    --muted: #9a9aa5;
-    --border: rgba(255, 255, 255, 0.12);
-    --accent: #5b8cff;
-  }
-}
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-}
-</style>
 
 <style scoped>
 .page {
@@ -213,6 +234,9 @@ input:not([type]) {
 }
 
 button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 14px;
   font-size: 13px;
   font-family: inherit;
@@ -232,12 +256,69 @@ button:disabled {
 button.primary {
   background: var(--accent);
   border-color: transparent;
-  color: #fff;
+  color: var(--accent-text);
 }
 
 button.small {
   padding: 4px 10px;
   font-size: 12px;
+}
+
+/* 主题选择 */
+.themes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.theme {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.theme.active {
+  border-color: var(--accent);
+  background: var(--surface-alt);
+}
+
+.theme__dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.theme__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.theme__meta strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.theme__meta small {
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 图标展示 */
+.icon-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  flex-wrap: wrap;
 }
 
 .todos {
@@ -282,7 +363,7 @@ button.small {
 
 .error {
   font-size: 13px;
-  color: #d64545;
+  color: var(--danger);
   margin: 12px 0 0;
 }
 
@@ -291,14 +372,14 @@ code {
   font-size: 12px;
   padding: 1px 5px;
   border-radius: 4px;
-  background: rgba(127, 127, 127, 0.15);
+  background: var(--surface-alt);
 }
 
 .progress {
   height: 6px;
   margin-top: 14px;
   border-radius: 999px;
-  background: rgba(127, 127, 127, 0.2);
+  background: var(--surface-alt);
   overflow: hidden;
 }
 

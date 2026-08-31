@@ -19,7 +19,26 @@
 - **系统层**：系统托盘（左键切换窗口 / 右键菜单）、单实例、关闭窗口隐藏而非退出
 - **自动更新**：签名 → 下载 → 安装 → 重启，全链路已打通
 - **工程化**：GitHub Actions 三端打包矩阵 + CI 质量门禁（typecheck / build / cargo check）
+- **图标库**：内置 [Lucide](https://lucide.dev)（ISC 协议，1700+ 图标），`<Icon>` 组件按需渲染
+- **风格主题**：4 套可一键切换的主题（海洋蓝 / 森林绿 / 暖阳橙 / 极简黑白），自动适配深浅色
 - **无 Electron**：安装包约 3–20 MB，远小于 Electron 的 ~300 MB
+
+## 🎯 适合做什么项目
+
+这个脚手架是 **「本地优先、面向真实用户、跨三端」的桌面工具发射台**。典型适配场景：
+
+| 类型 | 典型例子 |
+| --- | --- |
+| 个人知识 / 生产力 | 笔记、待办、日记、习惯追踪、时间追踪 |
+| 隐私 / 个人数据 | 记账、消费追踪、密码箱 |
+| 开发者实用工具 | API 客户端、DB 查看器、日志查看器、格式化工具 |
+| AI 桌面客户端 | 网页 Chat 套壳、本地 LLM 前端、RAG 知识库 |
+| 媒体 / 文件管理 | 本地图库、电子书管理、下载管理器、去重 |
+| 自托管面板 | Home Lab / NAS 控制台、自建服务面板 |
+
+**不适合**：纯网站（用 Vite 即可）、图形密集型游戏 / 3D、从成熟 Electron 项目迁移、系统级深度集成（虚拟摄像头、内核扩展）。
+
+> 📚 完整的项目适配说明与**分类型开发注意事项**（加密、全文搜索、流式响应、文件权限等）见 [docs/project-guide.md](./docs/project-guide.md)。
 
 ## 🏗 架构
 
@@ -85,11 +104,16 @@ cd my-app && npm install
 │   ├── ISSUE_TEMPLATE/     # Bug / Feature 工单模板
 │   └── dependabot.yml      # 依赖自动更新
 ├── docs/
-│   └── architecture.svg    # 架构图
+│   ├── architecture.svg    # 架构图
+│   └── project-guide.md    # 项目适配指南（适合做什么 + 分类型注意事项）
 ├── src/                    # 前端（Vue 3）
+│   ├── assets/
+│   │   ├── icons/          # 图标：catalog.ts（Lucide 图标名目录）
+│   │   └── themes/         # 主题：index.ts（4 套 token）+ apply.ts（应用/持久化）
+│   ├── components/Icon.vue # 图标薄封装（<Icon name="..." />）
 │   ├── lib/db.ts           # SQLite 封装（Todo CRUD + 类型）
 │   ├── lib/updater.ts      # 检查 / 下载 / 安装 / 重启
-│   └── App.vue             # 演示页
+│   └── App.vue             # 演示页（含主题切换 + 图标示例）
 ├── src-tauri/              # 后端（Rust）
 │   ├── src/lib.rs          # 应用装配：插件注册、单实例、窗口事件
 │   ├── src/tray.rs         # 托盘图标与菜单
@@ -118,6 +142,45 @@ cd my-app && npm install
 
 ### 窗口行为
 默认**关闭窗口不退出进程**，仅隐藏到托盘；从托盘菜单选「退出」才真正结束。不需要该行为可删除 `src/lib.rs` 中监听 `CloseRequested` 的段落。
+
+### 图标（Lucide）
+
+统一使用 [`@lucide/vue`](https://lucide.dev/guide/packages/lucide-vue-next)（ISC 协议，商用无需署名，1700+ 图标）。通过薄封装组件按需渲染：
+
+```vue
+<script setup lang="ts">
+import Icon from './components/Icon.vue'
+</script>
+
+<template>
+  <Icon name="settings" :size="16" />          <!-- kebab-case -->
+  <Icon name="FolderOpen" :size="20" color="#2f6feb" />  <!-- PascalCase，可自定义颜色/描边 -->
+</template>
+```
+
+- 图标名支持 `kebab-case` 或 `PascalCase`，完整名称见 [lucide.dev/icons](https://lucide.dev/icons)
+- 常用图标按类别整理在 `src/assets/icons/catalog.ts`
+- `Icon.vue` 通过 `@lucide/vue` 的 `icons` 映射表按名取组件，天然 tree-shakable，只打包用到的图标
+
+### 风格主题
+
+内置 4 套主题，定义在 `src/assets/themes/index.ts`，通过 CSS 变量驱动、一键切换：
+
+| 主题 | id | 定位 |
+| --- | --- | --- |
+| 海洋蓝 | `ocean` | 专业冷静，适合开发者工具与效率应用 |
+| 森林绿 | `forest` | 清爽柔和，适合笔记与知识管理 |
+| 暖阳橙 | `amber` | 温暖有活力，适合创意与生活记录 |
+| 极简黑白 | `mono` | 克制中性，适合写作与专注 |
+
+```ts
+import { setTheme } from './assets/themes/apply'
+setTheme('forest')  // 一键换肤，自动持久化 + 跟随系统深浅色
+```
+
+- 主题 token（`bg` / `surface` / `text` / `accent` 等）由 `applyTheme()` 写入 `:root` 的 CSS 变量
+- 组件里用 `var(--surface)` 等变量取色，换主题零改动
+- 想新增主题：在 `themes` 数组加一项即可，无需改组件
 
 ## 🛠 常用脚本
 

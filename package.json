@@ -16,20 +16,21 @@
     "tauri:signer": "tauri signer generate -- -w ~/.tauri/tauri-vue-desktop-template.key"
   },
   "dependencies": {
-    "vue": "^3.5.13",
+    "@lucide/vue": "^1.38.0",
     "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2",
-    "@tauri-apps/plugin-sql": "^2",
-    "@tauri-apps/plugin-updater": "^2",
-    "@tauri-apps/plugin-process": "^2",
     "@tauri-apps/plugin-dialog": "^2",
-    "@tauri-apps/plugin-store": "^2"
+    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-process": "^2",
+    "@tauri-apps/plugin-sql": "^2",
+    "@tauri-apps/plugin-store": "^2",
+    "@tauri-apps/plugin-updater": "^2",
+    "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2",
     "@vitejs/plugin-vue": "^5.2.1",
     "typescript": "~5.6.2",
     "vite": "^6.0.3",
-    "vue-tsc": "^2.1.10",
-    "@tauri-apps/cli": "^2"
+    "vue-tsc": "^2.1.10"
   }
 }
