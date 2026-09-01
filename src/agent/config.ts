@@ -38,6 +38,10 @@ export interface AgentConfig {
   providers: ProviderConfig[];
   /** 'provider/model' 形式，如 'openai/gpt-5' */
   defaultModel: string;
+  /** 系统提示词 */
+  systemPrompt?: string;
+  /** 单次运行最大步数（工具调用轮次上限），防止失控循环 */
+  maxSteps: number;
   tools: {
     /** 显式声明，未声明的内置工具不注册 */
     builtins: BuiltinToolName[];
@@ -67,6 +71,7 @@ export const defaultAgentConfig: AgentConfig = {
   runtime: 'inline',
   providers: [],
   defaultModel: '',
+  maxSteps: 20,
   tools: { builtins: [] },
   memory: {
     backend: 'sqlite',

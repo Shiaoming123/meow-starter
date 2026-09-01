@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Tauri Vue Template",
+  "productName": "Meow Starter",
   "version": "0.1.0",
-  "identifier": "com.example.tauri-vue-template",
+  "identifier": "com.shiaoming123.meow-starter",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Tauri Vue Template",
+        "title": "Meow Starter",
         "width": 1000,
         "height": 680,
         "minWidth": 820,

@@ -1,10 +1,10 @@
 [package]
-name = "tauri-vue-desktop-template"
+name = "meow-starter"
 version = "0.1.0"
-description = "Tauri 2 + Vue 3 desktop app template with SQLite, tray, updater and CI"
+description = "Tauri 2 + Vue 3 desktop app template with SQLite, tray, updater, CI and optional AI agent"
 authors = ["Shiaoming123"]
 license = "MIT"
-repository = "https://github.com/Shiaoming123/tauri-vue-desktop-template"
+repository = "https://github.com/Shiaoming123/meow-starter"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -13,7 +13,7 @@ edition = "2021"
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "tauri_vue_desktop_template_lib"
+name = "meow_starter_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

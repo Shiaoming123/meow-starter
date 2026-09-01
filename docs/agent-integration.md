@@ -1,6 +1,6 @@
 # Agent 能力集成方案
 
-> 面向 `tauri-vue-desktop-template` 的 AI Native 演进设计
+> 面向 `meow-starter`（Tauri 2 + Vue 3 桌面脚手架）的 AI Native 演进设计
 > 调研基准日：**2026-09-01**（所有 star 数、版本号、体积均为该日实测）
 > 结论均标注依据（仓库 / 版本 / 文档链接），便于后续复核
 

@@ -3,9 +3,9 @@
 > 一套开箱即用的跨平台桌面应用脚手架，覆盖 **macOS / Windows / Linux** 三端。
 > 内置 SQLite 数据层、系统托盘、自动更新与三端打包 CI——克隆下来即可开始写业务，不必再为每个项目重复搭建工程。
 
-![CI](https://github.com/Shiaoming123/tauri-vue-desktop-template/actions/workflows/ci.yml/badge.svg)
-![Release](https://img.shields.io/github/v/release/Shiaoming123/tauri-vue-desktop-template)
-![License](https://img.shields.io/github/license/Shiaoming123/tauri-vue-desktop-template)
+![CI](https://github.com/Shiaoming123/meow-starter/actions/workflows/ci.yml/badge.svg)
+![Release](https://img.shields.io/github/v/release/Shiaoming123/meow-starter)
+![License](https://img.shields.io/github/license/Shiaoming123/meow-starter)
 ![Tauri](https://img.shields.io/badge/Tauri-2-24C8D8?logo=tauri&logoColor=white)
 ![Vue](https://img.shields.io/badge/Vue-3.5-42b883?logo=vuedotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?logo=typescript&logoColor=white)
@@ -73,7 +73,7 @@
 
 ```bash
 # 克隆或直接作为 GitHub Template 使用
-git clone https://github.com/Shiaoming123/tauri-vue-desktop-template.git my-app
+git clone https://github.com/Shiaoming123/meow-starter.git my-app
 cd my-app
 npm install
 npm run tauri dev
@@ -84,7 +84,7 @@ npm run tauri dev
 推荐用 [`degit`](https://github.com/jacquesbh/degit) 拉取干净副本（不含 git 历史）：
 
 ```bash
-npx degit Shiaoming123/tauri-vue-desktop-template my-app
+npx degit Shiaoming123/meow-starter my-app
 cd my-app && npm install
 ```
 
@@ -205,7 +205,7 @@ setTheme('forest')  // 一键换肤，自动持久化 + 跟随系统深浅色
 npm run tauri:signer
 ```
 
-生成 `~/.tauri/tauri-vue-desktop-template.key`（私钥）与同名 `.pub`（公钥）。
+生成 `~/.tauri/meow-starter.key`（私钥）与同名 `.pub`（公钥）。
 将 `.pub` 内容填入 `src-tauri/tauri.conf.json` 的 `plugins.updater.pubkey`，
 并把 `endpoints` 中的 `OWNER/REPO` 换成你的 GitHub 仓库。
 
@@ -238,8 +238,8 @@ npm run tauri:signer
 
 欢迎 Issue 与 PR。提交前请阅读 [CONTRIBUTING.md](./CONTRIBUTING.md)，并遵守 [行为准则](./CODE_OF_CONDUCT.md)。安全相关请走 [SECURITY.md](./SECURITY.md) 的私下披露渠道。
 
-- 🐛 **Bug / 功能请求**：请提交 [Issue](https://github.com/Shiaoming123/tauri-vue-desktop-template/issues)，并选用对应的模板
-- 💬 **使用问答 / 想法交流**：请到 [Discussions](https://github.com/Shiaoming123/tauri-vue-desktop-template/discussions)
+- 🐛 **Bug / 功能请求**：请提交 [Issue](https://github.com/Shiaoming123/meow-starter/issues)，并选用对应的模板
+- 💬 **使用问答 / 想法交流**：请到 [Discussions](https://github.com/Shiaoming123/meow-starter/discussions)
 - ❤️ **支持本项目**：若它对你有帮助，欢迎通过 [GitHub Sponsors](https://github.com/sponsors/Shiaoming123) 赞助（配置见 [FUNDING.yml](./FUNDING.yml)）
 
 ## 📄 许可证
