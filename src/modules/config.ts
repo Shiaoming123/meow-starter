@@ -31,11 +31,13 @@ export interface ModuleConfig {
   notification: boolean
   /** 开机自启动（P1） */
   autostart: boolean
+  /** MCP 接入（P3，需 @ai-sdk/mcp，依赖 agent） */
+  mcp: boolean
 }
 
 /**
  * 默认配置：保留脚手架「开箱即用」的现有体验。
- * core 始终启用；sqlite/tray/updater/themes 默认开；agent 与 P1 新增默认关。
+ * core 始终启用；sqlite/tray/updater/themes 默认开；agent 与 P1/P3 新增默认关。
  */
 export const defaultModuleConfig: ModuleConfig = {
   core: true,
@@ -48,6 +50,7 @@ export const defaultModuleConfig: ModuleConfig = {
   clipboard: false,
   notification: false,
   autostart: false,
+  mcp: false,
 }
 
 /**
@@ -70,4 +73,5 @@ export const moduleRegistry: Record<
   clipboard: () => import('./clipboard'),
   notification: () => import('./notification'),
   autostart: () => import('./autostart'),
+  mcp: () => import('./mcp'),
 }
