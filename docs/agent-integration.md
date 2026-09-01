@@ -50,7 +50,7 @@
 | **主语言** | TypeScript | TypeScript | TypeScript | TypeScript | TypeScript | TypeScript |
 | **最近提交** | 2026-09-01 | 2026-08-31 | 2026-09-01 | 2026-09-01 | 2026-08-31 | 2026-08-31 |
 | **包体积（unpacked）** | agent-core 1.83MB / pi-ai 3.95MB / coding-agent **20.5MB** | launcher 0.11MB（功能在数十个 `dsh-*` 子包） | **ai 6.57MB / @ai-sdk/vue 0.15MB** | @mastra/core **63.09MB** | — | 4.63MB |
-| **node_modules 实测** | 90MB（agent-core 单装） | 见 §1.3 | **46MB**（ai+vue+openai+anthropic+zod，22 顶层依赖） | **128MB** | — | — |
+| **node_modules 实测** | 90MB（agent-core 单装） | ⚠️ **282MB**（`npx @deepseek-ai/dsh` 完整安装） | **46MB**（ai+vue+openai+anthropic+zod，22 顶层依赖） | **128MB** | — | — |
 | **能否跑在 WebView** | ❌ 需 Node 运行时 | ❌ 需 Node 运行时 | ✅ **纯浏览器可用** | ❌ Node 服务端 | ⚠️ 部分可以 | ❌ 需 Node |
 | **Vue 支持** | ❌（自带 TUI / web-components） | ❌（客户端是 React） | ✅ **@ai-sdk/vue 一等公民** | ❌ | ❌ | ❌ |
 | **Provider 抽象** | 统一多 Provider + `registerProvider()` 动态注册 | **近 40 家**（含 `llm-pi-ai` 适配） | **20+ 官方 Provider + OpenAI-compatible 通用适配** | 多家 | 最多 | ❌ 仅 Claude |
@@ -69,7 +69,7 @@
   - Pi：`@earendil-works/pi-agent-core` 单装 → 90MB（其依赖链含完整的 provider SDK）
   - AI SDK 组合（ai + @ai-sdk/vue + @ai-sdk/openai + @ai-sdk/anthropic + zod）→ **46MB**，22 个顶层依赖
   - Mastra：`@mastra/core` 单装 → **128MB**
-  - DeepSeek Harness：launcher 仅 0.11MB，但功能分散在 `dsh-base`/`dsh-goal`/`dsh-tool-fs`/`dsh-persona` 等数十个子包，完整安装体积显著大于 launcher 数字，安装耗时也明显更长。
+  - DeepSeek Harness：launcher 仅 0.11MB，但功能分散在 `dsh-base` / `dsh-goal` / `dsh-tool-fs` / `dsh-persona` 等数十个子包，**完整安装 node_modules 达 282MB，是本次对比中最重的**（远超 Mastra 的 128MB），且安装耗时约 20 分钟。仅看 launcher 的 0.11MB 会严重低估接入成本。
 - 注意：`node_modules` 是**开发磁盘占用**，不等于最终进入 App 的 bundle 体积。对 Tauri 而言关键区分是**能否被打进 WebView bundle**（影响 JS 体积）与**是否需要额外运行时**（影响安装包体积）。
 
 ### 1.4 各项目关键事实（依据）
@@ -123,11 +123,12 @@
 
 ### 2.2 为什么不直接选 DeepSeek Harness（尽管它 star 最高）
 
-star 数（206K）确实最高，但**对本项目的三个硬伤在当下不可接受**：
+star 数（206K）确实最高，但**对本项目的四个硬伤在当下不可接受**：
 
-1. **版本状态**：`0.1.2-alpha.3`，仓库自带 `SAFETY.md` 实验性声明，官方明示破坏性更新。脚手架模板引入 alpha 依赖，等于把不稳定性传染给所有下游项目 —— 这与"脚手架 = 稳定基座"的定位根本冲突。
-2. **重构剧烈**：调研时点（2026-08-31）仍在 `refactor(session)!: remove SQLite persistence backend` 这类带破坏性标记的重构中。会话持久化恰恰是我们最需要复用的能力，此刻接入等于踩在流沙上。
-3. **UI 栈不匹配**：客户端是 React（`packages/client/ui-workspace/*.tsx`），本项目是 Vue 3，无法直接复用其 UI 层。
+1. **接入成本最重**：完整安装 `node_modules` **282MB**（实测），是本次全部候选中最大的——超过 Mastra（128MB）一倍多，是 AI SDK 组合（46MB）的 6 倍。其 launcher 包仅 0.11MB 具有误导性，真实成本在数十个 `dsh-*` 子包里。对一个以"快速起项目"为卖点的脚手架而言，这个体积直接违背核心定位。
+2. **版本状态**：`0.1.2-alpha.3`，仓库自带 `SAFETY.md` 实验性声明，官方明示破坏性更新。脚手架模板引入 alpha 依赖，等于把不稳定性传染给所有下游项目 —— 这与"脚手架 = 稳定基座"的定位根本冲突。
+3. **重构剧烈**：调研时点（2026-08-31）仍在 `refactor(session)!: remove SQLite persistence backend` 这类带破坏性标记的重构中。会话持久化恰恰是我们最需要复用的能力，此刻接入等于踩在流沙上。
+4. **UI 栈不匹配**：客户端是 React（`packages/client/ui-workspace/*.tsx`），本项目是 Vue 3，无法直接复用其 UI 层。
 
 但它的**架构思想必须吸收**：能力接缝（seam）化 —— 把"模型、工具、记忆、会话、存储、审批"全部定义为可替换接缝，而不是写死的实现。这正是本方案 §3 扩展点设计的蓝本。
 
