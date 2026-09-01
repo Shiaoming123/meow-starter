@@ -22,21 +22,31 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 # tray-icon: 系统托盘; image-png: 让 default_window_icon() 能解码 PNG 图标
 tauri = { version = "2", features = ["tray-icon", "image-png"] }
+# —— 核心能力（始终启用，是脚手架的立身之本） ——
 tauri-plugin-opener = "2"
-tauri-plugin-sql = { version = "2", features = ["sqlite"] }
-tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
 tauri-plugin-dialog = "2"
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 tauri-plugin-store = "2"
+tauri-plugin-updater = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
-# Agent 能力（可选，默认全关 —— 不引入任何额外编译与体积负担）
-#   agent         = LLM 请求代理 + OS 钥匙串，避免密钥出现在前端（P2 阶段）
-#   agent-sidecar = 上述 + Pi RPC 子进程生命周期管理（P3 阶段）
-# 详见 docs/agent-integration.md
+# —— 可选能力模块（P1，由 feature 门控，未启用不编译、不占体积） ——
+tauri-plugin-global-shortcut = { version = "2", optional = true }
+tauri-plugin-clipboard-manager = { version = "2", optional = true }
+tauri-plugin-notification = { version = "2", optional = true }
+tauri-plugin-autostart = { version = "2", optional = true }
+
+# 功能模块开关（与前端 modules.config.ts 的 P1 模块对应）
+# 核心能力（sqlite/store/updater/tray）始终启用，无需 feature
 [features]
 default = []
+shortcut = ["dep:tauri-plugin-global-shortcut"]
+clipboard = ["dep:tauri-plugin-clipboard-manager"]
+notification = ["dep:tauri-plugin-notification"]
+autostart = ["dep:tauri-plugin-autostart"]
+# Agent 能力（P2/P3，前端为主，Rust 侧只有密钥代理与 sidecar）
 agent = []
 agent-sidecar = ["agent"]
 

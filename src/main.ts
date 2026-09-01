@@ -1,9 +1,12 @@
 import { createApp } from "vue";
 import App from "./App.vue";
-import { initTheme } from "./assets/themes/apply";
+import { mountModules } from "./modules/loader";
 import "./assets/themes/global.css";
 
-// 初始化主题（应用已保存主题 + 跟随系统深浅色）
-initTheme();
+// 模块化装配：按 modules.config 的开关加载各能力模块。
+// core 模块（设计系统 + 主题初始化）在 loader 里执行。
+const app = createApp(App);
 
-createApp(App).mount("#app");
+mountModules(app).then(() => {
+  app.mount("#app");
+});
