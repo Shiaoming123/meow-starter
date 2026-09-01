@@ -1,31 +1,55 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" font-family="-apple-system, system-ui, 'Segoe UI', 'PingFang SC', sans-serif">
-  <rect width="760" height="360" fill="#0d1117" rx="12"/>
-  <text x="32" y="40" fill="#e6edf3" font-size="18" font-weight="600">架构总览</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 520" font-family="-apple-system, system-ui, 'Segoe UI', 'PingFang SC', sans-serif">
+  <rect width="780" height="520" fill="#0d1117" rx="12"/>
+  <text x="32" y="40" fill="#e6edf3" font-size="18" font-weight="600">架构总览 · Architecture</text>
+  <text x="32" y="60" fill="#8b949e" font-size="12">meow-starter · Tauri 2 + Vue 3 · 模块化 + AI Native</text>
 
-  <rect x="40" y="64" width="680" height="64" rx="10" fill="#161b22" stroke="#30363d"/>
-  <text x="60" y="92" fill="#58a6ff" font-size="14" font-weight="600">前端层 · Frontend</text>
-  <text x="60" y="114" fill="#8b949e" font-size="12">Vue 3 + TypeScript + Vite  ·  App.vue / lib/db.ts / lib/updater.ts</text>
-
-  <path d="M380 128 L380 150" stroke="#6e7681" stroke-width="2" marker-end="url(#a)"/>
-
-  <rect x="40" y="152" width="680" height="56" rx="10" fill="#161b22" stroke="#30363d"/>
-  <text x="60" y="178" fill="#d2a8ff" font-size="14" font-weight="600">桥接层 · Bridge</text>
-  <text x="60" y="198" fill="#8b949e" font-size="12">@tauri-apps/api  ·  invoke() / listen()  （类型安全的 IPC）</text>
-
-  <path d="M380 208 L380 228" stroke="#6e7681" stroke-width="2" marker-end="url(#a)"/>
-
-  <rect x="40" y="230" width="680" height="104" rx="10" fill="#161b22" stroke="#30363d"/>
-  <text x="60" y="256" fill="#7ee787" font-size="14" font-weight="600">原生层 · Native（Rust / Tauri 2）</text>
+  <rect x="40" y="78" width="700" height="86" rx="10" fill="#161b22" stroke="#30363d"/>
+  <text x="60" y="102" fill="#58a6ff" font-size="14" font-weight="600">前端层 · Frontend（Vue 3 + TS + Vite）</text>
+  <text x="60" y="124" fill="#8b949e" font-size="11">core 设计系统 · 组件库 · 主题 · Agent UI（ChatPanel）</text>
   <g font-size="11" fill="#e6edf3">
-    <rect x="60" y="270" width="78" height="26" rx="6" fill="#21262d" stroke="#30363d"/><text x="86" y="287">sql</text>
-    <rect x="146" y="270" width="96" height="26" rx="6" fill="#21262d" stroke="#30363d"/><text x="160" y="287">updater</text>
-    <rect x="250" y="270" width="74" height="26" rx="6" fill="#21262d" stroke="#30363d"/><text x="270" y="287">tray</text>
-    <rect x="332" y="270" width="92" height="26" rx="6" fill="#21262d" stroke="#30363d"/><text x="346" y="287">process</text>
-    <rect x="432" y="270" width="80" height="26" rx="6" fill="#21262d" stroke="#30363d"/><text x="450" y="287">dialog</text>
-    <rect x="520" y="270" width="76" height="26" rx="6" fill="#21262d" stroke="#30363d"/><text x="538" y="287">store</text>
-    <rect x="604" y="270" width="104" height="26" rx="6" fill="#21262d" stroke="#30363d"/><text x="620" y="287">single-inst</text>
+    <rect x="60" y="134" width="92" height="22" rx="5" fill="#21262d" stroke="#30363d"/><text x="78" y="149">modules/loader</text>
+    <rect x="160" y="134" width="70" height="22" rx="5" fill="#21262d" stroke="#30363d"/><text x="176" y="149">core</text>
+    <rect x="238" y="134" width="70" height="22" rx="5" fill="#21262d" stroke="#30363d"/><text x="258" y="149">sqlite</text>
+    <rect x="316" y="134" width="70" height="22" rx="5" fill="#21262d" stroke="#30363d"/><text x="340" y="149">updater</text>
+    <rect x="394" y="134" width="70" height="22" rx="5" fill="#21262d" stroke="#30363d"/><text x="418" y="149">agent</text>
+    <rect x="472" y="134" width="70" height="22" rx="5" fill="#21262d" stroke="#30363d"/><text x="498" y="149">mcp</text>
+    <rect x="550" y="134" width="70" height="22" rx="5" fill="#21262d" stroke="#30363d"/><text x="568" y="149">shortcut</text>
+    <rect x="628" y="134" width="96" height="22" rx="5" fill="#21262d" stroke="#30363d"/><text x="642" y="149">clipboard…</text>
   </g>
-  <text x="60" y="320" fill="#8b949e" font-size="12">运行于系统 WebView · 数据落 SQLite(app.db) · 托盘常驻 · 更新自 GitHub Releases 拉取</text>
+
+  <path d="M390 164 L390 186" stroke="#6e7681" stroke-width="2" marker-end="url(#a)"/>
+
+  <rect x="40" y="188" width="700" height="56" rx="10" fill="#161b22" stroke="#30363d"/>
+  <text x="60" y="212" fill="#d2a8ff" font-size="14" font-weight="600">桥接层 · Bridge（类型安全 IPC）</text>
+  <text x="60" y="232" fill="#8b949e" font-size="11">@tauri-apps/api  ·  invoke() / listen()  ·  Agent 密钥经 Rust 代理（get_api_key）</text>
+
+  <path d="M390 244 L390 266" stroke="#6e7681" stroke-width="2" marker-end="url(#a)"/>
+
+  <rect x="40" y="268" width="700" height="140" rx="10" fill="#161b22" stroke="#30363d"/>
+  <text x="60" y="292" fill="#7ee787" font-size="14" font-weight="600">原生层 · Native（Rust / Tauri 2）</text>
+  <text x="60" y="312" fill="#8b949e" font-size="11">核心插件始终启用 + P1/P2 插件由 Cargo feature 门控</text>
+  <g font-size="11" fill="#e6edf3">
+    <rect x="60" y="322" width="70" height="24" rx="5" fill="#21262d" stroke="#30363d"/><text x="86" y="338">sql</text>
+    <rect x="138" y="322" width="78" height="24" rx="5" fill="#21262d" stroke="#30363d"/><text x="156" y="338">updater</text>
+    <rect x="224" y="322" width="70" height="24" rx="5" fill="#21262d" stroke="#30363d"/><text x="250" y="338">tray</text>
+    <rect x="302" y="322" width="70" height="24" rx="5" fill="#21262d" stroke="#30363d"/><text x="326" y="338">store</text>
+    <rect x="380" y="322" width="110" height="24" rx="5" fill="#1f3d2e" stroke="#2ea043"/><text x="396" y="338">agent:keyring</text>
+    <rect x="498" y="322" width="110" height="24" rx="5" fill="#1f3d2e" stroke="#2ea043"/><text x="514" y="338">agent:proxy</text>
+    <rect x="616" y="322" width="108" height="24" rx="5" fill="#2d1f3d" stroke="#8957e5"/><text x="632" y="338">shortcut…</text>
+  </g>
+  <text x="60" y="372" fill="#8b949e" font-size="11">运行于系统 WebView · SQLite(app.db) · 托盘常驻 · 密钥存 OS 钥匙串 · 更新自 GitHub Releases</text>
+  <text x="60" y="390" fill="#8b949e" font-size="11">feature 门控：shortcut / clipboard / notification / autostart / agent（keyring+reqwest）/ agent-sidecar</text>
+
+  <path d="M390 408 L390 430" stroke="#6e7681" stroke-width="2" marker-end="url(#a)"/>
+
+  <rect x="40" y="432" width="700" height="72" rx="10" fill="#161b22" stroke="#30363d"/>
+  <text x="60" y="456" fill="#ffa657" font-size="14" font-weight="600">外部服务 · External</text>
+  <g font-size="11" fill="#e6edf3">
+    <rect x="60" y="468" width="96" height="24" rx="5" fill="#21262d" stroke="#30363d"/><text x="76" y="484">Ollama(本地)</text>
+    <rect x="164" y="468" width="110" height="24" rx="5" fill="#21262d" stroke="#30363d"/><text x="180" y="484">OpenAI/Anthropic</text>
+    <rect x="282" y="468" width="96" height="24" rx="5" fill="#21262d" stroke="#30363d"/><text x="298" y="484">MCP Server</text>
+    <rect x="386" y="468" width="120" height="24" rx="5" fill="#21262d" stroke="#30363d"/><text x="402" y="484">GitHub Releases</text>
+  </g>
 
   <defs>
     <marker id="a" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
