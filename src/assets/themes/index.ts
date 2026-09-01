@@ -1,7 +1,13 @@
 /**
- * 风格化主题定义。
- * 每个主题提供一套 CSS 变量（浅色 + 深色），通过 data-theme 属性应用到根节点。
- * 一键切换，所有使用 var(--xxx) 的组件自动换肤。
+ * 设计系统 tokens。
+ *
+ * 分两层：
+ * 1. 语义色（semantic color）：每套主题提供 light / dark 两套，跟随主题切换。
+ * 2. 结构 token（spacing / radius / font / shadow / motion / z）：与主题无关，
+ *    在 global.css 里一次性定义，全主题共享。
+ *
+ * 设计原则：结构 token 保证「任何主题下组件间距、圆角、动效都一致」，
+ * 语义色只负责「换肤」，两者解耦，扩展新主题时只需补一套色板。
  */
 
 export interface ThemeTokens {
@@ -158,8 +164,8 @@ export function getTheme(id: string): Theme {
 }
 
 /**
- * 将主题 token 写入 CSS 变量。
- * 在组件挂载或主题切换时调用，配合 prefers-color-scheme 决定深浅。
+ * 将主题语义色写入 CSS 变量。
+ * 结构 token（spacing/radius/…）在 global.css 静态定义，这里不重复写。
  */
 export function applyTheme(id: string, dark: boolean) {
   const theme = getTheme(id)

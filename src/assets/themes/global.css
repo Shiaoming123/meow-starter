@@ -1,6 +1,12 @@
 /**
- * 全局样式：定义主题 CSS 变量并接入基础样式。
- * 主题由 applyTheme() 动态写入 data-theme 变量，这里提供默认值兜底。
+ * 全局样式：设计系统 token + 基础 reset + 工具类。
+ *
+ * token 分两类：
+ * - 语义色（--bg/--surface/--accent/…）：由 applyTheme() 动态写入，随主题切换。
+ * - 结构 token（--space-* / --radius-* / --text-* / --shadow-* / --motion-* / --z-*）：
+ *   与主题无关，全主题共享，保证任何主题下间距、圆角、动效一致。
+ *
+ * 完整说明见 docs/design-system.md。
  */
 
 :root {
@@ -13,7 +19,7 @@
     sans-serif;
   color-scheme: light dark;
 
-  /* 默认主题 token（海洋蓝·浅色），运行时会被 applyTheme 覆盖 */
+  /* ---- 语义色（默认海洋蓝·浅色，运行时被 applyTheme 覆盖） ---- */
   --bg: #f5f7fb;
   --surface: #ffffff;
   --surface-alt: #eef2f9;
@@ -25,6 +31,54 @@
   --success: #18a058;
   --warning: #d97b12;
   --danger: #d64545;
+
+  /* ---- 结构 token：间距（4px 基准） ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ---- 结构 token：圆角 ---- */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 999px;
+
+  /* ---- 结构 token：字号（正文 13/14，标题 15/16/20） ---- */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+
+  /* ---- 结构 token：字重（只用 400 / 500，克制层级） ---- */
+  --font-regular: 400;
+  --font-medium: 500;
+
+  /* ---- 结构 token：阴影（桌面端轻微层次） ---- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+
+  /* ---- 结构 token：动效 ---- */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---- 结构 token：层级 ---- */
+  --z-base: 1;
+  --z-sticky: 100;
+  --z-overlay: 200;
+  --z-modal: 300;
+  --z-toast: 400;
 
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -42,7 +96,23 @@ body {
   box-sizing: border-box;
 }
 
-/* 基础语义色工具类 */
+/* 让交互元素有可见的键盘焦点（可访问性底线） */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 尊重系统「减少动效」偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---- 语义色工具类 ---- */
 .text-success {
   color: var(--success);
 }
@@ -56,7 +126,7 @@ body {
   color: var(--muted);
 }
 
-/* 基础滚动条（桌面端更精致） */
+/* ---- 基础滚动条（桌面端更精致） ---- */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
