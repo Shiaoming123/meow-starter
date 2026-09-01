@@ -1,3 +1,5 @@
+import type { ZodType } from 'zod';
+
 export interface ToolContext {
   sessionId?: string;
   signal?: AbortSignal;
@@ -11,13 +13,13 @@ export interface ToolResult {
 }
 
 /**
- * 工具定义。inputSchema 在 P1 接入 AI SDK 后收敛为 Zod schema，
- * P0 阶段保持 unknown，以免为零依赖骨架引入新包。
+ * 工具定义。P1 起 inputSchema 收敛为 Zod schema（AI SDK 原生格式）。
+ * zod 仅以 `import type` 引入，类型在编译期擦除，不影响运行时打包。
  */
 export interface ToolDef<TInput = Record<string, unknown>> {
   name: string;
   description: string;
-  inputSchema?: unknown;
+  inputSchema?: ZodType;
   /** 返回 true 时触发人工审批门 */
   needsApproval?: (args: TInput) => boolean;
   execute: (args: TInput, ctx: ToolContext) => Promise<ToolResult>;

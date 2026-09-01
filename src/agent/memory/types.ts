@@ -1,9 +1,11 @@
 export interface AgentMessage {
-  id?: string;
+  /** SQLite 实现为自增 number，内存实现为 number */
+  id?: number | string;
   sessionId: string;
   role: 'user' | 'assistant' | 'tool' | 'system';
   content: string;
-  createdAt?: number;
+  /** SQLite 实现返回 datetime 字符串，内存实现返回毫秒时间戳 */
+  createdAt?: number | string;
 }
 
 /** 接缝 1：持久化。默认实现复用脚手架已有的 tauri-plugin-sql */

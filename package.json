@@ -1,19 +1,21 @@
 {
-  "name": "tauri-vue-desktop-template",
+  "name": "meow-starter",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "license": "MIT",
   "author": "Shiaoming123",
-  "repository": "https://github.com/Shiaoming123/tauri-vue-desktop-template",
-  "homepage": "https://github.com/Shiaoming123/tauri-vue-desktop-template#readme",
+  "repository": "https://github.com/Shiaoming123/meow-starter",
+  "homepage": "https://github.com/Shiaoming123/meow-starter#readme",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
     "tauri": "tauri",
-    "tauri:signer": "tauri signer generate -- -w ~/.tauri/tauri-vue-desktop-template.key"
+    "tauri:signer": "tauri signer generate -- -w ~/.tauri/meow-starter.key",
+    "add:agent": "npm install -D ai @ai-sdk/vue @ai-sdk/openai @ai-sdk/anthropic zod",
+    "remove:agent": "npm uninstall ai @ai-sdk/vue @ai-sdk/openai @ai-sdk/anthropic zod"
   },
   "dependencies": {
     "@lucide/vue": "^1.38.0",
@@ -26,11 +28,26 @@
     "@tauri-apps/plugin-updater": "^2",
     "vue": "^3.5.13"
   },
+  "peerDependencies": {
+    "@ai-sdk/vue": "^4.0.0",
+    "ai": "^7.0.0",
+    "zod": "^3.25.76 || ^4.1.8"
+  },
+  "peerDependenciesMeta": {
+    "@ai-sdk/vue": { "optional": true },
+    "ai": { "optional": true },
+    "zod": { "optional": true }
+  },
   "devDependencies": {
+    "@ai-sdk/anthropic": "^4.0.46",
+    "@ai-sdk/openai": "^4.0.53",
+    "@ai-sdk/vue": "^4.0.87",
     "@tauri-apps/cli": "^2",
     "@vitejs/plugin-vue": "^5.2.1",
+    "ai": "^7.0.87",
     "typescript": "~5.6.2",
     "vite": "^6.0.3",
-    "vue-tsc": "^2.1.10"
+    "vue-tsc": "^2.1.10",
+    "zod": "^4.5.4"
   }
 }

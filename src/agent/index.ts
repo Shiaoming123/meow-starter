@@ -28,3 +28,10 @@ export { registerProvider, getProvider, listProviders, clearProviders } from './
 export type { ProviderInstance, ProviderAdapter } from './providers/types';
 
 export type { AgentMessage, MemoryStore, ContextAssembler, CompactionStrategy } from './memory/types';
+export { sqliteMemoryStore, createMemoryStore, initAgentTables } from './memory/store';
+
+/**
+ * 注意：ChatPanel.vue 不在此导出 —— 它内部 import 了本文件的 loadAgent，
+ * 若再从这里导出会形成循环依赖。请按路径引入：
+ * `import ChatPanel from './agent/ui/ChatPanel.vue'`
+ */
