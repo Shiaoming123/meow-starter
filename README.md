@@ -43,6 +43,8 @@
 **不适合**：纯网站（用 Vite 即可）、图形密集型游戏 / 3D、从成熟 Electron 项目迁移、系统级深度集成（虚拟摄像头、内核扩展）。
 
 > 📚 完整的项目适配说明与**分类型开发注意事项**（加密、全文搜索、流式响应、文件权限等）见 [docs/project-guide.md](./docs/project-guide.md)。
+>
+> 🎨 设计系统 token、组件用法、主题扩展与性能建议见 [docs/design-system.md](./docs/design-system.md)。
 
 ## 🏗 架构
 
@@ -109,6 +111,7 @@ cd my-app && npm install
 │   └── dependabot.yml      # 依赖自动更新
 ├── docs/
 │   ├── architecture.svg    # 架构图
+│   ├── design-system.md    # 设计系统（tokens + 组件 + 主题 + 性能建议）
 │   └── project-guide.md    # 项目适配指南（适合做什么 + 分类型注意事项）
 ├── src/                    # 前端（Vue 3）
 │   ├── assets/
