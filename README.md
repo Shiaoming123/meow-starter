@@ -112,17 +112,20 @@ cd my-app && npm install
 ├── docs/
 │   ├── architecture.svg    # 架构图
 │   ├── design-system.md    # 设计系统（tokens + 组件 + 主题 + 性能建议）
+│   ├── ai-capabilities.md  # AI Native 能力模块清单（P1-P3 落地节奏）
+│   ├── modular-architecture.md # 模块化架构（三层门控 + Module 契约）
 │   └── project-guide.md    # 项目适配指南（适合做什么 + 分类型注意事项）
 ├── src/                    # 前端（Vue 3）
 │   ├── assets/
 │   │   ├── icons/          # 图标：catalog.ts（Lucide 图标名目录）
 │   │   └── themes/         # 主题：index.ts（4 套 token）+ apply.ts（应用/持久化）
-│   ├── components/Icon.vue # 图标薄封装（<Icon name="..." />）
+│   ├── components/         # Icon.vue + ui/（Button/Card/Input/Badge/Progress/EmptyState）
+│   ├── modules/            # ★ 模块化：config.ts（开关）+ loader.ts（装配）+ 各能力模块
 │   ├── lib/db.ts           # SQLite 封装（Todo CRUD + 类型）
 │   ├── lib/updater.ts      # 检查 / 下载 / 安装 / 重启
-│   └── App.vue             # 演示页（含主题切换 + 图标示例）
+│   └── App.vue             # 演示页（侧边栏导航 + 主题切换 + 图标示例）
 ├── src-tauri/              # 后端（Rust）
-│   ├── src/lib.rs          # 应用装配：插件注册、单实例、窗口事件
+│   ├── src/lib.rs          # 应用装配：插件注册（核心 + feature 门控）、单实例、窗口事件
 │   ├── src/tray.rs         # 托盘图标与菜单
 │   ├── src/db.rs           # SQLite 迁移定义
 │   ├── capabilities/       # 前端可调用的权限白名单

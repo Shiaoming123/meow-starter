@@ -17,6 +17,7 @@ pub fn run() {
         // 自动更新装完后需要 process 插件来重启应用
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_dialog::init())
+        // —— 核心能力：始终启用 ——
         // 轻量键值持久化，适合存窗口尺寸之类的 UI 偏好
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(
@@ -24,8 +25,34 @@ pub fn run() {
                 .add_migrations(db::DB_URL, db::migrations())
                 .build(),
         )
-        .plugin(tauri_plugin_updater::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![greet]);
+        .plugin(tauri_plugin_updater::Builder::new().build());
+
+    // —— 可选模块：按 Cargo feature 装配（与前端 modules.config.ts 的 P1 模块对应） ——
+
+    #[cfg(feature = "shortcut")]
+    {
+        builder = builder.plugin(tauri_plugin_global_shortcut::Builder::new().build());
+    }
+
+    #[cfg(feature = "clipboard")]
+    {
+        builder = builder.plugin(tauri_plugin_clipboard_manager::init());
+    }
+
+    #[cfg(feature = "notification")]
+    {
+        builder = builder.plugin(tauri_plugin_notification::init());
+    }
+
+    #[cfg(feature = "autostart")]
+    {
+        builder = builder.plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ));
+    }
+
+    builder = builder.invoke_handler(tauri::generate_handler![greet]);
 
     #[cfg(desktop)]
     {
