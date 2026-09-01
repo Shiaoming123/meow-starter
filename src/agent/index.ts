@@ -26,6 +26,8 @@ export type { ToolDef, ToolContext, ToolResult } from './tools/types';
 
 export { registerProvider, getProvider, listProviders, clearProviders } from './providers/registry';
 export type { ProviderInstance, ProviderAdapter } from './providers/types';
+export { ollamaPreset, vllmPreset, openaiPreset, anthropicPreset, providerPresets } from './providers/presets';
+export { saveApiKey, deleteApiKey } from './providers/adapter';
 
 export type { AgentMessage, MemoryStore, ContextAssembler, CompactionStrategy } from './memory/types';
 export { sqliteMemoryStore, createMemoryStore, initAgentTables } from './memory/store';

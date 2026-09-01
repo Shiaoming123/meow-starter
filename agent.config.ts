@@ -16,7 +16,8 @@ const config: Partial<AgentConfig> = {
   runtime: 'inline',
 
   providers: [
-    // 例：本地 Ollama，无需密钥，适合离线场景
+    // 例 1：本地 Ollama（隐私优先，零云端依赖）—— 推荐本地推理首选
+    // 前置：本机先 `ollama serve` 并 `ollama pull qwen3:8b`
     // {
     //   id: 'ollama',
     //   type: 'openai-compatible',
@@ -25,11 +26,12 @@ const config: Partial<AgentConfig> = {
     //   models: [{ id: 'qwen3:8b', contextWindow: 32768 }],
     // },
     //
-    // 例：云端 Provider，密钥存钥匙串、请求走 Rust 代理
+    // 例 2：云端 Provider，密钥存 OS 钥匙串（P2 已落地，经 Rust 代理读取）
+    // 首次使用前调用 saveApiKey('openai', 'default', 'sk-...') 存入钥匙串
     // {
     //   id: 'openai',
     //   type: 'openai',
-    //   apiKeyRef: { kind: 'keychain', service: 'your-app' },
+    //   apiKeyRef: { kind: 'keychain', service: 'openai', account: 'default' },
     // },
   ],
 
@@ -38,7 +40,7 @@ const config: Partial<AgentConfig> = {
   // 内置工具必须显式声明；shell 默认不开，避免 Agent 执行任意命令
   tools: { builtins: [] },
 
-  // 请求经 Rust 侧代理，密钥不出现在前端
+  // 请求经 Rust 侧代理，密钥不出现在前端（需 Cargo feature `agent` 已启用）
   secureProxy: true,
 };
 

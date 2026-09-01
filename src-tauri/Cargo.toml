@@ -38,7 +38,16 @@ tauri-plugin-clipboard-manager = { version = "2", optional = true }
 tauri-plugin-notification = { version = "2", optional = true }
 tauri-plugin-autostart = { version = "2", optional = true }
 
-# 功能模块开关（与前端 modules.config.ts 的 P1 模块对应）
+# —— Agent 能力（P2：密钥代理 + 本地推理，由 feature 门控） ——
+# keyring：OS 钥匙串（macOS Keychain / Windows Credential Manager / Linux Secret Service）
+# 默认 feature "v1" 已包含三端原生后端，按目标平台自动选择
+keyring = { version = "4", optional = true }
+# reqwest：LLM 请求流式透传代理，避免 API Key 暴露在前端
+reqwest = { version = "0.12", features = ["stream", "json"], optional = true }
+# futures-util：流式代理里消费 bytes_stream
+futures-util = { version = "0.3", optional = true }
+
+# 功能模块开关（与前端 modules.config.ts 对应）
 # 核心能力（sqlite/store/updater/tray）始终启用，无需 feature
 [features]
 default = []
@@ -46,8 +55,8 @@ shortcut = ["dep:tauri-plugin-global-shortcut"]
 clipboard = ["dep:tauri-plugin-clipboard-manager"]
 notification = ["dep:tauri-plugin-notification"]
 autostart = ["dep:tauri-plugin-autostart"]
-# Agent 能力（P2/P3，前端为主，Rust 侧只有密钥代理与 sidecar）
-agent = []
+# Agent 能力：agent = 密钥代理（keyring + reqwest）；agent-sidecar = 上述 + Pi RPC sidecar（P3）
+agent = ["dep:keyring", "dep:reqwest", "dep:futures-util"]
 agent-sidecar = ["agent"]
 
 # 单实例是桌面端专有能力，移动端目标不参与编译
