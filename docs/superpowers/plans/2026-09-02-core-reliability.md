@@ -298,9 +298,8 @@ Create `tests/icon-loading.test.ts`:
 
 ```ts
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
 import test from 'node:test'
-import { normalizeIconName } from '../src/assets/icons/registry.ts'
+import { normalizeIconName, resolveIcon } from '../src/assets/icons/registry.ts'
 
 test('normalizes PascalCase, spaces and underscores', () => {
   assert.equal(normalizeIconName('FolderOpen'), 'folder-open')
@@ -308,10 +307,10 @@ test('normalizes PascalCase, spaces and underscores', () => {
   assert.equal(normalizeIconName('Circle Check'), 'circle-check')
 })
 
-test('Icon.vue has no runtime-ignored bare module import', async () => {
-  const source = await readFile(new URL('../src/components/Icon.vue', import.meta.url), 'utf8')
-  assert.doesNotMatch(source, /@vite-ignore/)
-  assert.doesNotMatch(source, /@lucide\/vue\/dist\/esm\/icons\/\$\{/)
+test('resolves curated icons through normalized public names', () => {
+  assert.ok(resolveIcon('FolderOpen'))
+  assert.ok(resolveIcon('clipboard-list'))
+  assert.equal(resolveIcon('not-in-the-starter-registry'), undefined)
 })
 ```
 
@@ -319,7 +318,7 @@ test('Icon.vue has no runtime-ignored bare module import', async () => {
 
 Run: `npm test`
 
-Expected: FAIL because the registry does not exist and `Icon.vue` still contains `@vite-ignore`.
+Expected: FAIL because the registry does not exist.
 
 - [ ] **Step 3: Implement the curated literal registry**
 
@@ -380,10 +379,12 @@ git commit -m "fix: replace runtime icon imports with static registry"
 ### Task 4: Mobile shell layout and platform detection
 
 **Files:**
+- Create: `scripts/check-built-layout.mjs`
 - Create: `tests/mobile-platform.test.ts`
 - Modify: `src/lib/platform.ts`
 - Modify: `src/App.vue`
 - Modify: `docs/mobile.md`
+- Modify: `package.json`
 
 **Interfaces:**
 - Produces: `isMobileUserAgent(userAgent: string): boolean` for deterministic platform tests.
@@ -395,7 +396,6 @@ Create `tests/mobile-platform.test.ts`:
 
 ```ts
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import { isMobileUserAgent } from '../src/lib/platform.ts'
 
@@ -405,21 +405,15 @@ test('detects Android and iOS user agents without matching desktop', () => {
   assert.equal(isMobileUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'), false)
 })
 
-test('mobile media query stacks shell and reserves safe area', async () => {
-  const source = await readFile(new URL('../src/App.vue', import.meta.url), 'utf8')
-  const mobileCss = source.slice(source.indexOf('@media (max-width: 768px)'))
-  assert.match(mobileCss, /\.shell\s*{[^}]*flex-direction:\s*column/s)
-  assert.match(mobileCss, /padding-bottom:\s*env\(safe-area-inset-bottom/s)
-})
 ```
 
 - [ ] **Step 2: Run tests to verify failure**
 
 Run: `npm test`
 
-Expected: FAIL because `isMobileUserAgent` and the mobile shell rules do not exist.
+Expected: FAIL because `isMobileUserAgent` does not exist.
 
-- [ ] **Step 3: Implement deterministic detection and layout**
+- [ ] **Step 3: Implement deterministic platform detection**
 
 Add to `src/lib/platform.ts`:
 
@@ -429,7 +423,50 @@ export function isMobileUserAgent(userAgent: string): boolean {
 }
 ```
 
-Make `isMobile()` call it. In the mobile media query, add:
+Make `isMobile()` call it. Run `npm test` and expect all platform tests to pass before changing layout CSS.
+
+- [ ] **Step 4: Add a final-artifact layout check and verify RED**
+
+Create `scripts/check-built-layout.mjs`:
+
+```js
+import { readdir, readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
+
+const assets = resolve('dist/assets')
+const cssFiles = (await readdir(assets)).filter((file) => file.endsWith('.css'))
+const css = (await Promise.all(cssFiles.map((file) => readFile(resolve(assets, file), 'utf8')))).join('\n')
+const compact = css.replace(/\s+/g, '')
+
+const hasMobileShell = /@media\(max-width:768px\)[\s\S]*?\.shell\{[^}]*flex-direction:column/.test(compact)
+const hasSafeArea = /@media\(max-width:768px\)[\s\S]*?\.tabbar\{[^}]*padding-bottom:env\(safe-area-inset-bottom,0px\)/.test(compact)
+
+if (!hasMobileShell || !hasSafeArea) {
+  console.error('Built CSS is missing the mobile column shell or bottom safe-area rule.')
+  process.exit(1)
+}
+
+console.log('Built mobile layout contract is valid.')
+```
+
+Add to `package.json`:
+
+```json
+"check:layout": "node scripts/check-built-layout.mjs"
+```
+
+Before editing `App.vue`, run:
+
+```bash
+npm run build
+npm run check:layout
+```
+
+Expected: `npm run build` exits 0 and `npm run check:layout` exits 1 because the final CSS does not stack `.shell` or reserve the safe area.
+
+- [ ] **Step 5: Implement the mobile shell layout**
+
+In the mobile media query, add:
 
 ```css
 .shell {
@@ -446,11 +483,13 @@ Make `isMobile()` call it. In the mobile media query, add:
 }
 ```
 
-- [ ] **Step 4: Correct mobile maturity wording**
+Run `npm run build && npm run check:layout` and expect both commands to exit 0.
+
+- [ ] **Step 6: Correct mobile maturity wording**
 
 State in `docs/mobile.md` that M1-M2 are browser-verified code adaptations, while M3-M5 require real Android/iOS toolchains and remain unverified in this repository.
 
-- [ ] **Step 5: Run checks**
+- [ ] **Step 7: Run checks**
 
 Run:
 
@@ -458,14 +497,15 @@ Run:
 npm test
 npm run typecheck
 npm run build
+npm run check:layout
 ```
 
 Expected: all commands exit 0.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add src/lib/platform.ts src/App.vue tests/mobile-platform.test.ts docs/mobile.md
+git add package.json scripts/check-built-layout.mjs src/lib/platform.ts src/App.vue tests/mobile-platform.test.ts docs/mobile.md
 git commit -m "fix: make mobile navigation a real bottom bar"
 ```
 
