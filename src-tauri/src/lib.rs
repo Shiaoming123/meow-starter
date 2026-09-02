@@ -1,10 +1,10 @@
 use tauri::{Manager, WindowEvent};
 
+#[cfg(feature = "agent")]
+mod agent;
 mod db;
 #[cfg(desktop)]
 mod tray;
-#[cfg(feature = "agent")]
-mod agent;
 
 /// 前端 -> Rust 的示例命令，演示 IPC 的类型传递。
 #[tauri::command]

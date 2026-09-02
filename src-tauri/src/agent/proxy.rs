@@ -121,11 +121,9 @@ mod tests {
 
     #[test]
     fn accepts_only_the_fixed_provider_origins() {
-        assert!(validate_target(
-            ProxyProvider::OpenAi,
-            "https://api.openai.com/v1/responses",
-        )
-        .is_ok());
+        assert!(
+            validate_target(ProxyProvider::OpenAi, "https://api.openai.com/v1/responses",).is_ok()
+        );
         assert!(validate_target(
             ProxyProvider::Anthropic,
             "https://api.anthropic.com/v1/messages",
@@ -142,7 +140,10 @@ mod tests {
             "https://user:pass@api.openai.com/v1/responses",
             "https://api.openai.com/dashboard",
         ] {
-            assert!(validate_target(ProxyProvider::OpenAi, url).is_err(), "{url}");
+            assert!(
+                validate_target(ProxyProvider::OpenAi, url).is_err(),
+                "{url}"
+            );
         }
     }
 }

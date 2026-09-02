@@ -20,9 +20,10 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> Result<(), Box<dyn std::er
 
     let menu = Menu::with_items(app, &[&toggle, &check_update, &separator, &quit])?;
 
-    let icon = app.default_window_icon().cloned().ok_or_else(|| {
-        io::Error::new(io::ErrorKind::NotFound, "default window icon is missing")
-    })?;
+    let icon = app
+        .default_window_icon()
+        .cloned()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "default window icon is missing"))?;
 
     TrayIconBuilder::with_id("main-tray")
         .icon(icon)
