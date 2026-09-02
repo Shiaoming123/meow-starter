@@ -28,7 +28,8 @@ function getFilesystemType(root, platform) {
 
 export async function inspectEnvironment(root, options = {}) {
   const platform = options.platform ?? process.platform
-  const filesystemType = options.filesystemType ?? getFilesystemType(root, platform)
+  const detectedFilesystemType = options.filesystemType ?? getFilesystemType(root, platform)
+  const filesystemType = detectedFilesystemType.toLowerCase() === 'exfat' ? 'exfat' : detectedFilesystemType
   const warnings = []
 
   if (platform === 'darwin' && filesystemType.toLowerCase() === 'exfat') {

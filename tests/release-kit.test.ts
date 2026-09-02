@@ -23,11 +23,12 @@ test('warns about AppleDouble files on macOS exFAT volumes', async (t) => {
   })
 
   const result = await inspectEnvironment(fixtureRoot, {
-    filesystemType: 'exfat',
+    filesystemType: 'ExFAT',
     platform: 'darwin',
   })
 
   assert.match(result.warnings.join('\n'), /AppleDouble/)
+  assert.match(result.summary.join('\n'), /Filesystem: exfat/)
 })
 
 test('finds and removes only regular AppleDouble sidecars without following symlinks', async (t) => {
