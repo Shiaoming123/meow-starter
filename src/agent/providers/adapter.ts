@@ -21,6 +21,12 @@ export async function deleteApiKey(service: string, account: string): Promise<vo
   await invoke('delete_api_key', { service, account });
 }
 
+/** 只检查钥匙串中是否存在密钥，不读取密钥内容。 */
+export async function hasApiKey(service: string, account: string): Promise<boolean> {
+  const { invoke } = await import('@tauri-apps/api/core');
+  return invoke<boolean>('has_api_key', { service, account });
+}
+
 export function createLanguageModel(
   cfg: ProviderConfig,
   modelId: string,

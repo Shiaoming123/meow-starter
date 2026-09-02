@@ -5,14 +5,13 @@ export function createSecureProxyFetch(provider: ProviderInstance): typeof fetch
   return async (input, init) => {
     const req = await createSecureProxyRequest(provider, input, init)
     const { Channel, invoke } = await import('@tauri-apps/api/core')
-    const encoder = new TextEncoder()
     const signal = init?.signal
 
     const body = new ReadableStream<Uint8Array>({
       start(controller) {
         let settled = false
-        const channel = new Channel<string>((chunk) => {
-          if (!settled) controller.enqueue(encoder.encode(chunk))
+        const channel = new Channel<number[]>((chunk) => {
+          if (!settled) controller.enqueue(Uint8Array.from(chunk))
         })
 
         const fail = (error: unknown) => {
