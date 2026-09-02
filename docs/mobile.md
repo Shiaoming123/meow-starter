@@ -18,42 +18,116 @@
 
 ---
 
-## 1. 前置依赖
+## 1. 前置依赖（环境配置指引）
 
-### Android（需要 Android Studio）
+> 移动端构建需要完整的原生工具链，请按你的目标平台逐步配置。**脚手架本身不绑定这些环境**——装好依赖后，`tauri android init` / `tauri ios init` 就能生成工程。
+
+### 1.1 Android（约 20–30 GB，需 Android Studio）
+
+**第一步：装 Android Studio + SDK 组件**
+
+1. 下载安装 [Android Studio](https://developer.android.com/studio)
+2. 打开后进入 **SDK Manager**（`Tools → SDK Manager`），在 **SDK Platforms** 页勾选最新 **Android SDK Platform**
+3. 切到 **SDK Tools** 页，勾选并安装：
+   - **Android SDK Platform-Tools**
+   - **Android SDK Build-Tools**
+   - **NDK（Side by side）** —— Tauri 必需
+   - **Android SDK Command-line Tools**
+
+**第二步：配置环境变量**（写入 `~/.zshrc` 或 `~/.bashrc`，持久化）
 
 ```bash
-# 1. 装 Android Studio + SDK Manager 里装：SDK Platform / Platform-Tools / NDK / Build-Tools / Command-line Tools
-# 2. 环境变量
-export JAVA_HOME=/opt/android-studio/jbr
-export ANDROID_HOME="$HOME/Android/Sdk"
-export NDK_HOME="$ANDROID_HOME/ndk/$(ls -1 $ANDROID_HOME/ndk)"
-# 3. rustup 加 Android target
+# macOS（Android Studio 默认路径）
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export NDK_HOME="$ANDROID_HOME/ndk/$(ls -1 $ANDROID_HOME/ndk | sort -V | tail -1)"
+
+# Linux（常见路径）
+# export JAVA_HOME=/opt/android-studio/jbr
+# export ANDROID_HOME="$HOME/Android/Sdk"
+```
+
+> 写完后 `source ~/.zshrc` 重新加载。NDK_HOME 指向具体版本目录（不是 `ndk/` 本身）。
+
+**第三步：添加 Rust Android target**
+
+```bash
 rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
 ```
 
-### iOS（仅 macOS，需要完整 Xcode 而非 CLT）
+**验证就绪**：
 
 ```bash
-# 1. 装 Xcode（App Store / Apple Developer）
-# 2. rustup 加 iOS target
-rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
-# 3. 装 Cocoapods
-brew install cocoapods
+echo $ANDROID_HOME                              # 应输出 SDK 路径
+rustup target list --installed | grep android   # 应看到 4 个 android target
 ```
 
-> ⚠️ **前置依赖较重**：Android Studio + NDK 约几十 GB，iOS 需完整 Xcode。这是「移动端适配」最真实的成本，非代码层面能省略。
+### 1.2 iOS（仅 macOS，需完整 Xcode，非 Command Line Tools）
+
+**第一步：装完整 Xcode**
+
+```bash
+# App Store 搜索 Xcode，或从 Apple Developer 下载
+# 装完启动一次，让它完成组件安装
+sudo xcodebuild -license accept   # 接受许可协议
+```
+
+**第二步：添加 Rust iOS target**
+
+```bash
+rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
+```
+
+**第三步：装 Cocoapods**
+
+```bash
+brew install cocoapods
+pod --version   # 验证安装
+```
+
+> 若 `brew install cocoapods` 遇到 `ca-certificates` 链接冲突（`Cannot link ca-certificates`），先执行 `brew unlink ca-certificates && brew install cocoapods && brew link ca-certificates`。
+
+**验证就绪**：
+
+```bash
+xcodebuild -version                             # 应输出完整 Xcode 版本（不是 "Command Line Tools"）
+pod --version                                   # 应输出 Cocoapods 版本
+rustup target list --installed | grep ios       # 应看到 3 个 ios target
+```
+
+### 1.3 一句话总结
+
+| 平台 | 核心依赖 | 体积 | 验证命令 |
+|---|---|---|---|
+| Android | Android Studio + SDK + NDK | ~20–30 GB | `echo $ANDROID_HOME` |
+| iOS | 完整 Xcode + Cocoapods | ~15 GB | `xcodebuild -version` + `pod --version` |
+
+> ⚠️ **前置依赖较重**：这是「移动端适配」最真实的成本，非代码层面能省略。若只做桌面三端，可完全跳过本节。
 
 ---
 
-## 2. 初始化步骤
+## 2. 初始化与运行
+
+前置依赖就绪后，初始化移动端工程：
 
 ```bash
-# Android
+# Android：生成 src-tauri/gen/android/（Gradle 工程）
 npm run tauri android init
 
-# iOS（仅 macOS）
+# iOS：生成 src-tauri/gen/apple/（Xcode 工程，仅 macOS）
 npm run tauri ios init
+```
+
+初始化后即可开发 / 构建：
+
+```bash
+# 开发模式（热更新）
+npm run tauri android dev     # 需连接 Android 设备或模拟器
+npm run tauri ios dev         # 需打开 Xcode 模拟器
+
+# 生产构建
+npm run tauri android build   # 生成 APK / AAB
+npm run tauri ios build       # 生成 IPA
 ```
 
 会生成：
