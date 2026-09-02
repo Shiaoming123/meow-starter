@@ -55,6 +55,8 @@
 | I want to… | Go to |
 | --- | --- |
 | 🚀 Get running | [Quick start](#-quick-start) → [Rename checklist](#-create-a-new-project) |
+| 🛠 Set up local development / exFAT workspace | [docs/development.md](./docs/development.md) |
+| 📦 Understand the Release Kit and release boundary | [docs/release-kit.md](./docs/release-kit.md) |
 | 🎯 Check project fit | [docs/project-guide.md](./docs/project-guide.md) |
 | 🏗 Understand architecture | [Architecture](#-architecture) + [modular-architecture.md](./docs/modular-architecture.md) |
 | 🎨 Use design system/components | [docs/design-system.md](./docs/design-system.md) |
