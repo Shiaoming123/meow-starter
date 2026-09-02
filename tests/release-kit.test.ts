@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
+import { existsSync } from 'node:fs'
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import test from 'node:test'
@@ -7,6 +9,14 @@ import { findAppleDoubleFiles, removeAppleDoubleFiles } from '../scripts/release
 import { inspectReleaseConfig } from '../scripts/release-kit/config.mjs'
 import { inspectEnvironment } from '../scripts/release-kit/environment.mjs'
 import { isRunnableTestFile } from '../scripts/run-tests.mjs'
+
+const projectRoot = fileURLToPath(new URL('..', import.meta.url))
+
+test('publishes development and release-kit guidance', () => {
+  assert.equal(existsSync(join(projectRoot, 'AGENTS.md')), true)
+  assert.equal(existsSync(join(projectRoot, 'docs', 'development.md')), true)
+  assert.equal(existsSync(join(projectRoot, 'docs', 'release-kit.md')), true)
+})
 
 test('ignores AppleDouble test sidecars', () => {
   assert.equal(isRunnableTestFile('agent.test.ts'), true)

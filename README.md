@@ -70,6 +70,8 @@
 | 我想… | 去哪看 |
 | --- | --- |
 | 🚀 快速跑起来 | [快速开始](#-快速开始) → [改名清单](#-用它创建新项目) |
+| 🛠 配置本地开发 / exFAT 工作区 | [docs/development.md](./docs/development.md) |
+| 📦 了解 Release Kit 与发布边界 | [docs/release-kit.md](./docs/release-kit.md) |
 | 🎯 判断适不适合我的项目 | [docs/project-guide.md](./docs/project-guide.md) |
 | 🏗 理解架构 | [架构图](#-架构) + [模块化架构](./docs/modular-architecture.md) |
 | 🎨 用设计系统/组件 | [docs/design-system.md](./docs/design-system.md) |
@@ -169,6 +171,8 @@ npm run dev:web
 ├── .github/               # CI（ci.yml 门禁 + release.yml 三端打包）
 ├── docs/                  # 📚 文档中心
 │   ├── architecture.svg        # 架构图
+│   ├── development.md          # 本地开发、验证与 exFAT 处理
+│   ├── release-kit.md          # Release Kit 与发布成熟度边界
 │   ├── design-system.md        # 设计系统（token/组件/主题/性能）
 │   ├── project-guide.md        # 项目适配指南（适合做什么+分类型注意事项）
 │   ├── modular-architecture.md # 模块化架构（四层门控+Module契约）
