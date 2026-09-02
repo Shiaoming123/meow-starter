@@ -1,6 +1,9 @@
 import Database from '@tauri-apps/plugin-sql';
 import { isTauri } from '../../lib/db';
+import { browserMemoryStore } from './in-memory';
 import type { AgentMessage, MemoryStore } from './types';
+
+export { createMemoryStore } from './in-memory';
 
 const DB_URL = 'sqlite:app.db';
 
@@ -35,7 +38,7 @@ export async function initAgentTables(): Promise<void> {
 /** 默认实现：复用脚手架已有的 tauri-plugin-sql 连接 */
 export const sqliteMemoryStore: MemoryStore = {
   async append(msg: AgentMessage): Promise<void> {
-    if (!isTauri()) return createMemoryStore().append(msg);
+    if (!isTauri()) return browserMemoryStore.append(msg);
     const d = await db();
     await d.execute('INSERT INTO agent_messages (session_id, role, content) VALUES ($1, $2, $3)', [
       msg.sessionId,
@@ -45,7 +48,7 @@ export const sqliteMemoryStore: MemoryStore = {
   },
 
   async list(sessionId: string, limit = 200): Promise<AgentMessage[]> {
-    if (!isTauri()) return createMemoryStore().list(sessionId, limit);
+    if (!isTauri()) return browserMemoryStore.list(sessionId, limit);
     const d = await db();
     return d.select<AgentMessage[]>(
       `SELECT id,
@@ -62,26 +65,8 @@ export const sqliteMemoryStore: MemoryStore = {
   },
 
   async clear(sessionId: string): Promise<void> {
-    if (!isTauri()) return createMemoryStore().clear(sessionId);
+    if (!isTauri()) return browserMemoryStore.clear(sessionId);
     const d = await db();
     await d.execute('DELETE FROM agent_messages WHERE session_id = $1', [sessionId]);
   },
 };
-
-/** 纯内存实现：无持久化需求，或浏览器预览环境下使用 */
-export function createMemoryStore(): MemoryStore {
-  const store = new Map<string, AgentMessage[]>();
-  return {
-    async append(msg) {
-      const list = store.get(msg.sessionId) ?? [];
-      list.push({ ...msg, id: list.length + 1, createdAt: Date.now() });
-      store.set(msg.sessionId, list);
-    },
-    async list(sessionId, limit = 200) {
-      return (store.get(sessionId) ?? []).slice(-limit);
-    },
-    async clear(sessionId) {
-      store.delete(sessionId);
-    },
-  };
-}
