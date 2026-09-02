@@ -2,6 +2,8 @@
 
 > 面向 `meow-starter` 的能力扩展规划。
 > 调研基准日：**2026-09-01**，参考对象：Off Grid AI Desktop、QClaw、ai-spotlight-panel、LM Studio、Locally Uncensored 等真实 AI 桌面产品，以及 Tauri 官方/社区插件生态。
+>
+> **成熟度说明**：本页是能力地图，不是已实现清单。Stable/Beta/Preview/Roadmap 的当前状态以本节表格和 [文档中心](./README.md) 为准。
 
 ---
 
@@ -28,9 +30,9 @@
 |---|---|---|
 | SQLite 数据层 | ✅ 内置 | `tauri-plugin-sql`，迁移 + 类型封装 + 浏览器 mock |
 | 系统托盘 | ✅ 内置 | `tauri-plugin-single-instance` + 自研 tray.rs |
-| 自动更新 | ✅ 内置 | `tauri-plugin-updater` + 签名密钥 |
+| 自动更新 | 🟡 Beta | 插件与配置守卫已内置；需下游项目完成签名发布验证 |
 | 4 套主题 + 设计系统 | ✅ 内置 | CSS 变量驱动，见 `docs/design-system.md` |
-| Agent 运行时（P0/P1） | ✅ 已落地 | Vercel AI SDK 默认轨，防腐层隔离 |
+| Agent 运行时（P0/P1） | 🧪 Preview | inline 骨架已存在，默认关闭；真实 Provider 闭环仍需验证 |
 
 ### B. 强烈建议补齐（AI Native 标配）
 
@@ -40,7 +42,7 @@
 | **剪贴板读写** | ⭐⭐⭐⭐⭐ | 低（官方插件） | 官方 `clipboard-manager` | **P1 内置** |
 | **系统通知** | ⭐⭐⭐⭐ | 低（官方插件） | 官方 `notification` | **P1 内置** |
 | **开机自启动** | ⭐⭐⭐⭐ | 低（官方插件） | 官方 `autostart` | **P1 内置** |
-| **本地推理（Ollama 接入）** | ⭐⭐⭐⭐⭐ | 中 | OpenAI 兼容协议，已有 adapter | **P2 可选** |
+| **本地推理（Ollama 接入）** | ⭐⭐⭐⭐⭐ | 中 | OpenAI 兼容预设，Preview | **P2 可选** |
 | **文件系统访问** | ⭐⭐⭐⭐⭐ | 低（官方插件） | 官方 `fs` + `dialog` | **P1 内置** |
 | **HTTP 客户端（代理）** | ⭐⭐⭐⭐ | 中 | 官方 `http` 或 Rust reqwest | **P2 可选** |
 | **日志** | ⭐⭐⭐ | 低（官方插件） | 官方 `log` | **P1 内置** |
@@ -53,7 +55,7 @@
 | **语音输入（STT）** | ⭐⭐⭐ | 高 | whisper.cpp 集成，体积大 | **P3 可选** |
 | **语音输出（TTS）** | ⭐⭐⭐ | 高 | 本地 TTS 引擎 | **P3 可选** |
 | **截图 OCR / 屏幕理解** | ⭐⭐⭐⭐ | 高 | 需系统截图权限 + OCR 引擎 | **P3 可选** |
-| **MCP 协议接入** | ⭐⭐⭐⭐ | 中 | 社区 `tauri-plugin-mcp`（需评估稳定性） | **P3 可选** |
+| **MCP 协议接入** | ⭐⭐⭐⭐ | 中 | `@ai-sdk/mcp` HTTP/SSE adapter，Preview | **P3 可选** |
 | **图像生成（本地 SD）** | ⭐⭐ | 极高 | stable-diffusion.cpp，体积巨大 | **观察** |
 | **文件去重 / 智能整理** | ⭐⭐⭐ | 中 | Rust 侧实现 | **P3 可选** |
 | **多语言 i18n** | ⭐⭐⭐ | 中 | vue-i18n | **P2 可选** |

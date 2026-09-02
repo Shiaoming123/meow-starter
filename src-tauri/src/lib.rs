@@ -1,10 +1,10 @@
 use tauri::{Manager, WindowEvent};
 
+#[cfg(feature = "agent")]
+mod agent;
 mod db;
 #[cfg(desktop)]
 mod tray;
-#[cfg(feature = "agent")]
-mod agent;
 
 /// 前端 -> Rust 的示例命令，演示 IPC 的类型传递。
 #[tauri::command]
@@ -59,7 +59,7 @@ pub fn run() {
         builder = builder.invoke_handler(tauri::generate_handler![
             greet,
             agent::set_api_key,
-            agent::get_api_key,
+            agent::has_api_key,
             agent::delete_api_key,
             agent::proxy_json,
             agent::proxy_stream

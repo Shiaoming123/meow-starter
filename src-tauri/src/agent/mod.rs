@@ -1,7 +1,7 @@
 //! Agent 能力模块（P2：密钥安全代理）。
 //!
 //! 由 Cargo feature `agent` 门控。提供三个 Tauri command：
-//! - set_api_key / get_api_key / delete_api_key：OS 钥匙串存取
+//! - set_api_key / has_api_key / delete_api_key：OS 钥匙串写入、存在性检查与删除
 //! - proxy_json：非流式 LLM 请求代理
 //! - proxy_stream：流式 LLM 请求代理（配合 Tauri channel）
 //!
@@ -18,10 +18,10 @@ pub fn set_api_key(service: String, account: String, secret: String) -> Result<(
     secrets::set_secret(&service, &account, &secret)
 }
 
-/// 从系统钥匙串读取 API Key。
+/// 检查系统钥匙串中是否已配置 API Key，不返回密钥内容。
 #[tauri::command]
-pub fn get_api_key(service: String, account: String) -> Result<String, String> {
-    secrets::get_secret(&service, &account)
+pub fn has_api_key(service: String, account: String) -> Result<bool, String> {
+    secrets::has_secret(&service, &account)
 }
 
 /// 删除系统钥匙串中的 API Key。
@@ -40,7 +40,7 @@ pub async fn proxy_json(req: proxy::ProxyRequest) -> Result<String, String> {
 #[tauri::command]
 pub async fn proxy_stream(
     req: proxy::ProxyRequest,
-    on_chunk: Channel<String>,
+    on_chunk: Channel<Vec<u8>>,
 ) -> Result<(), String> {
     use futures_util::StreamExt;
 
@@ -49,9 +49,7 @@ pub async fn proxy_stream(
 
     while let Some(chunk) = stream.next().await {
         let chunk = chunk.map_err(|e| e.to_string())?;
-        // 每块转成字符串（LLM 流式响应通常是 UTF-8 文本）
-        let text = String::from_utf8_lossy(&chunk).to_string();
-        on_chunk.send(text).map_err(|e| e.to_string())?;
+        on_chunk.send(chunk.to_vec()).map_err(|e| e.to_string())?;
     }
     Ok(())
 }

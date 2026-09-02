@@ -1,4 +1,4 @@
-import { resolveConfig } from './config';
+import { bootstrapProviders, resolveAgentConfiguration } from './bootstrap';
 import type { AgentConfig } from './config';
 import type { AgentRuntime } from './runtime/types';
 
@@ -9,8 +9,9 @@ import type { AgentRuntime } from './runtime/types';
  * 分割成独立 chunk；`enabled: false` 时既不加载也不进入主包。
  */
 export async function loadAgent(user?: Partial<AgentConfig>): Promise<AgentRuntime | null> {
-  const cfg = resolveConfig(user);
+  const cfg = await resolveAgentConfiguration(user);
   if (!cfg.enabled) return null;
+  bootstrapProviders(cfg);
   const { createRuntime } = await import('./runtime');
   return createRuntime(cfg);
 }
@@ -27,7 +28,7 @@ export type { ToolDef, ToolContext, ToolResult } from './tools/types';
 export { registerProvider, getProvider, listProviders, clearProviders } from './providers/registry';
 export type { ProviderInstance, ProviderAdapter } from './providers/types';
 export { ollamaPreset, vllmPreset, openaiPreset, anthropicPreset, providerPresets } from './providers/presets';
-export { saveApiKey, deleteApiKey } from './providers/adapter';
+export { saveApiKey, deleteApiKey, hasApiKey } from './providers/adapter';
 
 export type { AgentMessage, MemoryStore, ContextAssembler, CompactionStrategy } from './memory/types';
 export { sqliteMemoryStore, createMemoryStore, initAgentTables } from './memory/store';

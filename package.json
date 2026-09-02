@@ -10,7 +10,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
+    "check:layout": "node scripts/check-built-layout.mjs",
+    "check:docs": "node scripts/check-doc-links.mjs",
     "preview": "vite preview",
+    "test": "node scripts/run-tests.mjs",
     "typecheck": "vue-tsc --noEmit",
     "tauri": "tauri",
     "tauri:signer": "tauri signer generate -- -w ~/.tauri/meow-starter.key",

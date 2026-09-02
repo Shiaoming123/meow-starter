@@ -2,6 +2,8 @@
 
 > P3 阶段：让脚手架的 Agent 通过 MCP（Model Context Protocol）连接外部工具。
 > 把任意 MCP server 暴露的工具，一键接入 Agent 的工具集。
+>
+> **成熟度：Preview。** 仓库目前提供 HTTP/SSE client adapter 和模块开关；尚未把远端工具完整接入默认 Agent 对话与审批闭环，不应视为生产级 MCP host。
 
 ## 1. 什么是 MCP 接入
 
@@ -44,7 +46,7 @@ export default {
 }
 ```
 
-### 第三步：连接 MCP server 并入 Agent 工具
+### 第三步：连接 MCP server（接入 Agent 工具仍需业务装配）
 
 ```ts
 import { connectMcpServer } from './modules/mcp'
@@ -57,8 +59,8 @@ const mcpTools = await connectMcpServer({
   url: 'http://localhost:8000/mcp',
 })
 
-// 把 MCP 工具并入 Agent 的工具集
-// mcpTools 是 { 工具名: AI SDK tool }，直接展开即可
+// mcpTools 是 { 工具名: AI SDK tool }。
+// Preview 阶段需在业务 runtime 创建处显式合并，并补充审批策略。
 ```
 
 ## 4. 常见 MCP server 示例

@@ -1,8 +1,15 @@
 import { ask } from '@tauri-apps/plugin-dialog'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { check } from '@tauri-apps/plugin-updater'
+import { isUpdaterConfiguredForBuild } from './updater-config'
 
-export type UpdatePhase = 'idle' | 'checking' | 'downloading' | 'installing' | 'error'
+export type UpdatePhase =
+  | 'idle'
+  | 'unconfigured'
+  | 'checking'
+  | 'downloading'
+  | 'installing'
+  | 'error'
 
 export interface UpdateState {
   phase: UpdatePhase
@@ -23,6 +30,15 @@ export async function checkForUpdates(
   onState: (state: UpdateState) => void,
   options: { silent?: boolean } = {},
 ): Promise<void> {
+  if (!isUpdaterConfiguredForBuild()) {
+    onState({
+      phase: 'unconfigured',
+      percent: 0,
+      message: '更新器尚未配置：请先替换仓库端点并生成自己的签名密钥。',
+    })
+    return
+  }
+
   try {
     onState({ phase: 'checking', percent: 0, message: '正在检查更新…' })
 

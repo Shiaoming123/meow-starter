@@ -212,7 +212,7 @@ src/
 
 **空状态是邀请行动**：写清「这是什么」+「怎么开始」。永远不要写"暂无数据"这种让用户摸不着头脑的句子。
 
-### 2.7 Icon（动态加载）
+### 2.7 Icon（静态注册表）
 
 ```vue
 <Icon name="settings" :size="16" />
@@ -220,9 +220,7 @@ src/
 <Icon name="CircleCheck" :size="14" class="text-success" />
 ```
 
-名称支持 PascalCase 或 kebab-case（自动转换）。Lucide 全部 1700+ 图标可用 —— 名称见 https://lucide.dev/icons。
-
-`Icon` 组件用动态 `import()` 按需加载单个图标文件（保持 Vite tree-shaking 干净），**图标名拼错会在控制台 warn**，不会抛错导致白屏。
+名称支持 PascalCase、kebab-case、空格或下划线（自动转换）。默认注册表只包含模板实际使用的 5 个图标；需要其他 Lucide 图标时，在 `src/assets/icons/registry.ts` 增加静态 import 和映射。图标名未注册会在控制台 warn，不会抛错导致白屏。
 
 ---
 
@@ -287,11 +285,9 @@ src/
 
 ## 5. 性能优化建议
 
-### 5.1 图标按需加载
+### 5.1 图标按需注册
 
-`Icon` 组件用动态 import 加载每个图标文件（`@lucide/vue/dist/esm/icons/<name>.mjs`）。**不要**在静态 `import` 里写一堆图标，会一次性全打进主包。
-
-如果你需要"打包关键图标同步加载"的稳定性（比如截图测试），可以直接 import 具体组件：
+`Icon` 组件通过小型静态注册表加载图标，让 Vite 能在构建时确定真实依赖。不要导入 Lucide 的全量图标映射；新增图标时只导入需要的组件：
 
 ```vue
 <script setup lang="ts">
@@ -329,7 +325,7 @@ AI 类应用（Vercel AI SDK 等）建议：
 
 - **数据**：新增表 → 在 `src-tauri/src/db.rs` 的迁移里建表 → 前端用 `src/lib/db.ts` 同样的模式封装（参考 `sqliteMemoryStore` 的浏览器 mock 降级）。
 - **设置项**：用 `tauri-plugin-store` 持久化用户偏好（主题已经存在 localStorage，可以改造到 store）。
-- **Agent**：P1 已落地 Vercel AI SDK 默认轨，`src/agent/` 是可选模块，`enabled: false` 不进 bundle。需要 `ChatPanel.vue` 演示请在 `App.vue` 引入 `import ChatPanel from './agent/ui/ChatPanel.vue'`。
+- **Agent（Preview）**：`src/agent/` 提供 Vercel AI SDK inline 适配器并默认关闭；启用前请完成 Provider 与安全代理验证。需要演示 UI 时可在业务入口显式引入 `ChatPanel.vue`。
 
 ---
 
