@@ -661,13 +661,23 @@ code {
 }
 
 @media (max-width: 768px) {
+  .shell {
+    flex-direction: column;
+  }
+
   .sidebar {
     display: none;
+  }
+
+  .main {
+    min-height: 0;
   }
 
   .tabbar {
     display: flex;
     flex-shrink: 0;
+    width: 100%;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     border-top: 1px solid var(--border);
     background: var(--surface);
   }

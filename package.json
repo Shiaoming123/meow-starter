@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
+    "check:layout": "node scripts/check-built-layout.mjs",
     "preview": "vite preview",
     "test": "node scripts/run-tests.mjs",
     "typecheck": "vue-tsc --noEmit",
