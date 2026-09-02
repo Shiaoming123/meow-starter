@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import test from 'node:test'
 import { findAppleDoubleFiles, removeAppleDoubleFiles } from '../scripts/release-kit/appledouble.mjs'
 import { inspectReleaseConfig } from '../scripts/release-kit/config.mjs'
+import { inspectEnvironment } from '../scripts/release-kit/environment.mjs'
 import { isRunnableTestFile } from '../scripts/run-tests.mjs'
 
 test('ignores AppleDouble test sidecars', () => {
@@ -12,6 +13,21 @@ test('ignores AppleDouble test sidecars', () => {
   assert.equal(isRunnableTestFile('._agent.test.ts'), false)
   assert.equal(isRunnableTestFile('tests/agent.test.ts'), true)
   assert.equal(isRunnableTestFile('tests/._agent.test.ts'), false)
+})
+
+test('warns about AppleDouble files on macOS exFAT volumes', async (t) => {
+  const fixtureRoot = await mkdtemp(join(tmpdir(), 'meow-environment-'))
+
+  t.after(async () => {
+    await rm(fixtureRoot, { force: true, recursive: true })
+  })
+
+  const result = await inspectEnvironment(fixtureRoot, {
+    filesystemType: 'exfat',
+    platform: 'darwin',
+  })
+
+  assert.match(result.warnings.join('\n'), /AppleDouble/)
 })
 
 test('finds and removes only regular AppleDouble sidecars without following symlinks', async (t) => {
