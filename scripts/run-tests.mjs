@@ -3,8 +3,13 @@ import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 const testsDir = fileURLToPath(new URL('../tests/', import.meta.url))
+
+export function isRunnableTestFile(file) {
+  return !file.startsWith('._') && file.endsWith('.test.ts')
+}
+
 const files = readdirSync(testsDir)
-  .filter((file) => file.endsWith('.test.ts'))
+  .filter(isRunnableTestFile)
   .sort()
   .map((file) => fileURLToPath(new URL(`../tests/${file}`, import.meta.url)))
 
