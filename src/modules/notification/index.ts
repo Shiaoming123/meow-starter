@@ -10,6 +10,8 @@ const notification: Module = {
   id: 'notification',
   name: '系统通知',
   dependencies: [],
+  platforms: ['desktop', 'mobile'],
+  requiredCapabilities: ['native-notification'],
 }
 
 export default notification

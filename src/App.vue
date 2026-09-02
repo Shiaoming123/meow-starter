@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { listen } from '@tauri-apps/api/event'
-import { getCurrentWindow } from '@tauri-apps/api/window'
 import { addTodo, listTodos, removeTodo, toggleTodo, type Todo } from './lib/db'
 import { checkForUpdates, IDLE_UPDATE_STATE, type UpdateState } from './lib/updater'
 import {
@@ -22,7 +20,8 @@ import {
   Blocks,
 } from '@lucide/vue'
 import { themes, setTheme, getSavedTheme } from './assets/themes/apply'
-import { isDesktopTauri } from './lib/platform'
+import { detectRuntimeInfo, hasRuntimeCapability } from './lib/platform'
+import { availableNavigationKeys, type NavKey } from './lib/navigation'
 import Button from './components/ui/Button.vue'
 import Card from './components/ui/Card.vue'
 import Badge from './components/ui/Badge.vue'
@@ -32,14 +31,19 @@ import EmptyState from './components/ui/EmptyState.vue'
 /** 与 src-tauri/src/tray.rs 中的 CHECK_UPDATE_EVENT 保持一致 */
 const CHECK_UPDATE_EVENT = 'tray://check-update'
 
-type NavKey = 'overview' | 'themes' | 'data' | 'updater'
+const runtime = detectRuntimeInfo()
+const nativeUpdaterAvailable = hasRuntimeCapability(runtime, 'native-updater')
+const systemTrayAvailable = hasRuntimeCapability(runtime, 'system-tray')
+const localDataName = runtime.platform === 'web' ? 'IndexedDB' : 'SQLite'
 
-const nav = [
+const allNav = [
   { key: 'overview', label: '概览', icon: LayoutGrid },
   { key: 'themes', label: '主题与样式', icon: Paintbrush },
   { key: 'data', label: '数据层', icon: Database },
   { key: 'updater', label: '自动更新', icon: RefreshCw },
 ] as const
+const availableNav = new Set(availableNavigationKeys(runtime))
+const nav = computed(() => allNav.filter((item) => availableNav.has(item.key)))
 
 const active = ref<NavKey>('overview')
 const sidebarOpen = ref(true)
@@ -91,13 +95,17 @@ async function runUpdateCheck(silent = false) {
   await checkForUpdates((state) => (updateState.value = state), { silent })
 }
 
-function hideToTray() {
-  void getCurrentWindow().hide()
+async function hideToTray() {
+  if (!systemTrayAvailable) return
+  const { getCurrentWindow } = await import('@tauri-apps/api/window')
+  await getCurrentWindow().hide()
 }
 
 onMounted(async () => {
   await refreshTodos()
+  if (!systemTrayAvailable) return
   try {
+    const { listen } = await import('@tauri-apps/api/event')
     unlistenTray = await listen(CHECK_UPDATE_EVENT, () => runUpdateCheck(false))
   } catch {
     // 纯浏览器预览环境无 Tauri 事件系统，忽略即可
@@ -141,11 +149,11 @@ onUnmounted(() => unlistenTray?.())
       <header class="topbar">
         <div>
           <h1 class="topbar__title">{{ nav.find((n) => n.key === active)?.label }}</h1>
-          <p class="topbar__sub">Tauri 2 + Vue 3 · SQLite · 托盘 · 自动更新 · 三端打包</p>
+          <p class="topbar__sub">Vue 3 + TypeScript · Web / Desktop / Mobile · 可插拔能力</p>
         </div>
         <div class="topbar__actions">
           <Badge v-if="busy" tone="accent">{{ updateState.phase }}</Badge>
-          <Button v-if="isDesktopTauri()" variant="ghost" size="sm" title="隐藏到托盘" @click="hideToTray">
+          <Button v-if="systemTrayAvailable" variant="ghost" size="sm" title="隐藏到托盘" @click="hideToTray">
             <Minus :size="14" />
             托盘
           </Button>
@@ -160,18 +168,18 @@ onUnmounted(() => unlistenTray?.())
               <div class="feature">
                 <Blocks :size="18" />
                 <div>
-                  <strong>SQLite 数据层</strong>
-                  <p>类型化封装 + 迁移 + 浏览器 mock 降级</p>
+                  <strong>{{ localDataName }} 本地数据层</strong>
+                  <p>统一领域接口 + 平台适配 + 持久化 CRUD</p>
                 </div>
               </div>
-              <div v-if="isDesktopTauri()" class="feature">
+              <div v-if="systemTrayAvailable" class="feature">
                 <Bell :size="18" />
                 <div>
                   <strong>系统托盘</strong>
                   <p>常驻后台，关闭即隐藏，进程不退出</p>
                 </div>
               </div>
-              <div class="feature">
+              <div v-if="nativeUpdaterAvailable" class="feature">
                 <RefreshCw :size="18" />
                 <div>
                   <strong>自动更新</strong>
@@ -195,7 +203,7 @@ onUnmounted(() => unlistenTray?.())
               <Badge>TypeScript</Badge>
               <Badge>Rust</Badge>
               <Badge>Vite</Badge>
-              <Badge>SQLite</Badge>
+              <Badge>{{ localDataName }}</Badge>
             </div>
             <p class="muted">完整设计系统与开发指引见 <code>docs/design-system.md</code>。</p>
           </Card>
@@ -242,7 +250,7 @@ onUnmounted(() => unlistenTray?.())
 
         <!-- 数据层 -->
         <template v-else-if="active === 'data'">
-          <Card title="SQLite 待办示例" padding="lg">
+          <Card :title="`${localDataName} 待办示例`" padding="lg">
             <form class="row" @submit.prevent="submitTodo">
               <input v-model="draft" class="input" placeholder="写点什么…" />
               <Button type="submit" variant="primary" :disabled="!draft.trim()">
@@ -266,13 +274,13 @@ onUnmounted(() => unlistenTray?.())
               v-else
               icon="clipboard-list"
               title="还没有数据"
-              description="添加一条待办，体验 SQLite 的本地持久化能力。"
+              :description="`添加一条待办，体验 ${localDataName} 的本地持久化能力。`"
             />
           </Card>
         </template>
 
         <!-- 自动更新 -->
-        <template v-else-if="active === 'updater'">
+        <template v-else-if="active === 'updater' && nativeUpdaterAvailable">
           <Card title="自动更新" padding="lg">
             <div class="row">
               <Button variant="primary" :disabled="busy" @click="runUpdateCheck(false)">
@@ -293,7 +301,7 @@ onUnmounted(() => unlistenTray?.())
             </p>
           </Card>
 
-          <Card v-if="isDesktopTauri()" title="系统托盘" padding="lg">
+          <Card v-if="systemTrayAvailable" title="系统托盘" padding="lg">
             <p class="muted">
               左键点击托盘图标切换窗口显隐，右键弹出菜单（显示 / 隐藏、检查更新、退出）。
               关闭窗口只会隐藏，进程常驻托盘；从托盘菜单选「退出」才会真正结束进程。

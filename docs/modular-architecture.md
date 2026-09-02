@@ -3,7 +3,7 @@
 > meow-starter 从「预置功能的模板」演进为「可插拔能力模块的底座」。
 > 核心诉求：**使用者的灵活性 + 脚手架整体的稳定性 + 集成化**三者平衡。
 >
-> **成熟度说明**：模块契约、依赖排序和运行时装配属于 Stable；前端配置与 Cargo feature 仍需手动保持一致。本文中的自动生成、目录迁移和新增能力属于目标设计，不代表已经全部实现。
+> **成熟度说明**：模块契约、依赖排序、运行时能力过滤和装配属于 Stable；Web IndexedDB 属于 Beta，sync 接缝属于 Preview。只有使用原生 Rust 插件的模块需要与 Cargo feature 对应，纯 Web 模块没有 Cargo feature。
 
 ---
 
@@ -24,14 +24,14 @@
 
 ---
 
-## 1. 三层门控机制
+## 1. 四层门控机制
 
-一个「能力模块」由三层协同控制，缺一不可：
+一个「能力模块」最多经过四层控制；纯 Web 模块不需要第四层：
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ ① 配置层（模块清单）                                       │
-│    modules.config.ts —— 声明启用了哪些模块                 │
+│    src/modules/config.ts —— 声明启用了哪些模块             │
 └──────────────────────┬──────────────────────────────────┘
                        ▼
 ┌─────────────────────────────────────────────────────────┐
@@ -41,17 +41,23 @@
 └──────────────────────┬──────────────────────────────────┘
                        ▼
 ┌─────────────────────────────────────────────────────────┐
-│ ③ Rust 层（feature 门控）                                  │
+│ ③ 运行时层（platform + capabilities）                       │
+│    Web / Desktop / Mobile —— 不支持的平台不执行 setup       │
+└──────────────────────┬──────────────────────────────────┘
+                       ▼
+┌─────────────────────────────────────────────────────────┐
+│ ④ Rust 层（仅原生模块的 feature 门控）                      │
 │    Cargo.toml [features] —— 启用的 feature 才编译插件     │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**为什么三层**：
+**为什么四层**：
 
 | 层 | 解决的问题 | 关闭时的效果 |
 |---|---|---|
 | 配置层 | 统一声明「用哪些模块」，是唯一入口 | 用户只需改一处 |
-| 前端层 | 避免 JS 依赖进主包 | 不 import 就不打包 |
+| 前端层 | 避免模块进入首屏执行路径 | 未启用模块不执行；Vite 仍可能输出独立 lazy chunk |
+| 运行时层 | 同一配置适配 Web、桌面与移动端 | 不满足平台/能力的模块跳过 `setup()` |
 | Rust 层 | 避免原生插件/依赖进二进制 | 不 feature 就不编译、不占体积 |
 
 ---
@@ -60,13 +66,16 @@
 
 ```
 meow-starter/
-├── modules.config.ts              # ★ 模块清单（唯一配置入口）
+├── src/modules/config.ts          # ★ 模块清单（唯一配置入口）
 ├── src/
 │   ├── modules/                   # ★ 模块化改造的核心
 │   │   ├── core/                  # 核心模块（始终启用，不可关）
 │   │   │   ├── index.ts           #   设计系统 + 主题 + Icon + ui 组件库
 │   │   │   └── ui/                #   Button/Card/... 基础组件
 │   │   ├── sqlite/                # 数据层模块
+│   │   ├── storage/               # 领域存储契约 + 内存回退
+│   │   ├── indexeddb/             # Web IndexedDB 适配器
+│   │   ├── sync/                  # 同步接缝（默认关闭）
 │   │   │   ├── index.ts
 │   │   │   └── db.ts
 │   │   ├── tray/                  # 托盘模块（含 Rust 联动）
@@ -104,12 +113,16 @@ meow-starter/
 ```ts
 // src/modules/<name>/index.ts —— 每个模块的入口
 export interface Module {
-  /** 模块唯一 id，对应 modules.config.ts 的 key 与 Cargo feature */
+  /** 模块唯一 id，对应 src/modules/config.ts 的 key */
   id: string
   /** 模块名（展示） */
   name: string
-  /** 依赖的其他模块 id（如 agent 依赖 sqlite） */
+  /** 依赖的其他模块 id（如 agent 依赖 storage） */
   dependencies: string[]
+  /** 支持的平台；省略表示全部平台 */
+  platforms?: readonly ('web' | 'desktop' | 'mobile')[]
+  /** setup 前必须具备的运行时能力 */
+  requiredCapabilities?: readonly RuntimeCapability[]
   /** 模块初始化（前端侧，可选） */
   setup?: () => void | Promise<void>
   /** 模块清理（可选） */
@@ -117,9 +130,11 @@ export interface Module {
 }
 
 export default {
-  id: 'sqlite',
-  name: '数据层',
-  dependencies: [],
+  id: 'indexedDb',
+  name: 'IndexedDB 本地数据层',
+  dependencies: ['storage'],
+  platforms: ['web'],
+  requiredCapabilities: ['web-storage'],
 } satisfies Module
 ```
 
@@ -132,16 +147,19 @@ export default {
 
 ---
 
-## 4. 配置层设计（modules.config.ts）
+## 4. 配置层设计（src/modules/config.ts）
 
 ```ts
-// modules.config.ts
+// src/modules/config.ts
 export default {
   // 核心模块，始终启用（设计系统、基础组件）
   core: true,
 
   // 功能模块，按需开关
-  sqlite: true,       // 数据层
+  storage: true,      // 领域存储契约，始终启用
+  sqlite: true,       // Tauri 数据层，原生运行时装配
+  indexedDb: true,    // Web 数据层，浏览器装配
+  sync: false,        // 同步接缝，默认不联网
   tray: true,         // 系统托盘
   updater: true,      // 自动更新
   agent: false,       // Agent（默认关，需装 AI SDK）
@@ -164,13 +182,12 @@ export default {
 ```ts
 // main.ts
 import { createApp } from 'vue'
-import modules from '../modules.config'
 import { mountModules } from './modules/loader'
 
 const app = createApp(App)
 
 // 只装配启用的模块
-await mountModules(app, modules)
+await mountModules(app)
 
 app.mount('#app')
 ```
@@ -229,7 +246,7 @@ agent-sidecar = ["agent"]
 
 | 目标 | 如何达成 |
 |---|---|
-| **灵活性** | 模块可插拔，`modules.config.ts` 一处开关；新增能力只需新增一个模块目录 + feature |
+| **灵活性** | 模块可插拔，`src/modules/config.ts` 一处开关；纯前端模块不需要 Cargo feature |
 | **稳定性** | 模块拓扑由自动化测试验证；关闭模块不进入默认运行时加载路径；依赖显式声明，避免隐式耦合 |
 | **集成化** | 统一 `Module` 契约 + 统一装配流程（前端 mountModules + Rust feature），用户一眼看清「有哪些模块、各自做什么」 |
 
@@ -243,7 +260,7 @@ agent-sidecar = ["agent"]
 
 | 步骤 | 内容 | 风险 |
 |---|---|---|
-| **M1** | 建立 `modules.config.ts` + `Module` 契约 + `mountModules` loader | 低（纯新增） |
+| **M1** | 建立 `src/modules/config.ts` + `Module` 契约 + `mountModules` loader | 已完成 |
 | **M2** | 把 `src/lib/db.ts` 迁入 `src/modules/sqlite/`，`tray`/`updater` 同理 | 低（移动文件 + 改 import） |
 | **M3** | `lib.rs` 按 feature 装配插件，`Cargo.toml` 补 features | 中（需验证三端编译） |
 | **M4** | 新增 P1 模块（shortcut/clipboard/notification/autostart）作为示范 | 低（官方插件） |
@@ -255,7 +272,7 @@ agent-sidecar = ["agent"]
 
 ## 9. 结论
 
-1. **模块化是「三层门控」**：配置层声明 + 前端动态 import + Rust feature，三者协同，默认关闭、按需启用。
+1. **模块化是「四层门控」**：配置声明 + 前端动态 import + 运行时能力 + 原生 Cargo feature；纯 Web 模块使用前三层。
 2. **能力模块清单已梳理**（见 `docs/ai-capabilities.md`），P1 补官方插件（快捷键/剪贴板/通知/自启/文件/日志），P2 补本地推理，P3 补 RAG/语音/OCR/MCP。
 3. **核心锚点不变**：设计系统 + 基础组件始终启用，是集成化的底座。
 4. **迁移渐进式**：M1-M5，每步独立验证，不破坏现有能力。

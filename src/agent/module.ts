@@ -6,12 +6,12 @@ import type { Module } from '../modules/types'
  * 这是 agent 能力的「模块化入口」，符合 Module 契约。
  * 具体 API（loadAgent / registerTool / registerProvider 等）仍在 src/agent/index.ts 导出。
  *
- * 依赖 sqlite：记忆持久化默认复用 SQLite。
+ * 依赖 storage：平台存储适配器由 storage 模块统一装配。
  */
 const agentModule: Module = {
   id: 'agent',
   name: 'Agent 运行时',
-  dependencies: ['sqlite'],
+  dependencies: ['storage'],
 }
 
 export default agentModule

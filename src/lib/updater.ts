@@ -1,6 +1,3 @@
-import { ask } from '@tauri-apps/plugin-dialog'
-import { relaunch } from '@tauri-apps/plugin-process'
-import { check } from '@tauri-apps/plugin-updater'
 import { isUpdaterConfiguredForBuild } from './updater-config'
 
 export type UpdatePhase =
@@ -41,6 +38,12 @@ export async function checkForUpdates(
 
   try {
     onState({ phase: 'checking', percent: 0, message: '正在检查更新…' })
+
+    const [{ ask }, { relaunch }, { check }] = await Promise.all([
+      import('@tauri-apps/plugin-dialog'),
+      import('@tauri-apps/plugin-process'),
+      import('@tauri-apps/plugin-updater'),
+    ])
 
     const update = await check()
     if (!update) {

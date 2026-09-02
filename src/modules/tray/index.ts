@@ -9,6 +9,8 @@ const tray: Module = {
   id: 'tray',
   name: '系统托盘',
   dependencies: [],
+  platforms: ['desktop'],
+  requiredCapabilities: ['system-tray'],
 }
 
 export default tray

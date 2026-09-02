@@ -9,6 +9,8 @@ const updater: Module = {
   id: 'updater',
   name: '自动更新',
   dependencies: ['tray'],
+  platforms: ['desktop'],
+  requiredCapabilities: ['native-updater'],
 }
 
 export default updater

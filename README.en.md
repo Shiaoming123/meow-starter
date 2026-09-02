@@ -5,9 +5,9 @@
 <h1 align="center">🐾 meow-starter</h1>
 
 <p align="center">
-  <strong>An AI-native, desktop-first cross-platform scaffold</strong><br/>
-  An extensible <b>Tauri 2 + Vue 3</b> base for the three desktop platforms, with Beta mobile code adaptation.<br/>
-  A stable SQLite, tray, and design-system core with updater and AI capabilities enabled by maturity.
+  <strong>An AI-native, desktop-first, Web-capable cross-platform scaffold</strong><br/>
+  An extensible <b>Tauri 2 + Vue 3</b> base for desktop, with Beta Web and mobile adaptations.<br/>
+  A stable local-data, tray, and design-system core with sync, updater, and AI capabilities enabled by maturity.
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/Tauri-2-24C8D8?logo=tauri&logoColor=white" alt="Tauri 2"/>
   <img src="https://img.shields.io/badge/Vue-3.5-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3"/>
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178c6?logo=typescript&logoColor=white" alt="TypeScript"/>
-  <img src="https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20iOS%20%7C%20Android-blue" alt="Platforms"/>
+  <img src="https://img.shields.io/badge/platforms-Web%20%7C%20macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20iOS%20%7C%20Android-blue" alt="Platforms"/>
 </p>
 
 <p align="center">
@@ -37,11 +37,12 @@
 ## ✨ Features
 
 - **Frontend**: Vue 3.5 + TypeScript + Vite 6, follows system dark mode
-- **Data**: SQLite (`tauri-plugin-sql`) with auto-migration and type-safe CRUD
+- **Data**: one domain interface with SQLite on Tauri and IndexedDB on Web
 - **System**: tray, single-instance, close-to-tray instead of quit
 - **Auto-update (Beta)**: sign, download, install, and relaunch code path; signed-release verification is project-specific
 - **Design system**: complete design tokens + 6 base components + 4 themes
-- **Modular**: three-layer gating (config + dynamic import + Cargo feature)
+- **Modular**: config, lazy loading, runtime capabilities, and native Cargo features
+- **Sync foundation (Preview)**: opt-in outbox engine, allowlist policy, and HTTP transport without vendor lock-in
 - **Agent (Preview)**: Vercel AI SDK inline adapter and extension interfaces; off by default
 - **Secret safety (Preview)**: stored keys cannot be read back by the WebView; OpenAI/Anthropic requests use a fixed-target Rust proxy
 - **Local inference (Preview)**: Ollama/OpenAI-compatible presets requiring local environment verification
@@ -60,6 +61,8 @@
 | 🤖 Integrate Agent | [docs/agent-integration.md](./docs/agent-integration.md) |
 | 🔌 Use local models (Ollama) | [docs/local-inference.md](./docs/local-inference.md) |
 | 🧩 Connect MCP tools | [docs/mcp.md](./docs/mcp.md) |
+| 🌐 Run and deploy the Web app | [docs/web.md](./docs/web.md) |
+| 🔄 Add account, cloud, or LAN sync | [docs/sync.md](./docs/sync.md) |
 | 🧠 See AI capability roadmap | [docs/ai-capabilities.md](./docs/ai-capabilities.md) |
 | 🤝 Contribute / feedback | [CONTRIBUTING.md](./CONTRIBUTING.md) · [Discussions](https://github.com/Shiaoming123/meow-starter/discussions) |
 
@@ -73,6 +76,12 @@ cd my-app && npm install && npm run tauri dev
 # Option 2: degit (clean copy without git history, recommended)
 npx degit Shiaoming123/meow-starter my-app
 cd my-app && npm install && npm run tauri dev
+```
+
+Web only:
+
+```bash
+npm run dev:web
 ```
 
 **Prerequisites**: Node.js 22+ / Rust 1.77.2+ / platform deps (see [Tauri docs](https://tauri.app/start/prerequisites/)).
@@ -98,7 +107,10 @@ Each capability is a pluggable module, toggled in `src/modules/config.ts`:
 | Module | Type | Default | Description |
 | --- | --- | --- | --- |
 | `core` | core | always | Design system + components + themes + icons |
-| `sqlite` | core | on | SQLite data layer |
+| `storage` | core | always | Domain storage contract + memory fallback |
+| `sqlite` | adapter | on | Tauri SQLite adapter; native runtimes only |
+| `indexedDb` | adapter | on | IndexedDB persistence; Web only |
+| `sync` | optional | off | Local-first contracts, outbox engine, and transports |
 | `tray` | core | on | System tray |
 | `updater` | core | on | Auto-update |
 | `themes` | core | on | 4 themes |
@@ -116,8 +128,8 @@ Each capability is a pluggable module, toggled in `src/modules/config.ts`:
 | Level | Meaning | Current capabilities |
 | --- | --- | --- |
 | Stable | Automated gates cover the default path | core, SQLite, themes, desktop tray/single-instance |
-| Beta | Code path exists; release-environment evidence is limited | updater, responsive mobile adaptation and desktop-feature fallback |
-| Preview | Off by default; interfaces or safety boundaries may change | Agent, Ollama, MCP, optional system plugins |
+| Beta | Code path exists; release-environment evidence is limited | Web IndexedDB, updater, responsive mobile adaptation and desktop-feature fallback |
+| Preview | Off by default; interfaces or safety boundaries may change | Sync, Agent, Ollama, MCP, optional system plugins |
 | Roadmap | Design or placeholder only | sidecar, RAG, speech, OCR |
 
 ## 🏗 Architecture
@@ -137,6 +149,8 @@ The Vue frontend communicates with Rust via `invoke`/`listen`, while the module 
 │   ├── components/        # Icon.vue + ui/ (Button/Card/Input/Badge/Progress/EmptyState)
 │   ├── modules/           # ★ modular: config (toggles) + loader + capability modules
 │   ├── agent/             # Agent (runtime/providers/tools/memory/hooks/ui)
+│   ├── storage/           # domain ports + IndexedDB/SQLite/memory adapters
+│   ├── sync/              # SyncProvider + outbox + HTTP transport
 │   ├── lib/               # db.ts / updater.ts
 │   └── App.vue            # demo page
 ├── src-tauri/

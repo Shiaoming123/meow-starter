@@ -1,4 +1,6 @@
 import type { App } from 'vue'
+import { detectRuntimeInfo, type RuntimeInfo } from '../lib/platform'
+import { selectCompatibleModules } from './compatibility'
 import { defaultModuleConfig, moduleRegistry, type ModuleConfig } from './config'
 import type { Module } from './types'
 import { sortModules } from './topology'
@@ -14,6 +16,7 @@ import { sortModules } from './topology'
 export async function mountModules(
   app: App,
   userConfig?: Partial<ModuleConfig>,
+  runtime: RuntimeInfo = detectRuntimeInfo(),
 ): Promise<Module[]> {
   const config: ModuleConfig = { ...defaultModuleConfig, ...userConfig }
   const enabled = (Object.keys(moduleRegistry) as (keyof ModuleConfig)[]).filter(
@@ -30,8 +33,13 @@ export async function mountModules(
   }
 
   // 拓扑排序（依赖在前）
-  const sorted = sortModules(modules)
-  const ctx = { app, config }
+  const compatible = selectCompatibleModules(
+    modules,
+    runtime,
+    (reason) => console.info(`[modules] ${reason}`),
+  )
+  const sorted = sortModules(compatible)
+  const ctx = { app, config, runtime }
 
   for (const mod of sorted) {
     await mod.setup?.(ctx)
