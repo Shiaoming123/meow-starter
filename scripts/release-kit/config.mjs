@@ -1,4 +1,4 @@
-import { access, readFile } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import { isAbsolute, join } from 'node:path'
 
 const versionPattern = /^version\s*=\s*"([^"]+)"/m
@@ -79,7 +79,9 @@ export async function inspectReleaseConfig(root, mode) {
 
       const iconPath = isAbsolute(icon) ? icon : join(root, 'src-tauri', icon)
       try {
-        await access(iconPath)
+        if (!(await stat(iconPath)).isFile()) {
+          errors.push(`Invalid bundle icon: ${icon} (not a regular file)`)
+        }
       } catch {
         errors.push(`Missing bundle icon: ${icon}`)
       }

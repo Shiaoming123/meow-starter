@@ -65,3 +65,54 @@ test('reports a placeholder updater endpoint according to inspection mode', asyn
   const releaseResult = await inspectReleaseConfig(fixtureRoot, 'release')
   assert.match(releaseResult.errors.join('\n'), /placeholder updater endpoint/)
 })
+
+test('reports field-specific release configuration failures', async (t) => {
+  const fixtureRoot = await mkdtemp(join(tmpdir(), 'meow-release-config-invalid-'))
+
+  t.after(async () => {
+    await rm(fixtureRoot, { force: true, recursive: true })
+  })
+
+  await mkdir(join(fixtureRoot, 'src-tauri', 'icons'), { recursive: true })
+  await writeFile(join(fixtureRoot, 'package.json'), JSON.stringify({ version: '1.2.3' }))
+  await writeFile(join(fixtureRoot, 'src-tauri', 'Cargo.toml'), '[package]\nversion = "2.3.4"\n')
+  await writeFile(join(fixtureRoot, 'src-tauri', 'tauri.conf.json'), JSON.stringify({
+    version: '3.4.5',
+    identifier: ' ',
+    bundle: { icon: ['icons', 'icons/missing.png', ''] },
+    plugins: { updater: { endpoints: ['not a URL', 'http://example.com/latest.json'] } },
+  }))
+
+  const result = await inspectReleaseConfig(fixtureRoot, 'template')
+  const errors = result.errors.join('\n')
+  assert.match(errors, /Version mismatch/)
+  assert.match(errors, /Missing non-empty Tauri identifier/)
+  assert.match(errors, /^Invalid bundle icon: icons \(not a regular file\)$/m)
+  assert.match(errors, /Missing bundle icon: icons\/missing\.png/)
+  assert.match(errors, /Invalid bundle icon path/)
+  assert.match(errors, /Invalid updater endpoint: not a URL/)
+  assert.match(errors, /Updater endpoint must use HTTPS: http:\/\/example\.com\/latest\.json/)
+})
+
+test('accepts a non-placeholder HTTPS updater endpoint', async (t) => {
+  const fixtureRoot = await mkdtemp(join(tmpdir(), 'meow-release-config-valid-'))
+
+  t.after(async () => {
+    await rm(fixtureRoot, { force: true, recursive: true })
+  })
+
+  await mkdir(join(fixtureRoot, 'src-tauri', 'icons'), { recursive: true })
+  await writeFile(join(fixtureRoot, 'package.json'), JSON.stringify({ version: '1.2.3' }))
+  await writeFile(join(fixtureRoot, 'src-tauri', 'Cargo.toml'), '[package]\nversion = "1.2.3"\n')
+  await writeFile(join(fixtureRoot, 'src-tauri', 'icons', 'icon.png'), 'icon')
+  await writeFile(join(fixtureRoot, 'src-tauri', 'tauri.conf.json'), JSON.stringify({
+    version: '1.2.3',
+    identifier: 'com.example.app',
+    bundle: { icon: ['icons/icon.png'] },
+    plugins: { updater: { endpoints: ['https://example.com/latest.json'] } },
+  }))
+
+  const result = await inspectReleaseConfig(fixtureRoot, 'release')
+  assert.deepEqual(result.errors, [])
+  assert.deepEqual(result.warnings, [])
+})
