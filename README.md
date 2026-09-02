@@ -5,8 +5,9 @@
 <h1 align="center">🐾 meow-starter</h1>
 
 <p align="center">
-  <strong>AI Native 的跨平台桌面应用脚手架</strong><br/>
-  一套开箱即用的 <b>Tauri 2 + Vue 3</b> 底座，内置 SQLite、系统托盘、自动更新、设计系统与可插拔的 Agent / MCP 能力。
+  <strong>AI Native 全平台桌面 & 移动脚手架</strong><br/>
+  一套开箱即用的 <b>Tauri 2 + Vue 3</b> 底座，覆盖 macOS / Windows / Linux / Android / iOS 五端。<br/>
+  内置 SQLite、系统托盘、自动更新、设计系统，可插拔的 Agent / MCP / 本地推理。
 </p>
 
 <p align="center">
@@ -16,20 +17,34 @@
   <img src="https://img.shields.io/badge/Tauri-2-24C8D8?logo=tauri&logoColor=white" alt="Tauri 2"/>
   <img src="https://img.shields.io/badge/Vue-3.5-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3"/>
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178c6?logo=typescript&logoColor=white" alt="TypeScript"/>
-  <img src="https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey" alt="Platforms"/>
+  <img src="https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20iOS%20%7C%20Android-blue" alt="Platforms"/>
 </p>
 
 <p align="center">
-  <img src="docs/preview.png" alt="meow-starter 演示" width="720"/>
+  <img src="docs/preview.png" alt="meow-starter 桌面演示" width="640"/>
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/mobile-concept.png" alt="meow-starter 移动端概念图" width="280"/>
 </p>
 
 ---
 
 ## 这是什么
 
-`meow-starter` 是一个**模块化、AI Native** 的桌面应用脚手架。它把桌面开发里最烦的样板代码全部做完——数据层、托盘、更新、设计系统——同时把 AI 能力（Agent、本地推理、MCP）做成**可插拔模块**，让你按需启用。
+`meow-starter` 是一个**模块化、AI Native** 的全平台应用脚手架。它把跨端开发里最烦的样板代码全部做完——数据层、托盘、更新、设计系统——同时把 AI 能力（Agent、本地推理、MCP）做成**可插拔模块**，让你按需启用。
 
 **核心理念**：核心轻量、能力可选、按需引入。不写一行 Agent 代码，它就是干净的桌面脚手架；打开一个开关，它就变成 AI 应用。
+
+### 五端覆盖
+
+| 平台 | 状态 | 说明 |
+| --- | --- | --- |
+| macOS | ✅ 完整支持 | 主开发平台，签名 + 公证已文档化 |
+| Windows | ✅ 完整支持 | MSVC + WebView2，已配三端打包 CI |
+| Linux | ✅ 完整支持 | WebKitGTK，覆盖 Debian / Arch / Fedora |
+| iOS | ✅ 代码就绪 | 响应式布局 + 降级已落地；`tauri ios init` 在 Xcode 环境一键启用 |
+| Android | ✅ 代码就绪 | 响应式布局 + 降级已落地；`tauri android init` 在 Android Studio 环境一键启用 |
+
+> 代码层（响应式布局、桌面专属能力降级、平台检测）已全部就绪。移动端工程初始化需要 Android Studio + NDK / Xcode + Cocoapods，详见 [docs/mobile.md](./docs/mobile.md)。
 
 ## ✨ 特性
 
@@ -59,6 +74,7 @@
 | 🤖 接入 Agent（对话/工具） | [docs/agent-integration.md](./docs/agent-integration.md) |
 | 🔌 接本地模型（Ollama） | [docs/local-inference.md](./docs/local-inference.md) |
 | 🧩 接 MCP 外部工具 | [docs/mcp.md](./docs/mcp.md) |
+| 📱 移动端适配（Android / iOS） | [docs/mobile.md](./docs/mobile.md) |
 | 🧠 了解全部 AI 能力规划 | [docs/ai-capabilities.md](./docs/ai-capabilities.md) |
 | 🤝 贡献 / 反馈 | [CONTRIBUTING.md](./CONTRIBUTING.md) · [Discussions](https://github.com/Shiaoming123/meow-starter/discussions) |
 
@@ -113,6 +129,12 @@ cd my-app && npm install && npm run tauri dev
 ![architecture](docs/architecture.svg)
 
 前端（Vue 3）通过 `invoke` / `listen` 与 Rust 运行时通信；模块化 loader 按需加载能力模块；Agent 密钥经 Rust 代理（keyring 钥匙串）；可连接 Ollama / 云端模型 / MCP server 等外部服务。
+
+### 五端覆盖
+
+![跨端覆盖](docs/cross-platform.png)
+
+同一份代码，同一套模块化能力，覆盖 **macOS / Windows / Linux / Android / iOS** 五大平台。桌面专属能力（托盘 / 单实例 / 自动更新）在移动端安全降级，移动端采用响应式布局。
 
 ## 📂 项目结构
 

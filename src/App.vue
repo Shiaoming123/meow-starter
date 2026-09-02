@@ -22,6 +22,7 @@ import {
   Blocks,
 } from '@lucide/vue'
 import { themes, setTheme, getSavedTheme } from './assets/themes/apply'
+import { isDesktopTauri } from './lib/platform'
 import Button from './components/ui/Button.vue'
 import Card from './components/ui/Card.vue'
 import Badge from './components/ui/Badge.vue'
@@ -144,7 +145,7 @@ onUnmounted(() => unlistenTray?.())
         </div>
         <div class="topbar__actions">
           <Badge v-if="busy" tone="accent">{{ updateState.phase }}</Badge>
-          <Button variant="ghost" size="sm" title="隐藏到托盘" @click="hideToTray">
+          <Button v-if="isDesktopTauri()" variant="ghost" size="sm" title="隐藏到托盘" @click="hideToTray">
             <Minus :size="14" />
             托盘
           </Button>
@@ -163,7 +164,7 @@ onUnmounted(() => unlistenTray?.())
                   <p>类型化封装 + 迁移 + 浏览器 mock 降级</p>
                 </div>
               </div>
-              <div class="feature">
+              <div v-if="isDesktopTauri()" class="feature">
                 <Bell :size="18" />
                 <div>
                   <strong>系统托盘</strong>
@@ -291,7 +292,7 @@ onUnmounted(() => unlistenTray?.())
             </p>
           </Card>
 
-          <Card title="系统托盘" padding="lg">
+          <Card v-if="isDesktopTauri()" title="系统托盘" padding="lg">
             <p class="muted">
               左键点击托盘图标切换窗口显隐，右键弹出菜单（显示 / 隐藏、检查更新、退出）。
               关闭窗口只会隐藏，进程常驻托盘；从托盘菜单选「退出」才会真正结束进程。
@@ -300,6 +301,19 @@ onUnmounted(() => unlistenTray?.())
         </template>
       </div>
     </div>
+
+    <nav class="tabbar">
+      <button
+        v-for="item in nav"
+        :key="item.key"
+        class="tabbar__item"
+        :class="{ active: active === item.key }"
+        @click="active = item.key"
+      >
+        <component :is="item.icon" :size="20" />
+        <span>{{ item.label }}</span>
+      </button>
+    </nav>
   </div>
 </template>
 
@@ -639,5 +653,54 @@ code {
   padding: 1px 5px;
   border-radius: var(--radius-sm);
   background: var(--surface-alt);
+}
+
+/* ---- 底部 tab bar（移动端） ---- */
+.tabbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+
+  .tabbar {
+    display: flex;
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .tabbar__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: var(--space-2) 0;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: var(--text-xs);
+    cursor: pointer;
+  }
+
+  .tabbar__item.active {
+    color: var(--accent);
+  }
+
+  .content {
+    padding: var(--space-4);
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .themes {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
