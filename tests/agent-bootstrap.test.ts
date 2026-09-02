@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { bootstrapProviders } from '../src/agent/bootstrap.ts'
+import {
+  bootstrapProviders,
+  resolveAgentConfiguration,
+} from '../src/agent/bootstrap.ts'
 import { resolveConfig } from '../src/agent/config.ts'
 import {
   clearProviders,
@@ -57,4 +60,24 @@ test('rejects a default model whose provider is not configured', () => {
       ),
     /defaultModel 引用了未配置的 provider: "missing"/,
   )
+})
+
+test('loads the root agent config only when no explicit config is supplied', async () => {
+  let loads = 0
+  const loadDefault = async () => {
+    loads += 1
+    return {
+      enabled: true,
+      providers: [{ id: 'ollama', type: 'openai-compatible' as const }],
+      defaultModel: 'ollama/qwen3:8b',
+    }
+  }
+
+  const fromFile = await resolveAgentConfiguration(undefined, loadDefault)
+  assert.equal(fromFile.enabled, true)
+  assert.equal(loads, 1)
+
+  const explicit = await resolveAgentConfiguration({ enabled: false }, loadDefault)
+  assert.equal(explicit.enabled, false)
+  assert.equal(loads, 1)
 })

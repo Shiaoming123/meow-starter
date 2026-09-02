@@ -1,5 +1,17 @@
-import type { AgentConfig } from './config'
+import { resolveConfig, type AgentConfig } from './config.ts'
 import { clearProviders, registerProvider } from './providers/registry.ts'
+
+type AgentConfigLoader = () => Promise<Partial<AgentConfig>>
+
+const loadRootAgentConfig: AgentConfigLoader = async () =>
+  (await import('../../agent.config')).default
+
+export async function resolveAgentConfiguration(
+  explicit: Partial<AgentConfig> | undefined,
+  loadDefault: AgentConfigLoader = loadRootAgentConfig,
+): Promise<AgentConfig> {
+  return resolveConfig(explicit ?? (await loadDefault()))
+}
 
 export function bootstrapProviders(config: AgentConfig): void {
   const providers = new Set<string>()
