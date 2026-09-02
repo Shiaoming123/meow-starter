@@ -212,7 +212,7 @@ src/
 
 **空状态是邀请行动**：写清「这是什么」+「怎么开始」。永远不要写"暂无数据"这种让用户摸不着头脑的句子。
 
-### 2.7 Icon（动态加载）
+### 2.7 Icon（静态注册表）
 
 ```vue
 <Icon name="settings" :size="16" />
@@ -220,9 +220,7 @@ src/
 <Icon name="CircleCheck" :size="14" class="text-success" />
 ```
 
-名称支持 PascalCase 或 kebab-case（自动转换）。Lucide 全部 1700+ 图标可用 —— 名称见 https://lucide.dev/icons。
-
-`Icon` 组件用动态 `import()` 按需加载单个图标文件（保持 Vite tree-shaking 干净），**图标名拼错会在控制台 warn**，不会抛错导致白屏。
+名称支持 PascalCase、kebab-case、空格或下划线（自动转换）。默认注册表只包含模板实际使用的 5 个图标；需要其他 Lucide 图标时，在 `src/assets/icons/registry.ts` 增加静态 import 和映射。图标名未注册会在控制台 warn，不会抛错导致白屏。
 
 ---
 
@@ -287,11 +285,9 @@ src/
 
 ## 5. 性能优化建议
 
-### 5.1 图标按需加载
+### 5.1 图标按需注册
 
-`Icon` 组件用动态 import 加载每个图标文件（`@lucide/vue/dist/esm/icons/<name>.mjs`）。**不要**在静态 `import` 里写一堆图标，会一次性全打进主包。
-
-如果你需要"打包关键图标同步加载"的稳定性（比如截图测试），可以直接 import 具体组件：
+`Icon` 组件通过小型静态注册表加载图标，让 Vite 能在构建时确定真实依赖。不要导入 Lucide 的全量图标映射；新增图标时只导入需要的组件：
 
 ```vue
 <script setup lang="ts">
