@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import test from 'node:test'
 import { findAppleDoubleFiles, removeAppleDoubleFiles } from '../scripts/release-kit/appledouble.mjs'
+import { inspectReleaseConfig } from '../scripts/release-kit/config.mjs'
 import { isRunnableTestFile } from '../scripts/run-tests.mjs'
 
 test('ignores AppleDouble test sidecars', () => {
@@ -37,4 +38,30 @@ test('finds and removes only regular AppleDouble sidecars without following syml
   assert.deepEqual(await removeAppleDoubleFiles(root), [sidecar, nestedSidecar])
   assert.equal(await readFile(join(root, '.env'), 'utf8'), 'keep')
   assert.equal(await readFile(outsideSidecar, 'utf8'), 'metadata')
+})
+
+test('reports a placeholder updater endpoint according to inspection mode', async (t) => {
+  const fixtureRoot = await mkdtemp(join(tmpdir(), 'meow-release-config-'))
+
+  t.after(async () => {
+    await rm(fixtureRoot, { force: true, recursive: true })
+  })
+
+  await mkdir(join(fixtureRoot, 'src-tauri', 'icons'), { recursive: true })
+  await writeFile(join(fixtureRoot, 'package.json'), JSON.stringify({ version: '1.2.3' }))
+  await writeFile(join(fixtureRoot, 'src-tauri', 'Cargo.toml'), '[package]\nversion = "1.2.3"\n')
+  await writeFile(join(fixtureRoot, 'src-tauri', 'icons', 'icon.png'), 'icon')
+  await writeFile(join(fixtureRoot, 'src-tauri', 'tauri.conf.json'), JSON.stringify({
+    version: '1.2.3',
+    identifier: 'com.example.app',
+    bundle: { icon: ['icons/icon.png'] },
+    plugins: { updater: { endpoints: ['https://github.com/OWNER/REPO/releases/latest/download/latest.json'] } },
+  }))
+
+  const result = await inspectReleaseConfig(fixtureRoot, 'template')
+  assert.deepEqual(result.errors, [])
+  assert.match(result.warnings.join('\n'), /placeholder updater endpoint/)
+
+  const releaseResult = await inspectReleaseConfig(fixtureRoot, 'release')
+  assert.match(releaseResult.errors.join('\n'), /placeholder updater endpoint/)
 })

@@ -15,6 +15,7 @@
     "check:layout": "node scripts/check-built-layout.mjs",
     "check:docs": "node scripts/check-doc-links.mjs",
     "clean:appledouble": "node scripts/clean-appledouble.mjs",
+    "release:check": "node scripts/release-check.mjs",
     "preview": "vite preview",
     "preview:web": "vite preview --mode web",
     "test": "node scripts/run-tests.mjs",
