@@ -13,6 +13,7 @@
 | 接入 Agent（对话/工具/记忆） | [agent-integration.md](./agent-integration.md) |
 | 接本地模型（Ollama） | [local-inference.md](./local-inference.md) |
 | 接 MCP 外部工具 | [mcp.md](./mcp.md) |
+| 移动端适配（Android/iOS） | [mobile.md](./mobile.md) |
 
 ## 按角色导航
 
@@ -20,6 +21,7 @@
 - **前端开发者** → 先读 [design-system.md](./design-system.md)，再动手写组件
 - **架构师 / 进阶开发者** → 先读 [modular-architecture.md](./modular-architecture.md) 与 [agent-integration.md](./agent-integration.md)
 - **AI 应用开发者** → 按需读 [agent-integration.md](./agent-integration.md)、[local-inference.md](./local-inference.md)、[mcp.md](./mcp.md)
+- **多端开发者** → 读 [mobile.md](./mobile.md) 了解移动端适配与降级策略
 
 ## 文档清单
 
@@ -32,6 +34,7 @@
 | agent-integration.md | Agent 集成方案：框架对比 + 双轨设计 + 分阶段路径 |
 | local-inference.md | 本地推理：Ollama 接入 + 密钥安全 |
 | mcp.md | MCP 接入：连接外部工具到 Agent |
+| mobile.md | 移动端适配（Android/iOS）：前置依赖 + 初始化 + 降级 |
 
 ## 架构图
 

@@ -5,8 +5,9 @@
 <h1 align="center">🐾 meow-starter</h1>
 
 <p align="center">
-  <strong>An AI-native cross-platform desktop app scaffold</strong><br/>
-  A ready-to-use <b>Tauri 2 + Vue 3</b> base with SQLite, system tray, auto-updater, a design system, and pluggable Agent / MCP capabilities.
+  <strong>An AI-native, full-platform desktop & mobile scaffold</strong><br/>
+  A ready-to-use <b>Tauri 2 + Vue 3</b> base covering <b>macOS / Windows / Linux / Android / iOS</b>.<br/>
+  Bundles SQLite, system tray, auto-updater, a design system, and pluggable Agent / MCP / local-inference capabilities.
 </p>
 
 <p align="center">
@@ -16,11 +17,13 @@
   <img src="https://img.shields.io/badge/Tauri-2-24C8D8?logo=tauri&logoColor=white" alt="Tauri 2"/>
   <img src="https://img.shields.io/badge/Vue-3.5-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3"/>
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178c6?logo=typescript&logoColor=white" alt="TypeScript"/>
-  <img src="https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey" alt="Platforms"/>
+  <img src="https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20iOS%20%7C%20Android-blue" alt="Platforms"/>
 </p>
 
 <p align="center">
-  <img src="docs/preview.png" alt="meow-starter demo" width="720"/>
+  <img src="docs/preview.png" alt="meow-starter desktop demo" width="640"/>
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/mobile-concept.png" alt="meow-starter mobile concept" width="280"/>
 </p>
 
 ---
