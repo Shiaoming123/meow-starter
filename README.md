@@ -103,6 +103,7 @@ cd my-app && npm install && npm run tauri dev
 3. `src-tauri/tauri.conf.json` 的 `productName` 与 `identifier`（⚠️ identifier 发布后不可改）
 4. `src-tauri/icons/` 换成自己的图标
 5. 重新生成更新签名密钥（`npm run tauri:signer`）
+6. 将 `plugins.updater.endpoints` 中的 `OWNER/REPO` 替换为自己的仓库
 
 ## 🧱 模块化能力一览
 
@@ -192,9 +193,11 @@ cd my-app && npm install && npm run tauri dev
 npm run tauri:signer   # 生成密钥对
 # 公钥填入 tauri.conf.json 的 plugins.updater.pubkey
 # 私钥存入 GitHub Secrets 的 TAURI_SIGNING_PRIVATE_KEY
+# 将 plugins.updater.endpoints 中的 OWNER/REPO 替换为你的仓库
 ```
 
 > 🔑 私钥丢失 = 无法发布新版本，已装用户永久卡旧版。务必备份、勿提交。
+> 模板占位端点会在构建期被识别为“未配置”，应用不会发起无效更新请求。
 
 ### Agent 能力
 

@@ -288,7 +288,8 @@ onUnmounted(() => unlistenTray?.())
             />
             <p class="muted mt">
               更新端点在 <code>src-tauri/tauri.conf.json</code> 的
-              <code>plugins.updater.endpoints</code> 配置。
+              <code>plugins.updater.endpoints</code> 配置。模板占位端点会被构建期守卫识别，
+              不会发起无效请求。
             </p>
           </Card>
 

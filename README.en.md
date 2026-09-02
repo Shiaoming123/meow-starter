@@ -84,6 +84,9 @@ cd my-app && npm install && npm run tauri dev
 3. `productName` and `identifier` in `src-tauri/tauri.conf.json` (⚠️ identifier is immutable after release)
 4. Your own icons in `src-tauri/icons/`
 5. Regenerate the update signing key (`npm run tauri:signer`)
+6. Replace `OWNER/REPO` in `plugins.updater.endpoints` with your repository
+
+Template updater endpoints are treated as unconfigured at build time, so the app will not send a broken update request before this step is complete.
 
 ## 🧱 Modules
 
