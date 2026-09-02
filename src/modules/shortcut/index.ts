@@ -13,6 +13,8 @@ const shortcut: Module = {
   id: 'shortcut',
   name: '全局快捷键',
   dependencies: [],
+  platforms: ['desktop'],
+  requiredCapabilities: ['global-shortcut'],
 }
 
 export default shortcut

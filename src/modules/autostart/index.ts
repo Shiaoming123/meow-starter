@@ -10,6 +10,8 @@ const autostart: Module = {
   id: 'autostart',
   name: '开机自启动',
   dependencies: [],
+  platforms: ['desktop'],
+  requiredCapabilities: ['autostart'],
 }
 
 export default autostart

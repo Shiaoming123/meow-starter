@@ -323,7 +323,7 @@ AI 类应用（Vercel AI SDK 等）建议：
 
 ## 7. 与脚手架其他能力的衔接
 
-- **数据**：新增表 → 在 `src-tauri/src/db.rs` 的迁移里建表 → 前端用 `src/lib/db.ts` 同样的模式封装（参考 `sqliteMemoryStore` 的浏览器 mock 降级）。
+- **数据**：先定义小型领域 Store 接口，再分别实现 Tauri SQLite、Web IndexedDB 和内存测试适配器；参考 `src/storage/todos/`。
 - **设置项**：用 `tauri-plugin-store` 持久化用户偏好（主题已经存在 localStorage，可以改造到 store）。
 - **Agent（Preview）**：`src/agent/` 提供 Vercel AI SDK inline 适配器并默认关闭；启用前请完成 Provider 与安全代理验证。需要演示 UI 时可在业务入口显式引入 `ChatPanel.vue`。
 

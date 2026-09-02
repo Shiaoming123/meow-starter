@@ -7,8 +7,8 @@
 | 级别 | 能力 |
 | --- | --- |
 | **Stable** | core、SQLite、主题、桌面托盘/单实例 |
-| **Beta** | 更新器、移动端响应式与桌面能力降级 |
-| **Preview** | Agent、Ollama、MCP、可选系统插件 |
+| **Beta** | Web IndexedDB、更新器、移动端响应式与桌面能力降级 |
+| **Preview** | Sync、Agent、Ollama、MCP、可选系统插件 |
 | **Roadmap** | sidecar、RAG、语音、OCR |
 
 专题文档既包含当前用法，也包含目标设计；每篇开头的成熟度说明优先于路线图描述。
@@ -24,6 +24,8 @@
 | 接入 Agent（对话/工具/记忆） | [agent-integration.md](./agent-integration.md) |
 | 接本地模型（Ollama） | [local-inference.md](./local-inference.md) |
 | 接 MCP 外部工具 | [mcp.md](./mcp.md) |
+| 运行和部署 Web 版 | [web.md](./web.md) |
+| 接账号、云端或局域网同步 | [sync.md](./sync.md) |
 | 移动端适配（Android/iOS） | [mobile.md](./mobile.md) |
 
 ## 按角色导航
@@ -32,7 +34,8 @@
 - **前端开发者** → 先读 [design-system.md](./design-system.md)，再动手写组件
 - **架构师 / 进阶开发者** → 先读 [modular-architecture.md](./modular-architecture.md) 与 [agent-integration.md](./agent-integration.md)
 - **AI 应用开发者** → 按需读 [agent-integration.md](./agent-integration.md)、[local-inference.md](./local-inference.md)、[mcp.md](./mcp.md)
-- **多端开发者** → 读 [mobile.md](./mobile.md) 了解移动端适配与降级策略
+- **多端开发者** → 读 [web.md](./web.md) 与 [mobile.md](./mobile.md) 了解各平台适配与降级策略
+- **本地优先应用开发者** → 读 [sync.md](./sync.md) 选择账号、云端或 LAN 接入层
 
 ## 文档清单
 
@@ -40,12 +43,14 @@
 | --- | --- |
 | project-guide.md | 项目适配指南：适合做什么 + 分类型注意事项 |
 | design-system.md | 设计系统：tokens + 组件 + 主题 + 性能 + 可达性 |
-| modular-architecture.md | 模块化架构：三层门控 + Module 契约 + 迁移路径 |
+| modular-architecture.md | 模块化架构：四层门控 + Module 契约 + 平台能力 |
 | ai-capabilities.md | AI Native 能力清单：P1-P3 落地节奏 |
 | agent-integration.md | Agent 集成方案：框架对比 + 双轨设计 + 分阶段路径 |
 | local-inference.md | 本地推理：Ollama 接入 + 密钥安全 |
 | mcp.md | MCP 接入：连接外部工具到 Agent |
 | mobile.md | 移动端适配（Android/iOS）：前置依赖 + 初始化 + 降级 |
+| web.md | Web 适配：IndexedDB + 平台能力 + 静态部署 |
+| sync.md | 同步接缝：outbox + HTTP + 云端/LAN/CRDT 方案选择 |
 
 ## 架构图
 

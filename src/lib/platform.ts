@@ -24,3 +24,56 @@ export function isMobile(): boolean {
 export function isDesktopTauri(): boolean {
   return isTauri() && !isMobile()
 }
+
+export type RuntimePlatform = 'web' | 'desktop' | 'mobile'
+
+export type RuntimeCapability =
+  | 'web-storage'
+  | 'native-sql'
+  | 'system-tray'
+  | 'native-updater'
+  | 'global-shortcut'
+  | 'native-clipboard'
+  | 'native-notification'
+  | 'autostart'
+  | 'secure-keychain-proxy'
+
+export interface RuntimeInfo {
+  platform: RuntimePlatform
+  capabilities: readonly RuntimeCapability[]
+}
+
+export function hasRuntimeCapability(
+  runtime: RuntimeInfo,
+  capability: RuntimeCapability,
+): boolean {
+  return runtime.capabilities.includes(capability)
+}
+
+/** 当前运行时可用能力的单一事实来源。 */
+export function detectRuntimeInfo(): RuntimeInfo {
+  if (!isTauri()) {
+    return { platform: 'web', capabilities: ['web-storage'] }
+  }
+
+  if (isMobile()) {
+    return {
+      platform: 'mobile',
+      capabilities: ['native-sql', 'native-clipboard', 'native-notification'],
+    }
+  }
+
+  return {
+    platform: 'desktop',
+    capabilities: [
+      'native-sql',
+      'system-tray',
+      'native-updater',
+      'global-shortcut',
+      'native-clipboard',
+      'native-notification',
+      'autostart',
+      'secure-keychain-proxy',
+    ],
+  }
+}

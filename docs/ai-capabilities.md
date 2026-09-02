@@ -28,7 +28,7 @@
 
 | 模块 | 状态 | 说明 |
 |---|---|---|
-| SQLite 数据层 | ✅ 内置 | `tauri-plugin-sql`，迁移 + 类型封装 + 浏览器 mock |
+| 本地数据层 | ✅ 内置 | Tauri SQLite + Web IndexedDB + 领域 Store 接口 |
 | 系统托盘 | ✅ 内置 | `tauri-plugin-single-instance` + 自研 tray.rs |
 | 自动更新 | 🟡 Beta | 插件与配置守卫已内置；需下游项目完成签名发布验证 |
 | 4 套主题 + 设计系统 | ✅ 内置 | CSS 变量驱动，见 `docs/design-system.md` |

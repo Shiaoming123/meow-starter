@@ -10,6 +10,8 @@ const clipboard: Module = {
   id: 'clipboard',
   name: '剪贴板',
   dependencies: [],
+  platforms: ['desktop', 'mobile'],
+  requiredCapabilities: ['native-clipboard'],
 }
 
 export default clipboard

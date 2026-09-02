@@ -1,5 +1,5 @@
 import Database from '@tauri-apps/plugin-sql';
-import { isTauri } from '../../lib/db';
+import { isTauri } from '../../lib/platform';
 import { browserMemoryStore } from './in-memory';
 import type { AgentMessage, MemoryStore } from './types';
 

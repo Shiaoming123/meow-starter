@@ -5,16 +5,22 @@ import type { Module } from './types'
  *
  * 每个 key 对应一个模块：
  * - true  = 启用（前端动态加载 + 参与构建）
- * - false = 关闭（零依赖、零体积、零心智负担）
+ * - false = 关闭（不装配、不执行；安装依赖与构建 chunk 以实际构建为准）
  *
- * 注意：Rust 侧的 Cargo feature 需与此保持同步（见 src-tauri/Cargo.toml）。
- * 修改后前端生效无需重装；若涉及 Rust 插件，需重新 `tauri dev` / `build`。
+ * 注意：使用 Rust 插件的原生模块还需启用同名 Cargo feature。
+ * 纯 Web 模块（如 indexedDb）没有对应的 Cargo feature。
  */
 export interface ModuleConfig {
   /** 核心模块（设计系统 + 基础组件 + 主题 + Icon），始终启用 */
   core: true
+  /** 领域存储契约与内存回退，始终启用 */
+  storage: true
   /** 数据层（SQLite） */
   sqlite: boolean
+  /** Web 持久化数据层（IndexedDB） */
+  indexedDb: boolean
+  /** 本地优先同步接口与内置 outbox 引擎（默认不联网） */
+  sync: boolean
   /** 系统托盘 */
   tray: boolean
   /** 自动更新 */
@@ -41,7 +47,10 @@ export interface ModuleConfig {
  */
 export const defaultModuleConfig: ModuleConfig = {
   core: true,
+  storage: true,
   sqlite: true,
+  indexedDb: true,
+  sync: false,
   tray: true,
   updater: true,
   themes: true,
@@ -64,7 +73,10 @@ export const moduleRegistry: Record<
   (() => Promise<{ default: Module }>) | null
 > = {
   core: () => import('./core'),
+  storage: () => import('./storage'),
   sqlite: () => import('./sqlite'),
+  indexedDb: () => import('./indexeddb'),
+  sync: () => import('./sync'),
   tray: () => import('./tray'),
   updater: () => import('./updater'),
   themes: () => import('./themes'),

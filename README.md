@@ -5,9 +5,9 @@
 <h1 align="center">🐾 meow-starter</h1>
 
 <p align="center">
-  <strong>AI Native、桌面优先的跨平台应用脚手架</strong><br/>
-  一套可直接扩展的 <b>Tauri 2 + Vue 3</b> 底座：桌面三端为主，移动端提供 Beta 级代码适配。<br/>
-  稳定核心包含 SQLite、托盘与设计系统；更新器及 Agent / MCP / 本地推理按成熟度渐进启用。
+  <strong>AI Native、桌面优先、Web 可用的跨平台应用脚手架</strong><br/>
+  一套可直接扩展的 <b>Tauri 2 + Vue 3</b> 底座：桌面三端为主，Web 与移动端提供 Beta 级适配。<br/>
+  稳定核心包含本地数据、托盘与设计系统；同步、更新器及 Agent / MCP / 本地推理按成熟度渐进启用。
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/Tauri-2-24C8D8?logo=tauri&logoColor=white" alt="Tauri 2"/>
   <img src="https://img.shields.io/badge/Vue-3.5-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3"/>
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178c6?logo=typescript&logoColor=white" alt="TypeScript"/>
-  <img src="https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20iOS%20%7C%20Android-blue" alt="Platforms"/>
+  <img src="https://img.shields.io/badge/platforms-Web%20%7C%20macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20iOS%20%7C%20Android-blue" alt="Platforms"/>
 </p>
 
 <p align="center">
@@ -34,10 +34,11 @@
 
 **核心理念**：核心轻量、能力可选、按需引入。不写一行 Agent 代码，它就是干净的桌面脚手架；打开一个开关，它就变成 AI 应用。
 
-### 五端覆盖
+### Web + 五端覆盖
 
 | 平台 | 状态 | 说明 |
 | --- | --- | --- |
+| Web | Beta | Vite 静态构建 + IndexedDB 持久化；原生模块按能力自动跳过 |
 | macOS | Stable | release workflow 覆盖构建、签名与公证配置 |
 | Windows | Stable | release workflow 覆盖 MSVC + WebView2 打包 |
 | Linux | Stable | release workflow 覆盖 Ubuntu 构建；其他发行版需项目自行验证 |
@@ -49,11 +50,12 @@
 ## ✨ 特性
 
 - **前端**：Vue 3.5 + TypeScript + Vite 6，深色模式跟随系统
-- **数据层**：SQLite（`tauri-plugin-sql`），启动自动迁移 + 类型安全 CRUD
+- **数据层**：统一领域接口；Tauri 使用 SQLite，Web 使用 IndexedDB
 - **系统层**：系统托盘、单实例、关闭窗口隐藏而非退出
 - **自动更新（Beta）**：包含签名、下载、安装与重启代码路径；需用自己的端点和密钥完成签名发布验证
 - **设计系统**：完整 design tokens + 6 个基础组件 + 4 套风格主题
-- **模块化**：三层门控（配置 + 动态 import + Cargo feature），能力可插拔
+- **模块化**：四层门控（配置 + 动态 import + 运行时能力 + 原生 Cargo feature），能力可插拔
+- **同步底座（Preview）**：默认关闭的 outbox 引擎、白名单策略与 HTTP transport；不绑定云厂商
 - **Agent 能力（Preview）**：Vercel AI SDK inline 适配器与扩展接口；默认关闭
 - **密钥安全（Preview）**：已存密钥不可从 WebView 读回；OpenAI/Anthropic 请求由固定目标的 Rust 代理注入
 - **本地推理（Preview）**：提供 Ollama/OpenAI-compatible 预设，需开发者验证本机环境
@@ -74,6 +76,8 @@
 | 🤖 接入 Agent（对话/工具） | [docs/agent-integration.md](./docs/agent-integration.md) |
 | 🔌 接本地模型（Ollama） | [docs/local-inference.md](./docs/local-inference.md) |
 | 🧩 接 MCP 外部工具 | [docs/mcp.md](./docs/mcp.md) |
+| 🌐 运行和部署 Web 版 | [docs/web.md](./docs/web.md) |
+| 🔄 接账号、云端或局域网同步 | [docs/sync.md](./docs/sync.md) |
 | 📱 移动端适配（Android / iOS） | [docs/mobile.md](./docs/mobile.md) |
 | 🧠 了解全部 AI 能力规划 | [docs/ai-capabilities.md](./docs/ai-capabilities.md) |
 | 🤝 贡献 / 反馈 | [CONTRIBUTING.md](./CONTRIBUTING.md) · [Discussions](https://github.com/Shiaoming123/meow-starter/discussions) |
@@ -90,6 +94,12 @@ cd my-app && npm install && npm run tauri dev
 # 方式二：用 degit 拉干净副本（不含 git 历史，推荐）
 npx degit Shiaoming123/meow-starter my-app
 cd my-app && npm install && npm run tauri dev
+```
+
+只运行 Web 版：
+
+```bash
+npm run dev:web
 ```
 
 **环境要求**：Node.js 22+ / Rust 1.77.2+ / 平台依赖（macOS 需 Xcode CLT，Windows 需 MSVC + WebView2，Linux 需 webkit2gtk 等，详见 [Tauri 官方文档](https://tauri.app/start/prerequisites/)）。
@@ -115,7 +125,10 @@ cd my-app && npm install && npm run tauri dev
 | 模块 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `core` | 核心 | 始终 | 设计系统 + 组件库 + 主题 + 图标 |
-| `sqlite` | 核心 | 开 | SQLite 数据层 |
+| `storage` | 核心 | 始终 | 领域存储契约 + 内存安全回退 |
+| `sqlite` | 平台适配 | 开 | Tauri SQLite 数据层；仅原生运行时装配 |
+| `indexedDb` | 平台适配 | 开 | Web IndexedDB 持久化；仅浏览器装配 |
+| `sync` | 可选 | 关 | 本地优先同步接口、outbox 引擎与 transport |
 | `tray` | 核心 | 开 | 系统托盘 |
 | `updater` | 核心 | 开 | 自动更新 |
 | `themes` | 核心 | 开 | 4 套风格主题 |
@@ -133,8 +146,8 @@ cd my-app && npm install && npm run tauri dev
 | 级别 | 含义 | 当前能力 |
 | --- | --- | --- |
 | Stable | 默认路径有自动化门禁 | core、SQLite、主题、桌面托盘/单实例 |
-| Beta | 代码闭环存在，但发布环境验证仍有限 | 更新器、移动端响应式与能力降级 |
-| Preview | 默认关闭，接口与安全边界仍可能变化 | Agent、Ollama、MCP、可选系统插件 |
+| Beta | 代码闭环存在，但发布环境验证仍有限 | Web IndexedDB、更新器、移动端响应式与能力降级 |
+| Preview | 默认关闭，接口与安全边界仍可能变化 | Sync、Agent、Ollama、MCP、可选系统插件 |
 | Roadmap | 只有设计或占位，不承诺可运行 | sidecar、RAG、语音、OCR |
 
 ## 🏗 架构
@@ -143,11 +156,11 @@ cd my-app && npm install && npm run tauri dev
 
 前端（Vue 3）通过 `invoke` / `listen` 与 Rust 运行时通信；模块 loader 按依赖顺序装配启用能力。Agent、Ollama、云端模型与 MCP 位于 Preview 扩展层，默认路径不加载。
 
-### 五端覆盖
+### Web + 五端覆盖
 
 ![跨端覆盖](docs/cross-platform.png)
 
-同一份代码面向 **macOS / Windows / Linux / Android / iOS**。桌面三端是主要验证目标；移动端采用响应式布局并降级桌面专属能力，当前成熟度为 Beta。
+同一份 Vue 代码面向 **Web / macOS / Windows / Linux / Android / iOS**。桌面三端是主要验证目标；Web 使用 IndexedDB 并跳过原生模块，移动端采用响应式布局并降级桌面专属能力。
 
 ## 📂 项目结构
 
@@ -158,16 +171,20 @@ cd my-app && npm install && npm run tauri dev
 │   ├── architecture.svg        # 架构图
 │   ├── design-system.md        # 设计系统（token/组件/主题/性能）
 │   ├── project-guide.md        # 项目适配指南（适合做什么+分类型注意事项）
-│   ├── modular-architecture.md # 模块化架构（三层门控+Module契约）
+│   ├── modular-architecture.md # 模块化架构（四层门控+Module契约）
 │   ├── ai-capabilities.md      # AI Native 能力清单（P1-P3 节奏）
 │   ├── agent-integration.md    # Agent 集成方案（框架对比+双轨设计）
 │   ├── local-inference.md      # 本地推理（Ollama）
+│   ├── web.md                  # Web 运行、持久化与部署
+│   ├── sync.md                 # 账号、云端与局域网同步
 │   └── mcp.md                  # MCP 接入指南
 ├── src/
 │   ├── assets/themes/     # 主题 token + 全局样式
 │   ├── components/        # Icon.vue + ui/（Button/Card/Input/Badge/Progress/EmptyState）
 │   ├── modules/           # ★ 模块化：config（开关）+ loader（装配）+ 各能力模块
 │   ├── agent/             # Agent 能力（runtime/providers/tools/memory/hooks/ui）
+│   ├── storage/           # 领域存储接口 + IndexedDB/SQLite/内存适配器
+│   ├── sync/              # SyncProvider + outbox + HTTP transport
 │   ├── lib/               # db.ts / updater.ts
 │   └── App.vue            # 演示页（侧边栏 + 主题 + 数据 + 更新）
 ├── src-tauri/
@@ -187,9 +204,9 @@ cd my-app && npm install && npm run tauri dev
 
 ## ⚙️ 核心模块说明
 
-### 数据层（SQLite）
+### 本地数据层（SQLite / IndexedDB）
 
-迁移定义在 `src-tauri/src/db.rs`，启动时自动执行；前端经 `src/lib/db.ts` 访问。
+前端统一经 `src/lib/db.ts` 访问领域接口。Tauri SQLite 迁移定义在 `src-tauri/src/db.rs` 并在启动时执行；Web 数据保存在 IndexedDB。详见 [docs/web.md](./docs/web.md)。
 
 > 📌 每条迁移**只写一条 SQL 语句**——底层 sqlx 的 `execute` 不支持多语句。
 
@@ -242,7 +259,9 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 | 命令 | 说明 |
 | --- | --- |
 | `npm run dev` | 启动前端开发服务器 |
+| `npm run dev:web` | 启动显式 Web 开发模式 |
 | `npm run build` | 类型检查 + 前端构建 |
+| `npm run build:web` | 类型检查 + Web 静态构建 |
 | `npm test` | 运行无额外框架依赖的行为测试 |
 | `npm run typecheck` | 仅类型检查 |
 | `npm run check:layout` | 验证生产 CSS 的移动端布局契约 |
@@ -258,6 +277,7 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 - 上线前将 `tauri.conf.json` 的 `app.security.csp` 从 `null` 改为具体 CSP。
 - `identifier` 发布后不可更改。
 - API Key 存 OS 钥匙串（keyring），不硬编码、不存 localStorage；已存密钥不提供读取命令。
+- 同步使用集合白名单；API Key、Token、Cookie、MCP 凭据和本地路径永不进入通用同步层。
 - 新增插件需同步三处：`Cargo.toml`、`lib.rs`、`capabilities/default.json`。
 
 ## 🤝 贡献
