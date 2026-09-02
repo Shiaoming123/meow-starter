@@ -1,6 +1,7 @@
 import type { App } from 'vue'
 import { defaultModuleConfig, moduleRegistry, type ModuleConfig } from './config'
 import type { Module } from './types'
+import { sortModules } from './topology'
 
 /**
  * 模块装配器。
@@ -29,7 +30,7 @@ export async function mountModules(
   }
 
   // 拓扑排序（依赖在前）
-  const sorted = topoSort(modules)
+  const sorted = sortModules(modules)
   const ctx = { app, config }
 
   for (const mod of sorted) {
@@ -37,22 +38,4 @@ export async function mountModules(
   }
 
   return sorted
-}
-
-function topoSort(modules: Module[]): Module[] {
-  const byId = new Map(modules.map((m) => [m.id, m]))
-  const visited = new Set<string>()
-  const result: Module[] = []
-
-  const visit = (id: string) => {
-    if (visited.has(id)) return
-    visited.add(id)
-    const mod = byId.get(id)
-    if (!mod) return
-    for (const dep of mod.dependencies) visit(dep)
-    result.push(mod)
-  }
-
-  for (const m of modules) visit(m.id)
-  return result
 }
