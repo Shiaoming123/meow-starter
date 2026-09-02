@@ -1,8 +1,11 @@
 import { ToolLoopAgent, stepCountIs, tool } from 'ai';
-import type { FlexibleSchema } from 'ai';
+import type { FlexibleSchema, ModelMessage } from 'ai';
 import { z } from 'zod';
 import type { AgentConfig } from '../config';
 import type { HookBus } from '../hooks/bus';
+import { conversationMessages } from '../memory/conversation';
+import { browserMemoryStore } from '../memory/in-memory';
+import { initAgentTables, sqliteMemoryStore } from '../memory/store';
 import { resolveModel } from '../providers/adapter';
 import { decideToolApproval } from '../tools/approval';
 import { listTools } from '../tools/registry';
@@ -34,6 +37,15 @@ export function createInlineRuntime(cfg: AgentConfig): AgentRuntime {
         throw new Error('[agent] 未指定模型：请在 agent.config.ts 设置 defaultModel');
       }
       const model = await resolveModel(modelRef);
+      const memory = cfg.memory.backend === 'sqlite' ? sqliteMemoryStore : browserMemoryStore;
+      if (req.sessionId && cfg.memory.backend === 'sqlite') await initAgentTables();
+      const history = req.sessionId
+        ? await memory.list(req.sessionId, Math.max(0, cfg.memory.maxTurns * 2))
+        : [];
+      const requestContext = await hooks.beforeRequest({
+        messages: conversationMessages(history, req.prompt, cfg.memory.maxTurns),
+        systemPrompt: cfg.systemPrompt,
+      });
 
       // 注册中心的工具 → AI SDK 的 tool 格式；审批与改写交给 HookBus
       const tools = Object.fromEntries(
@@ -100,19 +112,22 @@ export function createInlineRuntime(cfg: AgentConfig): AgentRuntime {
 
       const agent = new ToolLoopAgent({
         model,
-        instructions: cfg.systemPrompt,
+        instructions: requestContext.systemPrompt,
         tools,
         stopWhen: stepCountIs(cfg.maxSteps),
       });
 
       const result = await agent.stream({
-        prompt: req.prompt,
+        messages: requestContext.messages as ModelMessage[],
         abortSignal: controller.signal,
       });
 
+      let assistantText = '';
+      let completed = false;
       for await (const part of result.fullStream) {
         switch (part.type) {
           case 'text-delta':
+            assistantText += part.text;
             hooks.emitChunk(part.text);
             yield { type: 'text-delta', text: part.text };
             break;
@@ -141,12 +156,29 @@ export function createInlineRuntime(cfg: AgentConfig): AgentRuntime {
             yield { type: 'error', message: String(part.error) };
             break;
           case 'finish':
+            completed = true;
             hooks.emitComplete(part.finishReason);
             yield { type: 'done', finishReason: part.finishReason };
             break;
           default:
             break;
         }
+      }
+
+      if (completed && req.sessionId) {
+        await memory.append({
+          sessionId: req.sessionId,
+          role: 'user',
+          content: req.prompt,
+        });
+        if (assistantText) {
+          await memory.append({
+            sessionId: req.sessionId,
+            role: 'assistant',
+            content: assistantText,
+          });
+        }
+        await hooks.persist(req.sessionId);
       }
     },
   };

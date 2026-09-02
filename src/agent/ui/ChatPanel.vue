@@ -20,6 +20,7 @@ const busy = ref(false)
 const error = ref<string | null>(null)
 
 let runtime: AgentRuntime | null = null
+const sessionId = globalThis.crypto?.randomUUID?.() ?? `agent-${Date.now()}`
 
 async function ensureRuntime(): Promise<AgentRuntime> {
   if (runtime) return runtime
@@ -43,8 +44,12 @@ async function send() {
   try {
     const r = await ensureRuntime()
     const hooks = new HookBus()
+    hooks.register({
+      onApprovalRequired: ({ name, args }) =>
+        window.confirm(`Agent 请求执行工具 ${name}：\n\n${JSON.stringify(args, null, 2)}`),
+    })
 
-    for await (const event of r.stream({ prompt: text }, hooks)) {
+    for await (const event of r.stream({ prompt: text, sessionId }, hooks)) {
       if (event.type === 'text-delta') {
         bubbles.value[index].content += event.text
       } else if (event.type === 'tool-call') {
