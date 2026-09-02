@@ -367,7 +367,7 @@ agent-sidecar = ["agent"] # + Pi RPC 子进程管理
 |---|---|---|---|---|
 | **P0 — 骨架（已实现）** | 落目录、类型与默认关闭配置 | `src/agent/**` 骨架 + `agent.config.ts` + Cargo feature + 文档 | 依赖已存在于 lockfile；默认运行时不加载 | `vue-tsc` 与默认构建通过 |
 | **P1 — 默认轨（Preview）** | inline 适配器与最小 UI | `runtime/inline.ts` + `ChatPanel.vue` + Provider/Memory 接口 | bundle 增量以构建报告为准 | 仍需真实 Provider 端到端验证 |
-| **P2 — 安全与可控（进行中）** | 收紧代理、审批和内置工具边界 | Rust proxy/secrets + ApprovalGate + 工具白名单 | Rust feature 可选 | 安全回归测试完成后再升级成熟度 |
+| **P2 — 安全与可控（Preview）** | 收紧代理、审批和会话边界 | 固定目标 Rust proxy、无密钥读回、规则审批、受限会话记忆 | Rust feature 可选 | TypeScript 行为测试已覆盖；Rust `fmt/clippy/test` 由 CI 验证，真实 Provider smoke test 待补 |
 | **P3 — 进阶轨（Roadmap）** | 接入 Pi sidecar | sidecar、钩子映射、会话树 UI | 未引入 | 尚不可运行 |
 | **P4 — 观察与再评估** | 跟踪 dsh 与生态 | 评估记录，不写生产代码 | 0 | dsh 发布 1.0 稳定版后重跑本对比表 |
 
@@ -382,13 +382,15 @@ agent-sidecar = ["agent"] # + Pi RPC 子进程管理
 | 风险 | 影响 | 应对 |
 |---|---|---|
 | **AI SDK v7 迭代快，API 不稳定** | 升级需改业务代码 | 防腐层隔离：业务只依赖 `AgentRuntime` 接口，AI SDK 被封装在 `runtime/inline.ts` 内部；锁版本并跟进官方 migration guide |
-| **API Key 暴露在 WebView** | 桌面 App 逆向可提取密钥 | P2 起强制 `secureProxy: true`，请求经 Rust 侧代理；密钥存 OS 钥匙串（macOS Keychain / Windows Credential Manager / Linux Secret Service） |
+| **API Key 暴露在 WebView** | 桌面 App 逆向可提取密钥 | keychain Provider 强制 `secureProxy: true`；WebView 只能写入/删除/检查存在性，云端请求由 Rust 读取密钥并代发 |
 | **工具越权（文件/命令）** | Agent 执行破坏性操作 | 三层防护：① `tools.builtins` 默认空、`shell` 默认关闭；② `allowPaths` 目录白名单；③ `approval.mode: 'confirm'` + `needsApproval` 规则 |
 | **sidecar 三端打包复杂度** | 某平台 Node 运行时缺失或路径异常 | P3 才引入；优先 `nodeRuntime: 'bundled'` 自带运行时；CI 三端矩阵必须验证 sidecar 启动；提供降级到 inline 轨的开关 |
 | **Pi RPC 协议变更** | sidecar 轨失效 | Pi 版本锁定；`sidecar.ts` 内做协议版本握手与能力探测，不匹配时降级并告警 |
 | **前端 bundle 膨胀** | 首屏变慢 | `src/agent/index.ts` 作为唯一动态 import 边界，Vite 自动代码分割；仅在用户首次打开 AI 功能时加载 |
 | **上下文/记忆无限增长** | token 成本失控 | `memory.maxTurns` + `compaction.thresholdTokens` 双重限制 |
-| **下游项目被强加依赖** | 违背"脚手架轻量"初衷 | P0 阶段依赖增量为 0；AI SDK 相关包放入 `optionalDependencies`，`enabled: false` 时不安装 |
+| **下游项目被强加依赖** | 违背"脚手架轻量"初衷 | AI SDK 声明为 optional peer，模板 devDependencies 用于验证；`enabled: false` 时默认运行时不加载 Agent |
+
+设置页首次录入密钥时，用户输入和值传入 `set_api_key` 的 IPC 参数会短暂存在于 WebView 内存，这是桌面表单无法消除的边界；安全保证是“不写入前端持久化、不提供已存密钥读回命令、后续模型请求不把密钥交给 JavaScript”。
 
 ### 5.2 关键取舍
 
@@ -405,7 +407,7 @@ agent-sidecar = ["agent"] # + Pi RPC 子进程管理
 | 只关进阶轨 | `runtime: 'inline'` + 关闭 Cargo feature `agent-sidecar` | 保留基础对话能力，移除 sidecar 打包与 Node 运行时 |
 | AI SDK 升级破坏兼容 | 锁回上一个可用版本；因防腐层存在，仅需改 `runtime/inline.ts` | 业务代码零改动 |
 | 某个内置工具出事 | 从 `tools.builtins` 中移除该项 | 该工具不再注册，其余功能不受影响 |
-| 密钥代理异常 | `secureProxy: false` 临时降级到前端直连（仅限开发调试，**禁止用于生产分发**） | 恢复连通性，需在日志中显著告警 |
+| 密钥代理异常 | 关闭云端 Provider，或切换到 `apiKeyRef: { kind: 'none' }` 的本地模型；不得回退为 WebView 读取密钥 | 云端暂停，本地能力保留，安全边界不降级 |
 | SQLite 记忆表结构变更 | `src-tauri/src/db.rs` 走现有迁移机制，保留旧表 | 会话历史不丢失 |
 
 ---

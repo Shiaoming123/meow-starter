@@ -4,12 +4,12 @@ import type { AgentConfig } from './src/agent/config';
  * Agent 能力配置。
  *
  * 使用方式：在应用侧以 `await import('./src/agent')` 动态加载，
- * 本文件保持零运行时依赖，避免被静态打进主包。
+ * 本文件保持为纯配置；enabled: false 时 Agent 不进入默认运行时加载路径。
  *
  * 完整字段说明见 docs/agent-integration.md
  */
 const config: Partial<AgentConfig> = {
-  // 总开关。false 时整个 agent 模块不加载，产物与未接入时一致
+  // 总开关。false 时整个 agent 模块不进入默认运行时加载路径
   enabled: false,
 
   // 'inline' = 跑在 WebView（需 P1）；'sidecar' = Pi RPC 子进程（需 P3）
@@ -26,7 +26,7 @@ const config: Partial<AgentConfig> = {
     //   models: [{ id: 'qwen3:8b', contextWindow: 32768 }],
     // },
     //
-    // 例 2：云端 Provider，密钥存 OS 钥匙串（P2 已落地，经 Rust 代理读取）
+    // 例 2：云端 Provider，密钥存 OS 钥匙串，请求由 Rust 代理注入密钥
     // 首次使用前调用 saveApiKey('openai', 'default', 'sk-...') 存入钥匙串
     // {
     //   id: 'openai',
@@ -40,7 +40,8 @@ const config: Partial<AgentConfig> = {
   // 内置工具必须显式声明；shell 默认不开，避免 Agent 执行任意命令
   tools: { builtins: [] },
 
-  // 请求经 Rust 侧代理，密钥不出现在前端（需 Cargo feature `agent` 已启用）
+  // keychain Provider 必须为 true；WebView 没有读取已存密钥的命令
+  // 需用 Cargo feature `agent` 构建 Tauri 应用
   secureProxy: true,
 };
 

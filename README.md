@@ -55,7 +55,7 @@
 - **设计系统**：完整 design tokens + 6 个基础组件 + 4 套风格主题
 - **模块化**：三层门控（配置 + 动态 import + Cargo feature），能力可插拔
 - **Agent 能力（Preview）**：Vercel AI SDK inline 适配器与扩展接口；默认关闭
-- **密钥安全（Preview）**：OS 钥匙串与 Rust 代理正在收敛为受限请求边界
+- **密钥安全（Preview）**：已存密钥不可从 WebView 读回；OpenAI/Anthropic 请求由固定目标的 Rust 代理注入
 - **本地推理（Preview）**：提供 Ollama/OpenAI-compatible 预设，需开发者验证本机环境
 - **MCP 接入（Preview）**：提供 HTTP/SSE client 适配器，完整 Agent 工具闭环仍在验证
 - **工程化**：GitHub Actions 三端打包 + CI 质量门禁
@@ -220,7 +220,7 @@ npm run add:agent   # 装 ai + @ai-sdk/vue + provider 包
 # 在 agent.config.ts 设 enabled: true，配 provider + defaultModel
 ```
 
-支持云端模型（OpenAI/Anthropic）与本地模型（Ollama）。密钥走 keychain 类型存 OS 钥匙串。详见 [docs/agent-integration.md](./docs/agent-integration.md) 与 [docs/local-inference.md](./docs/local-inference.md)。
+支持云端模型（OpenAI/Anthropic）与本地模型（Ollama）。云端密钥存 OS 钥匙串，WebView 只可写入、删除和检查是否存在，无法读回明文；请求由 Rust 代理发往固定官方 API。详见 [docs/agent-integration.md](./docs/agent-integration.md) 与 [docs/local-inference.md](./docs/local-inference.md)。
 
 ### MCP 接入
 
@@ -243,7 +243,10 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 | --- | --- |
 | `npm run dev` | 启动前端开发服务器 |
 | `npm run build` | 类型检查 + 前端构建 |
+| `npm test` | 运行无额外框架依赖的行为测试 |
 | `npm run typecheck` | 仅类型检查 |
+| `npm run check:layout` | 验证生产 CSS 的移动端布局契约 |
+| `npm run check:docs` | 检查 Markdown 相对链接 |
 | `npm run tauri dev` | 启动桌面应用（含 Rust 热重载） |
 | `npm run tauri build` | 打包当前平台 |
 | `npm run tauri:signer` | 生成更新签名密钥 |
@@ -254,7 +257,7 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 
 - 上线前将 `tauri.conf.json` 的 `app.security.csp` 从 `null` 改为具体 CSP。
 - `identifier` 发布后不可更改。
-- API Key 存 OS 钥匙串（keyring），不硬编码、不存 localStorage。
+- API Key 存 OS 钥匙串（keyring），不硬编码、不存 localStorage；已存密钥不提供读取命令。
 - 新增插件需同步三处：`Cargo.toml`、`lib.rs`、`capabilities/default.json`。
 
 ## 🤝 贡献
