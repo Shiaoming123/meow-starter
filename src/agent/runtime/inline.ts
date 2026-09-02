@@ -36,7 +36,7 @@ export function createInlineRuntime(cfg: AgentConfig): AgentRuntime {
       if (!modelRef) {
         throw new Error('[agent] 未指定模型：请在 agent.config.ts 设置 defaultModel');
       }
-      const model = await resolveModel(modelRef);
+      const model = await resolveModel(modelRef, cfg.secureProxy);
       const memory = cfg.memory.backend === 'sqlite' ? sqliteMemoryStore : browserMemoryStore;
       if (req.sessionId && cfg.memory.backend === 'sqlite') await initAgentTables();
       const history = req.sessionId
