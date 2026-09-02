@@ -1,9 +1,12 @@
 import type { ProviderConfig } from '../config';
-import { toProviderInstance, type ProviderInstance } from './types';
+import { toProviderInstance, type ProviderInstance } from './types.ts';
 
 const providers = new Map<string, ProviderInstance>();
 
 export function registerProvider(cfg: ProviderConfig): void {
+  if (providers.has(cfg.id)) {
+    throw new Error(`[agent] provider 已注册: "${cfg.id}"`)
+  }
   providers.set(cfg.id, toProviderInstance(cfg));
 }
 

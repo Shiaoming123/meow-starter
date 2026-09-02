@@ -1,4 +1,5 @@
 import { resolveConfig } from './config';
+import { bootstrapProviders } from './bootstrap';
 import type { AgentConfig } from './config';
 import type { AgentRuntime } from './runtime/types';
 
@@ -11,6 +12,7 @@ import type { AgentRuntime } from './runtime/types';
 export async function loadAgent(user?: Partial<AgentConfig>): Promise<AgentRuntime | null> {
   const cfg = resolveConfig(user);
   if (!cfg.enabled) return null;
+  bootstrapProviders(cfg);
   const { createRuntime } = await import('./runtime');
   return createRuntime(cfg);
 }
