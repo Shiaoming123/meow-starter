@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { AgentConfig } from '../config';
 import type { HookBus } from '../hooks/bus';
 import { resolveModel } from '../providers/adapter';
+import { decideToolApproval } from '../tools/approval';
 import { listTools } from '../tools/registry';
 import type { AgentEvent, AgentRequest, AgentRuntime } from './types';
 
@@ -43,9 +44,6 @@ export function createInlineRuntime(cfg: AgentConfig): AgentRuntime {
             // AI SDK 要求 inputSchema 必填；无参工具兜底为空对象 schema。
             // ToolDef 侧保持 unknown 以免骨架强绑 zod，适配在此收敛。
             inputSchema: (t.inputSchema ?? z.object({})) as FlexibleSchema<unknown>,
-            needsApproval: t.needsApproval
-              ? (input: unknown) => t.needsApproval!(input as never)
-              : undefined,
             execute: async (args, opts) => {
               const intercepted = await hooks.interceptToolCall({
                 toolCallId: opts.toolCallId,
@@ -54,6 +52,33 @@ export function createInlineRuntime(cfg: AgentConfig): AgentRuntime {
               });
               if (intercepted.blocked) {
                 return { error: intercepted.reason ?? 'blocked by hook' };
+              }
+
+              let toolRequiresApproval = false;
+              try {
+                toolRequiresApproval = t.needsApproval?.(intercepted.args as never) ?? false;
+              } catch {
+                return { error: 'tool approval predicate failed closed' };
+              }
+
+              const approval = decideToolApproval(
+                cfg.approval,
+                t.name,
+                intercepted.args,
+                toolRequiresApproval,
+              );
+              if (approval === 'deny') {
+                return { error: 'tool execution denied by policy' };
+              }
+              if (
+                approval === 'confirm' &&
+                !(await hooks.requestApproval({
+                  toolCallId: opts.toolCallId,
+                  name: t.name,
+                  args: intercepted.args,
+                }))
+              ) {
+                return { error: 'tool execution was not approved' };
               }
 
               const result = await t.execute(intercepted.args, {
