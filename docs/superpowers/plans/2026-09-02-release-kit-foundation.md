@@ -273,9 +273,12 @@ for (const command of commands) {
 
 Add `doctor`, `verify`, and `rust:verify` package scripts. `doctor` exits
 successfully with warnings; both verification commands exit at the first failed
-quality gate. `rust:verify` imports `removeAppleDoubleFiles`, then uses
-`join(tmpdir(), 'meow-starter-cargo-target')` as `CARGO_TARGET_DIR` only when
-the inspected filesystem is exFAT on macOS.
+quality gate. `rust:verify` imports `removeAppleDoubleFiles`, preserves any
+caller-provided `CARGO_TARGET_DIR`, and uses
+`join(tmpdir(), 'meow-starter-cargo-target')` only as a macOS exFAT fallback
+when that variable is absent. The fallback must warn that the temporary
+directory's filesystem type has not been verified as native; a caller-selected
+native target directory remains the supported path.
 
 - [ ] **Step 5: Run proof commands**
 

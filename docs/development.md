@@ -14,6 +14,8 @@ npm run tauri dev
 
 For the Web-only app, use `npm run dev:web`. Before sharing a frontend change, run `npm run verify`; it runs `test`, `typecheck`, `build`, `build:web`, `check:layout`, and `check:docs` in that order. Use `npm run release:check` to inspect versions, identifiers, bundle icons, updater configuration, and signing-related configuration in template mode.
 
+`npm run doctor` reports the Node, npm, Rust, Cargo, and local Tauri CLI versions, the official Tauri platform-prerequisite guide, and the locations of `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json`. Missing tools include installation guidance. The command does not enumerate environment variables, secrets, or keychains.
+
 ## exFAT checkouts on macOS
 
 macOS can create AppleDouble sidecars (`._*`) on exFAT volumes. Those sidecars can be mistaken for test files or Tauri capability/configuration files. Run `npm run doctor` after setup and whenever a tool behaves unexpectedly: it warns when it detects this filesystem condition.
@@ -32,7 +34,7 @@ Rust output should be placed on a native filesystem when the checkout is on exFA
 CARGO_TARGET_DIR=/absolute/path/on/apfs npm run rust:verify
 ```
 
-`npm run rust:verify` cleans known AppleDouble sidecars before its Rust gates.
+`npm run rust:verify` preserves a caller-provided `CARGO_TARGET_DIR` and cleans known AppleDouble sidecars before its Rust gates. On macOS exFAT only, when no target directory is provided, it uses the operating-system temporary directory as a fallback and warns that the fallback filesystem has not been verified as native. A caller-selected APFS path remains the supported choice for reliable Rust builds.
 
 ## Everyday command matrix
 

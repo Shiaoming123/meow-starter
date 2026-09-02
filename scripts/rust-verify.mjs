@@ -1,20 +1,18 @@
 import { spawnSync } from 'node:child_process'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { removeAppleDoubleFiles } from './release-kit/appledouble.mjs'
-import { inspectEnvironment } from './release-kit/environment.mjs'
+import { inspectEnvironment, prepareCargoEnvironment } from './release-kit/environment.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const removed = await removeAppleDoubleFiles(root)
 const environment = await inspectEnvironment(root)
-const cargoEnvironment = { ...process.env }
-
-if (process.platform === 'darwin' && environment.summary.at(-1) === 'Filesystem: exfat') {
-  cargoEnvironment.CARGO_TARGET_DIR = join(tmpdir(), 'meow-starter-cargo-target')
-}
+const cargo = prepareCargoEnvironment(process.env, {
+  filesystemType: environment.filesystemType,
+  platform: process.platform,
+})
 
 console.log(`Removed ${removed.length} AppleDouble file(s).`)
+for (const warning of cargo.warnings) console.warn(`WARN: ${warning}`)
 
 const commands = [
   ['fmt', '--manifest-path', 'src-tauri/Cargo.toml', '--all', '--', '--check'],
@@ -24,6 +22,6 @@ const commands = [
 ]
 
 for (const args of commands) {
-  const result = spawnSync('cargo', args, { env: cargoEnvironment, stdio: 'inherit' })
+  const result = spawnSync('cargo', args, { env: cargo.environment, stdio: 'inherit' })
   if (result.status !== 0) process.exit(result.status ?? 1)
 }

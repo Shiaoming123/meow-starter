@@ -34,6 +34,10 @@ function isPlaceholderEndpoint(endpoint) {
 }
 
 export async function inspectReleaseConfig(root, mode) {
+  if (mode !== 'template' && mode !== 'release') {
+    throw new TypeError(`Unknown release check mode: ${mode}`)
+  }
+
   const errors = []
   const warnings = []
   const summary = [`Release configuration mode: ${mode}`]
@@ -114,6 +118,22 @@ export async function inspectReleaseConfig(root, mode) {
     }
     summary.push(`Updater endpoints: ${endpoints.length}`)
   }
+
+  const signingIssues = []
+  if (typeof tauri?.plugins?.updater?.pubkey !== 'string' || tauri.plugins.updater.pubkey.trim() === '') {
+    signingIssues.push('Missing non-empty updater public key at plugins.updater.pubkey')
+  } else {
+    summary.push('Updater public key: configured')
+  }
+
+  const updaterArtifacts = tauri?.bundle?.createUpdaterArtifacts
+  if (updaterArtifacts !== true && updaterArtifacts !== 'v1Compatible') {
+    signingIssues.push('bundle.createUpdaterArtifacts must enable updater artifacts (true or "v1Compatible")')
+  } else {
+    summary.push('Updater artifacts: enabled')
+  }
+
+  ;(mode === 'release' ? errors : warnings).push(...signingIssues)
 
   return { errors, warnings, summary }
 }

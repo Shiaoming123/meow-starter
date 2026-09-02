@@ -114,9 +114,12 @@ cargo test --manifest-path src-tauri/Cargo.toml --all-features
 cargo check --manifest-path src-tauri/Cargo.toml --all-features
 ```
 
-For an exFAT checkout, Rust verification uses a caller-selected target directory
-on a native filesystem. CI remains unchanged because its Linux filesystem does
-not create AppleDouble sidecars.
+For an exFAT checkout, Rust verification preserves a caller-selected target
+directory on a native filesystem. If no target directory is provided on macOS
+exFAT, the wrapper may use the operating-system temporary directory only as a
+fallback and must warn that its filesystem type has not been verified as
+native. CI remains unchanged because its Linux filesystem does not create
+AppleDouble sidecars.
 
 ## Deferred work
 

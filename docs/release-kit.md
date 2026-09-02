@@ -27,13 +27,15 @@ npm run release:check
 npm run verify
 ```
 
-`npm run release:check` defaults to template mode. In that mode, the starter's `OWNER/REPO` updater endpoint is reported explicitly as a placeholder rather than accepted as release-ready. When a project has supplied a real endpoint, use the stricter check:
+`npm run release:check` defaults to template mode. In that mode, the starter's `OWNER/REPO` updater endpoint and incomplete updater-signing preparation are reported explicitly as warnings rather than accepted as release-ready. The check inspects the non-secret `plugins.updater.pubkey` and `bundle.createUpdaterArtifacts` fields; it never reads a private signing key or secret. When a project has supplied a real endpoint and signing configuration, use the stricter check:
 
 ```bash
 npm run release:check -- --mode=release
 ```
 
 Keep `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json` versions aligned. A valid identifier, bundle icons, and HTTPS updater endpoint are configuration checks, not a substitute for a signed end-to-end release.
+
+Only `template` and `release` are valid mode values. Unknown values fail instead of falling back to template mode.
 
 ## Credentials and handoff
 
