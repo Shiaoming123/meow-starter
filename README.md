@@ -5,9 +5,9 @@
 <h1 align="center">🐾 meow-starter</h1>
 
 <p align="center">
-  <strong>AI Native 全平台桌面 & 移动脚手架</strong><br/>
-  一套开箱即用的 <b>Tauri 2 + Vue 3</b> 底座，覆盖 macOS / Windows / Linux / Android / iOS 五端。<br/>
-  内置 SQLite、系统托盘、自动更新、设计系统，可插拔的 Agent / MCP / 本地推理。
+  <strong>AI Native、桌面优先的跨平台应用脚手架</strong><br/>
+  一套可直接扩展的 <b>Tauri 2 + Vue 3</b> 底座：桌面三端为主，移动端提供 Beta 级代码适配。<br/>
+  稳定核心包含 SQLite、托盘与设计系统；更新器及 Agent / MCP / 本地推理按成熟度渐进启用。
 </p>
 
 <p align="center">
@@ -38,26 +38,26 @@
 
 | 平台 | 状态 | 说明 |
 | --- | --- | --- |
-| macOS | ✅ 完整支持 | 主开发平台，签名 + 公证已文档化 |
-| Windows | ✅ 完整支持 | MSVC + WebView2，已配三端打包 CI |
-| Linux | ✅ 完整支持 | WebKitGTK，覆盖 Debian / Arch / Fedora |
-| iOS | ✅ 代码就绪 | 响应式布局 + 降级已落地；`tauri ios init` 在 Xcode 环境一键启用 |
-| Android | ✅ 代码就绪 | 响应式布局 + 降级已落地；`tauri android init` 在 Android Studio 环境一键启用 |
+| macOS | Stable | release workflow 覆盖构建、签名与公证配置 |
+| Windows | Stable | release workflow 覆盖 MSVC + WebView2 打包 |
+| Linux | Stable | release workflow 覆盖 Ubuntu 构建；其他发行版需项目自行验证 |
+| iOS | Beta | 响应式与桌面能力降级已落地；尚未在 Xcode/真机持续验证 |
+| Android | Beta | 响应式与桌面能力降级已落地；尚未在 Android 工具链/真机持续验证 |
 
-> 代码层（响应式布局、桌面专属能力降级、平台检测）已全部就绪。移动端工程初始化需要 Android Studio + NDK / Xcode + Cocoapods，详见 [docs/mobile.md](./docs/mobile.md)。
+> 移动端当前表示“代码适配可用”，不是“已验证可发布”。原生工程初始化需要 Android Studio + NDK / Xcode + CocoaPods，详见 [docs/mobile.md](./docs/mobile.md)。
 
 ## ✨ 特性
 
 - **前端**：Vue 3.5 + TypeScript + Vite 6，深色模式跟随系统
 - **数据层**：SQLite（`tauri-plugin-sql`），启动自动迁移 + 类型安全 CRUD
 - **系统层**：系统托盘、单实例、关闭窗口隐藏而非退出
-- **自动更新**：签名 → 下载 → 安装 → 重启全链路
+- **自动更新（Beta）**：包含签名、下载、安装与重启代码路径；需用自己的端点和密钥完成签名发布验证
 - **设计系统**：完整 design tokens + 6 个基础组件 + 4 套风格主题
 - **模块化**：三层门控（配置 + 动态 import + Cargo feature），能力可插拔
-- **Agent 能力**：Vercel AI SDK 默认轨 + Pi RPC 进阶轨，防腐层隔离
-- **密钥安全**：API Key 存 OS 钥匙串，经 Rust 代理，不落前端
-- **本地推理**：适配 Ollama，模型跑本机、数据不出设备
-- **MCP 接入**：连接外部 MCP server，工具并入 Agent
+- **Agent 能力（Preview）**：Vercel AI SDK inline 适配器与扩展接口；默认关闭
+- **密钥安全（Preview）**：OS 钥匙串与 Rust 代理正在收敛为受限请求边界
+- **本地推理（Preview）**：提供 Ollama/OpenAI-compatible 预设，需开发者验证本机环境
+- **MCP 接入（Preview）**：提供 HTTP/SSE client 适配器，完整 Agent 工具闭环仍在验证
 - **工程化**：GitHub Actions 三端打包 + CI 质量门禁
 - **无 Electron**：安装包约 3–20 MB，远小于 Electron 的 ~300 MB
 
@@ -104,6 +104,9 @@ cd my-app && npm install && npm run tauri dev
 4. `src-tauri/icons/` 换成自己的图标
 5. 重新生成更新签名密钥（`npm run tauri:signer`）
 6. 将 `plugins.updater.endpoints` 中的 `OWNER/REPO` 替换为自己的仓库
+7. 更新 `package.json` 与 `src-tauri/Cargo.toml` 的 repository/homepage/author 元数据
+8. 修改 `src/App.vue` 的品牌文案、`src-tauri/src/tray.rs` 的 tooltip，以及钥匙串命名空间 `src-tauri/src/agent/secrets.rs`
+9. 同步 `package.json`、`src-tauri/Cargo.toml`、`src-tauri/tauri.conf.json` 的版本号
 
 ## 🧱 模块化能力一览
 
@@ -123,19 +126,28 @@ cd my-app && npm install && npm run tauri dev
 | `notification` | 可选 | 关 | 系统通知（P1） |
 | `autostart` | 可选 | 关 | 开机自启（P1） |
 
-> 完整设计见 [docs/modular-architecture.md](./docs/modular-architecture.md)。关闭的模块 = 零依赖、零体积。
+> 完整设计见 [docs/modular-architecture.md](./docs/modular-architecture.md)。关闭的模块不会进入默认运行时加载路径；依赖安装量与最终产物体积仍应以 lockfile 和构建产物为准。
+
+### 成熟度约定
+
+| 级别 | 含义 | 当前能力 |
+| --- | --- | --- |
+| Stable | 默认路径有自动化门禁 | core、SQLite、主题、桌面托盘/单实例 |
+| Beta | 代码闭环存在，但发布环境验证仍有限 | 更新器、移动端响应式与能力降级 |
+| Preview | 默认关闭，接口与安全边界仍可能变化 | Agent、Ollama、MCP、可选系统插件 |
+| Roadmap | 只有设计或占位，不承诺可运行 | sidecar、RAG、语音、OCR |
 
 ## 🏗 架构
 
 ![architecture](docs/architecture.svg)
 
-前端（Vue 3）通过 `invoke` / `listen` 与 Rust 运行时通信；模块化 loader 按需加载能力模块；Agent 密钥经 Rust 代理（keyring 钥匙串）；可连接 Ollama / 云端模型 / MCP server 等外部服务。
+前端（Vue 3）通过 `invoke` / `listen` 与 Rust 运行时通信；模块 loader 按依赖顺序装配启用能力。Agent、Ollama、云端模型与 MCP 位于 Preview 扩展层，默认路径不加载。
 
 ### 五端覆盖
 
 ![跨端覆盖](docs/cross-platform.png)
 
-同一份代码，同一套模块化能力，覆盖 **macOS / Windows / Linux / Android / iOS** 五大平台。桌面专属能力（托盘 / 单实例 / 自动更新）在移动端安全降级，移动端采用响应式布局。
+同一份代码面向 **macOS / Windows / Linux / Android / iOS**。桌面三端是主要验证目标；移动端采用响应式布局并降级桌面专属能力，当前成熟度为 Beta。
 
 ## 📂 项目结构
 

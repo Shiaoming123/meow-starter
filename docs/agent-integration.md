@@ -3,12 +3,14 @@
 > 面向 `meow-starter`（Tauri 2 + Vue 3 桌面脚手架）的 AI Native 演进设计
 > 调研基准日：**2026-09-01**（所有 star 数、版本号、体积均为该日实测）
 > 结论均标注依据（仓库 / 版本 / 文档链接），便于后续复核
+>
+> **成熟度：Preview。** 当前仓库提供 inline runtime、Provider/Memory/Tool/Hook 接口和 Rust 侧安全能力骨架，默认关闭。本文同时记录目标架构；只有经过测试覆盖的路径才应视为已实现，sidecar 仍是 Roadmap。
 
 ---
 
 ## 0. 背景与设计约束
 
-本脚手架定位 **AI Native 桌面应用底座**，但当前只提供 SQLite、托盘、自动更新等通用能力，Agent 相关能力尚未纳入。需要在**不牺牲核心轻量**的前提下，把 Agent 能力做成可选模块。
+本脚手架定位 **AI Native 桌面应用底座**。当前默认路径提供 SQLite、托盘、更新等通用能力，Agent 骨架作为默认关闭的 Preview 模块存在；后续工作是在**不牺牲核心轻量**的前提下补齐可验证的安全闭环。
 
 设计前先明确本项目的硬性约束，它们直接决定了候选方案的取舍：
 
@@ -363,10 +365,10 @@ agent-sidecar = ["agent"] # + Pi RPC 子进程管理
 
 | 阶段 | 目标 | 交付物 | 核心包增量 | 验收标准 |
 |---|---|---|---|---|
-| **P0 — 骨架（默认零负担）** | 只落目录与类型，不装任何 Agent 依赖 | `src/agent/**` 骨架 + `agent.config.ts` + Cargo feature 声明 + 文档 | **0 KB** | 关闭时 `npm run build` 产物与当前完全一致；`vue-tsc` 通过 |
-| **P1 — 默认轨（inline）** | AI SDK 跑通最小闭环 | `runtime/inline.ts` + `ChatPanel.vue` + Provider 注册 + SQLite 记忆 | 约 46MB node_modules（**dev 依赖，bundle 增量视 tree-shaking 而定**） | 能在 Demo 中与一家云端 Provider 完成一轮流式对话 + 一次工具调用 |
-| **P2 — 安全与可控** | 解决密钥与审批 | Rust `proxy.rs` + `secrets.rs` + `ApprovalGate.vue` + 内置工具（fs/db） | Rust 侧新增约 2 个文件 | API Key 不出现在前端 bundle；危险工具调用弹出确认；`strings` 检查产物无明文密钥 |
-| **P3 — 进阶轨（sidecar，可选）** | 接入 Pi 完整 harness | `runtime/sidecar.ts` + Rust `sidecar.rs` + 钩子映射 + 会话树 UI | Pi agent-core 约 90MB + Node 运行时 | `feature = "agent-sidecar"` 下可 spawn Pi 并完成 RPC 一轮对话；默认 feature 下不编译 |
+| **P0 — 骨架（已实现）** | 落目录、类型与默认关闭配置 | `src/agent/**` 骨架 + `agent.config.ts` + Cargo feature + 文档 | 依赖已存在于 lockfile；默认运行时不加载 | `vue-tsc` 与默认构建通过 |
+| **P1 — 默认轨（Preview）** | inline 适配器与最小 UI | `runtime/inline.ts` + `ChatPanel.vue` + Provider/Memory 接口 | bundle 增量以构建报告为准 | 仍需真实 Provider 端到端验证 |
+| **P2 — 安全与可控（进行中）** | 收紧代理、审批和内置工具边界 | Rust proxy/secrets + ApprovalGate + 工具白名单 | Rust feature 可选 | 安全回归测试完成后再升级成熟度 |
+| **P3 — 进阶轨（Roadmap）** | 接入 Pi sidecar | sidecar、钩子映射、会话树 UI | 未引入 | 尚不可运行 |
 | **P4 — 观察与再评估** | 跟踪 dsh 与生态 | 评估记录，不写生产代码 | 0 | dsh 发布 1.0 稳定版后重跑本对比表 |
 
 **建议停手点**：P0–P2 是绝大多数 AI Native 桌面应用所需；P3 仅当项目确实需要会话树 / 沙箱 / 完整编码 Agent 能力时才投入。
@@ -390,7 +392,7 @@ agent-sidecar = ["agent"] # + Pi RPC 子进程管理
 
 ### 5.2 关键取舍
 
-1. **能力完整度 vs 体积**：默认轨选 AI SDK（能力适中、体积最小），把 Pi 的完整能力放到可选轨。牺牲了开箱即用的会话树/沙箱，换来核心零负担。
+1. **能力完整度 vs 体积**：默认轨选 AI SDK（能力适中、体积较小），把 Pi 的完整能力放到 Roadmap。牺牲开箱即用的会话树/沙箱，换取更轻的默认运行时路径。
 2. **前端直连 vs Rust 代理**：前端直连最简单但密钥裸奔；Rust 代理安全但要自己实现流式透传（SSE）。本方案选后者，因为桌面 App 的密钥泄露是不可接受的安全事故。
 3. **自建抽象 vs 直接用 SDK 原生 API**：自建 `AgentRuntime` 有额外维护成本，但换来可替换性 —— 这正是"脚手架"应有的姿态：不把任何一家 SDK 的 API 形状强加给下游项目。
 4. **dsh 现在集成 vs 等 1.0**：选择等。206K star 很有吸引力，但 alpha + 每周破坏性重构 + React 客户端，此刻集成的风险远大于收益；其架构思想（seam 化、Host Controller 契约）已被吸收进 §3 的设计。
@@ -414,7 +416,7 @@ agent-sidecar = ["agent"] # + Pi RPC 子进程管理
 2. **进阶选 Pi（RPC 模式）**：官方为嵌入场景设计的 RPC + Extension UI Protocol，约 30 个生命周期钩子，会话树与 SQLite 后端与本项目高度契合，MIT 协议。
 3. **DeepSeek Harness 暂不集成、只借鉴**："一切皆插件"与能力接缝思想已直接体现在 §3.3 的五个扩展点设计中；待 1.0 稳定后重跑本文对比表再决策。
 4. **通过防腐层保证可替换**：业务代码只依赖 `AgentRuntime` 接口，任何一家 SDK 都可作为 adapter 接入或替换。
-5. **P0 阶段依赖增量为 0**：`enabled: false` 时产物与现状完全一致，严格守住"核心轻量"这条底线。
+5. **默认运行时保持轻量**：`enabled: false` 时 Agent 不进入默认运行时加载路径；安装依赖量和产物增量以 lockfile 与构建报告为准。
 
 ---
 

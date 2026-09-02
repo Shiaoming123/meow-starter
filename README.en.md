@@ -5,9 +5,9 @@
 <h1 align="center">🐾 meow-starter</h1>
 
 <p align="center">
-  <strong>An AI-native, full-platform desktop & mobile scaffold</strong><br/>
-  A ready-to-use <b>Tauri 2 + Vue 3</b> base covering <b>macOS / Windows / Linux / Android / iOS</b>.<br/>
-  Bundles SQLite, system tray, auto-updater, a design system, and pluggable Agent / MCP / local-inference capabilities.
+  <strong>An AI-native, desktop-first cross-platform scaffold</strong><br/>
+  An extensible <b>Tauri 2 + Vue 3</b> base for the three desktop platforms, with Beta mobile code adaptation.<br/>
+  A stable SQLite, tray, and design-system core with updater and AI capabilities enabled by maturity.
 </p>
 
 <p align="center">
@@ -39,13 +39,13 @@
 - **Frontend**: Vue 3.5 + TypeScript + Vite 6, follows system dark mode
 - **Data**: SQLite (`tauri-plugin-sql`) with auto-migration and type-safe CRUD
 - **System**: tray, single-instance, close-to-tray instead of quit
-- **Auto-update**: sign → download → install → relaunch, full pipeline
+- **Auto-update (Beta)**: sign, download, install, and relaunch code path; signed-release verification is project-specific
 - **Design system**: complete design tokens + 6 base components + 4 themes
 - **Modular**: three-layer gating (config + dynamic import + Cargo feature)
-- **Agent**: Vercel AI SDK (default) + Pi RPC (advanced), behind an anti-corruption layer
-- **Secret safety**: API keys in OS keychain, proxied through Rust, never in frontend
-- **Local inference**: adapts Ollama, models run on-device
-- **MCP**: connect external MCP servers, merge tools into the Agent
+- **Agent (Preview)**: Vercel AI SDK inline adapter and extension interfaces; off by default
+- **Secret safety (Preview)**: OS keychain and Rust proxy code converging on a restricted request boundary
+- **Local inference (Preview)**: Ollama/OpenAI-compatible presets requiring local environment verification
+- **MCP (Preview)**: HTTP/SSE client adapter; the full Agent tool loop is still being verified
 - **Engineering**: GitHub Actions 3-platform build matrix + CI gates
 - **No Electron**: ~3–20 MB bundles vs ~300 MB
 
@@ -85,6 +85,9 @@ cd my-app && npm install && npm run tauri dev
 4. Your own icons in `src-tauri/icons/`
 5. Regenerate the update signing key (`npm run tauri:signer`)
 6. Replace `OWNER/REPO` in `plugins.updater.endpoints` with your repository
+7. Update repository/homepage/author metadata in `package.json` and `src-tauri/Cargo.toml`
+8. Replace UI branding, the tray tooltip, and the keychain namespace in `src-tauri/src/agent/secrets.rs`
+9. Keep versions synchronized across `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json`
 
 Template updater endpoints are treated as unconfigured at build time, so the app will not send a broken update request before this step is complete.
 
@@ -106,13 +109,22 @@ Each capability is a pluggable module, toggled in `src/modules/config.ts`:
 | `notification` | optional | off | Notifications |
 | `autostart` | optional | off | Auto-start on boot |
 
-> Full design: [docs/modular-architecture.md](./docs/modular-architecture.md). Disabled modules = zero deps, zero size.
+> Full design: [docs/modular-architecture.md](./docs/modular-architecture.md). Disabled modules are not loaded on the default runtime path; use the lockfile and build output to judge install and distribution size.
+
+### Maturity model
+
+| Level | Meaning | Current capabilities |
+| --- | --- | --- |
+| Stable | Automated gates cover the default path | core, SQLite, themes, desktop tray/single-instance |
+| Beta | Code path exists; release-environment evidence is limited | updater, responsive mobile adaptation and desktop-feature fallback |
+| Preview | Off by default; interfaces or safety boundaries may change | Agent, Ollama, MCP, optional system plugins |
+| Roadmap | Design or placeholder only | sidecar, RAG, speech, OCR |
 
 ## 🏗 Architecture
 
 ![architecture](docs/architecture.svg)
 
-The frontend (Vue 3) communicates with Rust via `invoke`/`listen`; the modular loader loads capabilities on demand; Agent secrets are proxied through Rust (keychain); external services include Ollama, cloud models, and MCP servers.
+The Vue frontend communicates with Rust via `invoke`/`listen`, while the module loader assembles enabled capabilities in dependency order. Agent, Ollama, cloud-provider, and MCP integrations live in the Preview extension layer and are not loaded on the default path.
 
 ## 📂 Project structure
 

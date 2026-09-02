@@ -9,7 +9,7 @@
 
 | 维度 | 现状 | 目标 |
 |---|---|---|
-| 桌面端 | ✅ macOS / Windows / Linux 已落地 | 保持 |
+| 桌面端 | ✅ macOS / Windows / Linux 为主要 CI 与发布目标 | 保持 |
 | 移动端 | 🟡 已完成 M1–M2 代码适配，尚未经过原生工具链验证 | 补 Android / iOS 完整适配 |
 | 前端 | ✅ 桌面侧边栏 + 移动端底部 tab | 保持响应式与安全区适配 |
 | 桌面专属能力 | tray / single-instance / updater | 移动端安全降级 |
