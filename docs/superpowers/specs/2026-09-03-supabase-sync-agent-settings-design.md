@@ -76,6 +76,42 @@ an explicitly selected local secure-storage adapter on desktop and follows the
 Web platform's documented storage boundary. Supabase publishable URL/key are
 the only `VITE_` values; no `.env` value is committed.
 
+## Adoption paths and operator guide
+
+Supabase is an optional reference backend, not a runtime prerequisite. The
+starter continues to work in local-only mode when `sync` and `agent` are
+disabled; users do not need an account, Docker, a cloud project, or any
+environment value to run the base application.
+
+The user guide presents four explicitly separate paths, all using the same
+revision-aware `SyncTransport` contract:
+
+1. **Local-only (default):** no account and no network. Agent profile and
+   usage remain device-local; this is the recommended first-run experience.
+2. **Managed Supabase (recommended cloud path):** create a hosted project,
+   apply the tracked migration, deploy the `sync` function, configure only the
+   project URL and publishable key locally, then sign in. The guide provides a
+   copyable prerequisite check, commands discovered from the installed CLI,
+   and a two-device verification checklist. Secret/service-role keys never
+   appear in the app configuration.
+3. **Self-hosted Supabase:** use the same tracked migration and Edge Function
+   against a production-hardened Docker deployment. The guide distinguishes a
+   local CLI stack (development/testing only) from a public self-hosted server,
+   and calls out operator-owned TLS, backups, upgrades, monitoring, and
+   incident response. It does not imply that `supabase start` is production.
+4. **Bring-your-own backend:** implement the documented `POST /push` and
+   `GET /pull` contract, including user authentication, owner isolation,
+   operation idempotency, compare-and-swap revisions, tombstones, and ordered
+   checkpoints. Firebase, a private API, or another Postgres host can use this
+   route without importing Supabase packages.
+
+The guide includes a decision table, "what this enables" explanation, a
+credential-safe setup checklist, common failures (missing RLS/select policy,
+unexposed Data API tables, wrong Edge Function route, expired session), and
+an uninstall/rollback section that disables sync locally without deleting
+device data. It labels Supabase CLI/Docker checks, local integration tests,
+and a deployed two-device test as distinct evidence tiers.
+
 ## Provider and model settings
 
 Provider definitions are a curated catalog. A provider's trusted endpoint and
