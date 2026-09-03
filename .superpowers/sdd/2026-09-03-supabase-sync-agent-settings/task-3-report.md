@@ -147,3 +147,56 @@ changes are outside this task's code path.
 - `supabase/functions/sync/deno.lock`
 - `supabase/functions/sync/.npmrc`
 - `tests/supabase-sync-contract.test.ts`
+
+## Review fix round 1: payload boundary and lossless nulls
+
+Two P1 review findings were addressed without changing the Task 1 sync types:
+
+1. `agent_preferences` now has an explicit top-level payload allowlist:
+   `providerId`, `modelSlots`, `modelCapabilities`, and
+   `fallbackPreferences`. The Edge contract parser recursively rejects keys
+   associated with API keys/secrets/tokens, credential references,
+   authorization/session/cookies, endpoints/URLs, paths, prompts/messages/
+   responses/completions, usage, and raw/provider error content.
+2. The migration applies the same validation inside
+   `sync_agent_preferences_payload_is_safe(jsonb, boolean)`. `sync_push`
+   rejects unsafe payloads before deduplication or writes, while CHECK
+   constraints protect `sync_records`, `sync_operations`, and
+   `sync_change_log` from direct authenticated Data API writes.
+3. Canonical accepted/conflict and pull JSON now conditionally adds only the
+   top-level `payload` member. All recursive `jsonb_strip_nulls` calls were
+   removed, so nested null preference values are retained while tombstones
+   still omit the payload field.
+
+### Review-fix TDD evidence
+
+RED command:
+
+```text
+node --experimental-strip-types --test tests/supabase-sync-contract.test.ts
+```
+
+Result: exit 1, 4 passed and 1 failed. The new security regression received
+HTTP 200 instead of the required HTTP 400, proving that the existing function
+parser accepted an unknown `selectedModel` key and recursively nested sensitive
+keys.
+
+GREEN and regression results after the fix:
+
+| Check | Result |
+| --- | --- |
+| Focused Supabase contract test | Passed: 5 tests, 0 failures. |
+| Full `npm test` | Passed: 78 tests, 0 failures, 0 skipped. |
+| Deno Edge check | Passed with the pinned import map/lockfile. |
+| `npm run typecheck` | Passed. |
+| `npm run build` | Passed with the previously recorded Zod/Rollup comment warnings. |
+| `npm run build:web` | Passed with the same warnings. |
+| `npm run check:docs` | Passed. |
+
+The nested-null regression exercises accepted, conflict, duplicate-operation
+replay, and pull JSON at the pure function contract boundary. The PostgreSQL
+migration mirrors that construction without recursive null stripping. Docker
+remains unavailable (`docker info` cannot connect to
+`/Users/wuling/.docker/run/docker.sock`), so executing the CHECK constraints,
+RPC validation, and database round-trip remains explicitly not run rather than
+being inferred from the pure tests.

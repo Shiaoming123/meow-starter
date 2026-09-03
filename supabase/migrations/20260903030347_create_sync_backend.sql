@@ -1,3 +1,76 @@
+create function public.sync_agent_preferences_payload_is_safe(
+  p_payload jsonb,
+  p_root boolean default true
+)
+returns boolean
+language plpgsql
+immutable
+strict
+security invoker
+set search_path = ''
+as $$
+declare
+  v_key text;
+  v_child jsonb;
+  v_normalized_key text;
+begin
+  if p_root then
+    if jsonb_typeof(p_payload) is distinct from 'object' then
+      return false;
+    end if;
+    if p_payload - array[
+      'providerId',
+      'modelSlots',
+      'modelCapabilities',
+      'fallbackPreferences'
+    ] <> '{}'::jsonb then
+      return false;
+    end if;
+  end if;
+
+  if jsonb_typeof(p_payload) = 'object' then
+    for v_key, v_child in select key, value from jsonb_each(p_payload)
+    loop
+      v_normalized_key := lower(regexp_replace(v_key, '[^a-zA-Z0-9]', '', 'g'));
+      if v_normalized_key = 'key'
+        or v_normalized_key like '%apikey%'
+        or v_normalized_key like '%credential%'
+        or v_normalized_key like '%secret%'
+        or v_normalized_key like '%token%'
+        or v_normalized_key like '%authorization%'
+        or v_normalized_key like '%cookie%'
+        or v_normalized_key = 'session'
+        or v_normalized_key like '%endpoint%'
+        or v_normalized_key like '%url%'
+        or v_normalized_key like '%path%'
+        or v_normalized_key like '%prompt%'
+        or v_normalized_key like '%message%'
+        or v_normalized_key like '%response%'
+        or v_normalized_key like '%completion%'
+        or v_normalized_key like '%usage%'
+        or v_normalized_key in ('error', 'errors')
+        or v_normalized_key like '%rawerror%'
+        or v_normalized_key like '%errorbody%'
+        or v_normalized_key like '%providererror%' then
+        return false;
+      end if;
+      if not public.sync_agent_preferences_payload_is_safe(v_child, false) then
+        return false;
+      end if;
+    end loop;
+  elsif jsonb_typeof(p_payload) = 'array' then
+    for v_child in select value from jsonb_array_elements(p_payload)
+    loop
+      if not public.sync_agent_preferences_payload_is_safe(v_child, false) then
+        return false;
+      end if;
+    end loop;
+  end if;
+
+  return true;
+end;
+$$;
+
 create table public.sync_records (
   owner_id uuid not null references auth.users (id) on delete cascade,
   collection text not null,
@@ -17,7 +90,11 @@ create table public.sync_records (
   constraint sync_records_device_id_check check (char_length(last_device_id) between 1 and 256),
   constraint sync_records_payload_check check (
     (tombstone and payload is null)
-    or (not tombstone and jsonb_typeof(payload) = 'object')
+    or (
+      not tombstone
+      and payload is not null
+      and public.sync_agent_preferences_payload_is_safe(payload)
+    )
   )
 );
 
@@ -30,7 +107,13 @@ create table public.sync_operations (
   primary key (owner_id, operation_id),
   constraint sync_operations_operation_id_check check (char_length(operation_id) between 1 and 128),
   constraint sync_operations_outcome_check check (outcome in ('accepted', 'conflict')),
-  constraint sync_operations_canonical_change_check check (jsonb_typeof(canonical_change) = 'object')
+  constraint sync_operations_canonical_change_check check (
+    jsonb_typeof(canonical_change) = 'object'
+    and (
+      not (canonical_change ? 'payload')
+      or public.sync_agent_preferences_payload_is_safe(canonical_change -> 'payload')
+    )
+  )
 );
 
 create table public.sync_change_log (
@@ -55,7 +138,11 @@ create table public.sync_change_log (
   constraint sync_change_log_device_id_check check (char_length(device_id) between 1 and 256),
   constraint sync_change_log_payload_check check (
     (kind = 'delete' and payload is null)
-    or (kind = 'upsert' and jsonb_typeof(payload) = 'object')
+    or (
+      kind = 'upsert'
+      and payload is not null
+      and public.sync_agent_preferences_payload_is_safe(payload)
+    )
   )
 );
 
@@ -176,6 +263,10 @@ begin
       or (v_kind = 'delete' and v_change ? 'payload') then
       raise exception using errcode = '22023', message = 'Invalid change payload';
     end if;
+    if v_kind = 'upsert'
+      and not public.sync_agent_preferences_payload_is_safe(v_payload) then
+      raise exception using errcode = '22023', message = 'Unsafe agent preferences payload';
+    end if;
 
     begin
       v_occurred_at := (v_change ->> 'occurredAt')::timestamptz;
@@ -223,16 +314,18 @@ begin
         raise exception using errcode = '22023', message = 'Base revision has no canonical record';
       end if;
 
-      v_canonical := jsonb_strip_nulls(jsonb_build_object(
+      v_canonical := jsonb_build_object(
         'operationId', v_current.last_operation_id,
         'collection', v_current.collection,
         'recordId', v_current.record_id,
         'kind', case when v_current.tombstone then 'delete' else 'upsert' end,
-        'payload', case when v_current.tombstone then null else v_current.payload end,
         'revision', v_current.revision::text,
         'deviceId', v_current.last_device_id,
         'occurredAt', v_current.last_occurred_at
-      ));
+      ) || case
+        when v_current.tombstone then '{}'::jsonb
+        else jsonb_build_object('payload', v_current.payload)
+      end;
 
       insert into public.sync_operations (
         owner_id, operation_id, outcome, canonical_change
@@ -250,16 +343,18 @@ begin
       into v_revision
       from public.sync_change_log
       where owner_id = v_owner;
-    v_canonical := jsonb_strip_nulls(jsonb_build_object(
+    v_canonical := jsonb_build_object(
       'operationId', v_operation_id,
       'collection', v_collection,
       'recordId', v_record_id,
       'kind', v_kind,
-      'payload', case when v_kind = 'delete' then null else v_payload end,
       'revision', v_revision::text,
       'deviceId', v_device_id,
       'occurredAt', v_occurred_at
-    ));
+    ) || case
+      when v_kind = 'delete' then '{}'::jsonb
+      else jsonb_build_object('payload', v_payload)
+    end;
 
     insert into public.sync_records (
       owner_id,
@@ -364,16 +459,18 @@ begin
   )
   select
     coalesce(jsonb_agg(
-      jsonb_strip_nulls(jsonb_build_object(
+      jsonb_build_object(
         'operationId', operation_id,
         'collection', collection,
         'recordId', record_id,
         'kind', kind,
-        'payload', case when kind = 'delete' then null else payload end,
         'revision', revision::text,
         'deviceId', device_id,
         'occurredAt', occurred_at
-      )) order by server_sequence
+      ) || case
+        when kind = 'delete' then '{}'::jsonb
+        else jsonb_build_object('payload', payload)
+      end order by server_sequence
     ), '[]'::jsonb),
     max(server_sequence)
   into v_changes, v_next_checkpoint
@@ -391,5 +488,9 @@ $$;
 
 revoke all on function public.sync_push(jsonb) from public, anon, authenticated;
 revoke all on function public.sync_pull(text) from public, anon, authenticated;
+revoke all on function public.sync_agent_preferences_payload_is_safe(jsonb, boolean)
+  from public, anon, authenticated;
 grant execute on function public.sync_push(jsonb) to authenticated;
 grant execute on function public.sync_pull(text) to authenticated;
+grant execute on function public.sync_agent_preferences_payload_is_safe(jsonb, boolean)
+  to authenticated;

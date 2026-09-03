@@ -34,6 +34,12 @@ export interface SyncBackend {
 }
 
 const ALLOWED_COLLECTIONS = new Set(['agent_preferences'])
+const ALLOWED_AGENT_PREFERENCE_KEYS = new Set([
+  'providerId',
+  'modelSlots',
+  'modelCapabilities',
+  'fallbackPreferences',
+])
 const MAX_PUSH_CHANGES = 100
 const DECIMAL_SEQUENCE = /^(0|[1-9]\d*)$/
 const POSITIVE_DECIMAL_SEQUENCE = /^[1-9]\d*$/
@@ -48,6 +54,55 @@ class InvalidSyncRequest extends Error {}
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isSensitivePreferenceKey(key: string): boolean {
+  const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, '')
+  return (
+    normalized === 'key' ||
+    normalized.includes('apikey') ||
+    normalized.includes('credential') ||
+    normalized.includes('secret') ||
+    normalized.includes('token') ||
+    normalized.includes('authorization') ||
+    normalized.includes('cookie') ||
+    normalized === 'session' ||
+    normalized.includes('endpoint') ||
+    normalized.includes('url') ||
+    normalized.includes('path') ||
+    normalized.includes('prompt') ||
+    normalized.includes('message') ||
+    normalized.includes('response') ||
+    normalized.includes('completion') ||
+    normalized.includes('usage') ||
+    normalized === 'error' ||
+    normalized === 'errors' ||
+    normalized.includes('rawerror') ||
+    normalized.includes('errorbody') ||
+    normalized.includes('providererror')
+  )
+}
+
+function validatePreferenceKeys(value: unknown): void {
+  if (Array.isArray(value)) {
+    for (const item of value) validatePreferenceKeys(item)
+    return
+  }
+  if (!isObject(value)) return
+
+  for (const [key, child] of Object.entries(value)) {
+    if (isSensitivePreferenceKey(key)) {
+      throw new InvalidSyncRequest('Sensitive agent preference key')
+    }
+    validatePreferenceKeys(child)
+  }
+}
+
+function validateAgentPreferencesPayload(payload: Record<string, unknown>): void {
+  if (Object.keys(payload).some((key) => !ALLOWED_AGENT_PREFERENCE_KEYS.has(key))) {
+    throw new InvalidSyncRequest('Unknown agent preference key')
+  }
+  validatePreferenceKeys(payload)
 }
 
 function readString(
@@ -92,6 +147,7 @@ function readPendingMutation(value: unknown): PendingSyncMutation {
     throw new InvalidSyncRequest('Invalid baseRevision')
   }
   const payload = isObject(value.payload) ? value.payload : undefined
+  if (payload !== undefined) validateAgentPreferencesPayload(payload)
 
   return {
     operationId,
