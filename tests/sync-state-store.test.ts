@@ -68,3 +68,40 @@ test('IndexedDB acknowledgement removes only requested pending operations', asyn
     await deleteDB(databaseName)
   }
 })
+
+test('IndexedDB pending mutations preserve enqueue order after reopening and replacement', async () => {
+  const databaseName = `meow-test-sync-order-${Date.now()}`
+  await deleteDB(databaseName)
+
+  try {
+    const firstStore = createIndexedDbSyncStateStore({ databaseName })
+    await firstStore.enqueue({ ...pendingMutation, operationId: 'z-operation' })
+    await firstStore.enqueue({ ...pendingMutation, operationId: 'a-operation' })
+    await firstStore.enqueue({ ...pendingMutation, operationId: 'm-operation' })
+
+    const reopenedStore = createIndexedDbSyncStateStore({ databaseName })
+    assert.deepEqual(
+      (await reopenedStore.listPending(100)).map(({ operationId }) => operationId),
+      ['z-operation', 'a-operation', 'm-operation'],
+    )
+
+    await reopenedStore.enqueue({
+      ...pendingMutation,
+      operationId: 'a-operation',
+      payload: { selectedModel: 'gpt-5.7' },
+    })
+    assert.deepEqual(
+      (await reopenedStore.listPending(100)).map(({ operationId, payload }) => ({
+        operationId,
+        payload,
+      })),
+      [
+        { operationId: 'z-operation', payload: { selectedModel: 'gpt-5.6' } },
+        { operationId: 'a-operation', payload: { selectedModel: 'gpt-5.7' } },
+        { operationId: 'm-operation', payload: { selectedModel: 'gpt-5.6' } },
+      ],
+    )
+  } finally {
+    await deleteDB(databaseName)
+  }
+})
