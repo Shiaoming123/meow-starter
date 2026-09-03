@@ -78,7 +78,7 @@
     "@ai-sdk/openai": "^4.0.53",
     "@ai-sdk/vue": "^4.0.87",
     "@tauri-apps/cli": "^2",
-    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue": "^6.0.8",
     "ai": "^7.0.87",
     "fake-indexeddb": "^6.2.5",
     "playwright-core": "^1.62.1",
