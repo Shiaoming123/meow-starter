@@ -36,7 +36,7 @@
 
 `meow-starter` is a **modular, AI-native** desktop app scaffold. It handles the boilerplate that makes desktop development tedious — data layer, tray, updater, design system — while packaging AI capabilities (Agent, local inference, MCP) as **pluggable modules** you enable on demand.
 
-**Core philosophy**: lightweight core, optional capabilities, on-demand inclusion. Write zero agent code and it's a clean desktop scaffold; flip a switch and it becomes an AI app.
+**Core philosophy**: lightweight core, optional capabilities, on-demand inclusion. Write zero agent code and it is a clean desktop scaffold; a Preview capability becomes product functionality only after explicit project configuration and verification.
 
 ## ✨ Features
 
@@ -62,6 +62,7 @@
 | 🛠 Set up local development / exFAT workspace | [docs/development.md](./docs/development.md) |
 | 📦 Understand the Release Kit and release boundary | [docs/release-kit.md](./docs/release-kit.md) |
 | 🎯 Check project fit | [docs/project-guide.md](./docs/project-guide.md) |
+| 🧭 Build a first application from the scaffold | [docs/blueprints/README.md](./docs/blueprints/README.md) |
 | 🏗 Understand architecture | [Architecture](#-architecture) + [modular-architecture.md](./docs/modular-architecture.md) |
 | 🎨 Use design system/components | [docs/design-system.md](./docs/design-system.md) |
 | 🤖 Integrate Agent | [docs/agent-integration.md](./docs/agent-integration.md) |

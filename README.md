@@ -36,7 +36,7 @@
 
 `meow-starter` 是一个**模块化、AI Native** 的全平台应用脚手架。它把跨端开发里最烦的样板代码全部做完——数据层、托盘、更新、设计系统——同时把 AI 能力（Agent、本地推理、MCP）做成**可插拔模块**，让你按需启用。
 
-**核心理念**：核心轻量、能力可选、按需引入。不写一行 Agent 代码，它就是干净的桌面脚手架；打开一个开关，它就变成 AI 应用。
+**核心理念**：核心轻量、能力可选、按需引入。不写一行 Agent 代码，它就是干净的桌面脚手架；Preview 能力须由项目显式配置并完成验证后才能成为产品功能。
 
 ### Web + 五端覆盖
 
@@ -77,6 +77,7 @@
 | 🛠 配置本地开发 / exFAT 工作区 | [docs/development.md](./docs/development.md) |
 | 📦 了解 Release Kit 与发布边界 | [docs/release-kit.md](./docs/release-kit.md) |
 | 🎯 判断适不适合我的项目 | [docs/project-guide.md](./docs/project-guide.md) |
+| 🧭 从模板做出第一个应用 | [docs/blueprints/README.md](./docs/blueprints/README.md) |
 | 🏗 理解架构 | [架构图](#-架构) + [模块化架构](./docs/modular-architecture.md) |
 | 🎨 用设计系统/组件 | [docs/design-system.md](./docs/design-system.md) |
 | 🤖 接入 Agent（对话/工具） | [docs/agent-integration.md](./docs/agent-integration.md) |
