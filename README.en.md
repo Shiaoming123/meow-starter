@@ -43,7 +43,7 @@
 - **Design system**: complete design tokens + 6 base components + 4 themes
 - **Modular**: three-layer gating (config + dynamic import + Cargo feature)
 - **Agent (Preview)**: Vercel AI SDK inline adapter and extension interfaces; off by default
-- **Secret safety (Preview)**: stored keys cannot be read back by the WebView; OpenAI/Anthropic requests use a fixed-target Rust proxy
+- **Secret safety (Preview)**: stored keys cannot be read back by the WebView; OpenAI/Anthropic requests use a fixed-target Rust proxy (allowlist: `api.openai.com` / `api.anthropic.com` only — see [docs/agent-integration.md](./docs/agent-integration.md) to extend)
 - **Local inference (Preview)**: Ollama/OpenAI-compatible presets requiring local environment verification
 - **MCP (Preview)**: HTTP/SSE client adapter; the full Agent tool loop is still being verified
 - **Engineering**: GitHub Actions 3-platform build matrix + CI gates

@@ -13,7 +13,7 @@ src/
 │   ├── apply.ts        ← 主题持久化、跟随系统深浅色
 │   └── global.css       ← 全局 reset + 结构 token（间距/圆角/字号/阴影/动效/层级）
 └── components/
-    ├── Icon.vue         ← Lucide 图标封装（动态 import，按需加载）
+    ├── Icon.vue         ← Lucide 图标封装（静态注册表，构建期确定依赖）
     └── ui/
         ├── Button.vue
         ├── Input.vue
