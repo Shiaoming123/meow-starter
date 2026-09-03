@@ -40,16 +40,22 @@ export function createOutboxSyncEngine(
       let conflicts: SyncConflict[] = []
       if (pending.length > 0) {
         const pushed = await options.transport.push(pending)
+        conflicts = pushed.conflicts
+        assertAllowed(
+          conflicts.map(({ current }) => current),
+          options.policy,
+        )
+
+        for (const conflict of conflicts) {
+          await options.applyRemote(conflict.current)
+          await options.store.markAppliedOperation(conflict.current.operationId)
+          await options.store.recordConflict(conflict)
+        }
+
         await options.store.acknowledge(
           pushed.accepted.map(({ operationId }) => operationId),
         )
         uploaded = pushed.accepted.length
-        conflicts = pushed.conflicts
-
-        for (const conflict of conflicts) {
-          await options.applyRemote(conflict.current)
-          await options.store.recordConflict(conflict)
-        }
       }
 
       const previousCheckpoint = await options.store.getCheckpoint()
