@@ -31,6 +31,7 @@
 | 运行和部署 Web 版 | [web.md](./web.md) |
 | 接账号、云端或局域网同步 | [sync.md](./sync.md) |
 | 移动端适配（Android/iOS） | [mobile.md](./mobile.md) |
+| 维护开源社区与推广节奏 | [community-growth.md](./community-growth.md) |
 
 ## 按角色导航
 
@@ -62,6 +63,7 @@
 | mobile.md | 移动端适配（Android/iOS）：前置依赖 + 初始化 + 降级 |
 | web.md | Web 适配：IndexedDB、版本化 Todo 数据端口、平台能力与静态部署 |
 | sync.md | 同步接缝：outbox + HTTP + 云端/LAN/CRDT 方案选择 |
+| community-growth.md | 开源曝光、贡献者入口与首月运营节奏 |
 
 ## 架构图
 
