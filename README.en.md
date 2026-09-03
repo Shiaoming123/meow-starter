@@ -93,6 +93,19 @@ npm run dev:web
 
 **Prerequisites**: Node.js 22+ / Rust 1.77.2+ / platform deps (see [Tauri docs](https://tauri.app/start/prerequisites/)).
 
+## Runtime smoke checks
+
+These opt-in commands provide local evidence and are not part of CI or `npm run verify`:
+
+```bash
+npm run smoke:web-persistence
+npm run smoke:windows-package # Windows only
+```
+
+The Web command builds Web mode, uses an already installed Edge or Chrome to add a Todo and verify it after reload, and never downloads a browser. Set `MEOW_BROWSER_PATH` when automatic discovery cannot find the executable. The Windows command builds an unsigned NSIS installer with updater artifacts temporarily disabled, installs and redirects app data under `src-tauri/target/meow-windows-package-smoke-*`, then checks that its own child process stays alive briefly before cleanup.
+
+Neither command proves signing, hosted updater delivery, offline installation, graceful tray exit, store acceptance, or release readiness.
+
 ## 🧩 Create a new project (rename checklist)
 
 1. `name` in `package.json`

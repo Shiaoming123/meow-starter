@@ -288,6 +288,8 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 | `npm run dev:web` | 启动显式 Web 开发模式 |
 | `npm run build` | 类型检查 + 前端构建 |
 | `npm run build:web` | 类型检查 + Web 静态构建 |
+| `npm run smoke:web-persistence` | 可选：真实浏览器新增 Todo、刷新后验证 IndexedDB 持久化 |
+| `npm run smoke:windows-package` | 可选：Windows 未签名 NSIS 打包、受限目录安装与启动存活检查 |
 | `npm test` | 运行无额外框架依赖的行为测试 |
 | `npm run typecheck` | 仅类型检查 |
 | `npm run check:modules` | 核对模块目录、当前默认配置与原生构建要求 |
@@ -298,6 +300,10 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 | `npm run tauri:signer` | 生成更新签名密钥 |
 | `npm run add:agent` | 安装 Agent 依赖 |
 | `npm run add:mcp` | 安装 MCP 依赖 |
+
+两项 smoke 都是本机验收，不进入默认 CI 或 `npm run verify`。Web smoke 不下载浏览器，会优先使用已安装的 Edge / Chrome；未自动发现时设置 `MEOW_BROWSER_PATH` 为浏览器可执行文件。Windows smoke 会临时关闭更新产物生成、把安装和应用数据限制在 `src-tauri/target/meow-windows-package-smoke-*`，并强制结束其自己启动的子进程。
+
+它们不证明代码签名、更新端点交付、离线安装、托盘的优雅退出、商店审核或任何平台的发布就绪。
 
 ## 🛡 安全须知
 
