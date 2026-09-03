@@ -1,7 +1,10 @@
+import 'fake-indexeddb/auto'
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { deleteDB } from 'idb'
 import { createOutboxSyncEngine } from '../src/sync/engine.ts'
 import { createInMemorySyncStateStore } from '../src/sync/in-memory-store.ts'
+import { createIndexedDbSyncStateStore } from '../src/sync/indexeddb-store.ts'
 import { createAllowlistSyncPolicy } from '../src/sync/policy.ts'
 import type { SyncMutation, SyncTransport } from '../src/sync/types.ts'
 
@@ -42,6 +45,23 @@ test('in-memory sync store enqueues by id and replaces duplicate operations', as
       { operationId: 'op-2', payload: { title: 'latest' } },
     ],
   )
+})
+
+test('IndexedDB sync store preserves pending changes and checkpoint after reopening', async () => {
+  const databaseName = `meow-test-sync-${Date.now()}`
+  await deleteDB(databaseName)
+  const store = createIndexedDbSyncStateStore({ databaseName })
+
+  await store.enqueue(mutation())
+  await store.enqueue(mutation({ operationId: 'op-2', recordId: 'note-2' }))
+  await store.setCheckpoint('cursor-1')
+  await store.acknowledge(['op-1'])
+
+  const reopened = createIndexedDbSyncStateStore({ databaseName })
+  assert.deepEqual(await reopened.listPending(100), [
+    mutation({ operationId: 'op-2', recordId: 'note-2' }),
+  ])
+  assert.equal(await reopened.getCheckpoint(), 'cursor-1')
 })
 
 test('sync uploads accepted changes, applies pulled changes and advances checkpoint', async () => {

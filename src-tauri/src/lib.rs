@@ -1,3 +1,4 @@
+#[cfg(desktop)]
 use tauri::{Manager, WindowEvent};
 
 #[cfg(feature = "agent")]

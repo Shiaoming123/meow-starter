@@ -60,6 +60,18 @@ export NDK_HOME="$ANDROID_HOME/ndk/$(ls -1 $ANDROID_HOME/ndk | sort -V | tail -1
 # export ANDROID_HOME="$HOME/Android/Sdk"
 ```
 
+Windows 可在用户环境变量中设置同样的三个值：`JAVA_HOME` 指向 Android
+Studio 的 `jbr` 目录，`ANDROID_HOME`（以及兼容用途的
+`ANDROID_SDK_ROOT`）指向 `%LOCALAPPDATA%\Android\Sdk`，`NDK_HOME` 指向
+其中具体的 `ndk\<版本>` 目录。将 `platform-tools` 与
+`cmdline-tools\latest\bin` 加入用户 `Path`，然后重新打开终端再运行
+`adb` 或 `npm run mobile:doctor`。
+
+> Windows 上的 `tauri android dev` 需要将 Rust `.so` 链接进生成的
+> Android 工程。启用 Windows **Developer Mode**（或由管理员授予创建符号
+> 链接权限）后重新打开终端；否则 Tauri 会在该链接步骤明确失败，且不应把
+> 这种状态误报为 ADB 或模拟器故障。
+
 > 写完后 `source ~/.zshrc` 重新加载。NDK_HOME 指向具体版本目录（不是 `ndk/` 本身）。
 
 **第三步：添加 Rust Android target**

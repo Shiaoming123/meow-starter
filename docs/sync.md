@@ -1,6 +1,6 @@
 # 账号、云端与局域网同步指南
 
-> **成熟度：Preview。** 仓库提供默认关闭的同步契约、内存 outbox 实现和安全 HTTP transport；账号后端、持久化 outbox、设备配对与冲突 UI 需要应用按业务接入。
+> **成熟度：Preview。** 仓库提供默认关闭的同步契约、内存/IndexedDB outbox 状态适配器和安全 HTTP transport；账号后端、设备配对与冲突 UI 需要应用按业务接入。
 
 ## 设计原则
 
@@ -27,12 +27,12 @@ Domain Store -> Outbox -> SyncProvider
 import {
   createAllowlistSyncPolicy,
   createHttpSyncTransport,
-  createInMemorySyncStateStore,
+  createIndexedDbSyncStateStore,
   createOutboxSyncEngine,
 } from './src/sync'
 
 const provider = createOutboxSyncEngine({
-  store: createInMemorySyncStateStore(),
+  store: createIndexedDbSyncStateStore(),
   policy: createAllowlistSyncPolicy(['notes']),
   transport: createHttpSyncTransport({
     baseUrl: 'https://sync.example.com/v1',
@@ -44,7 +44,7 @@ const provider = createOutboxSyncEngine({
 await provider.syncOnce()
 ```
 
-示例中的内存 store 只用于接口演示和测试。生产应用必须实现持久化 `SyncStateStore`，确保应用退出或断电后 outbox 与 checkpoint 不丢失。
+`createIndexedDbSyncStateStore()` 适用于 Web 的持久化 outbox：同一浏览器 origin 下重开适配器后，待上传操作和 checkpoint 仍会保留。它不启用同步、不选择 collection、不创建网络连接，也不解决跨设备冲突。桌面或移动端应按各自本地数据库实现同一 `SyncStateStore` 契约；`createInMemorySyncStateStore()` 仍只适合演示和测试。
 
 ## HTTP 协议
 

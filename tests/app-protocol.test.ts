@@ -13,6 +13,7 @@ const packageJson = {
     build: 'vite build',
     'build:web': 'vite build --mode web',
     'check:modules': 'node scripts/check-module-contract.mjs',
+    'check:csp': 'node scripts/check-tauri-csp.mjs',
     'check:docs': 'node scripts/check-doc-links.mjs',
     'check:protocol': 'node scripts/check-app-protocol.mjs',
     'rust:verify': 'node scripts/rust-verify.mjs',
@@ -55,7 +56,7 @@ function validProtocol() {
       mobileNative: 'unverified',
     },
     acceptance: {
-      required: ['test', 'check:protocol', 'typecheck', 'build', 'build:web', 'check:modules', 'check:docs'],
+      required: ['test', 'check:protocol', 'check:csp', 'typecheck', 'build', 'build:web', 'check:modules', 'check:docs'],
       conditional: ['rust:verify', 'smoke:web-persistence', 'smoke:windows-package'],
     },
     evolution: {

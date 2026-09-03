@@ -53,7 +53,7 @@
 
 ## ✨ 特性
 
-- **前端**：Vue 3.5 + TypeScript + Vite 6，深色模式跟随系统
+- **前端**：Vue 3.5 + TypeScript 5.6 + Vite 8，深色模式跟随系统
 - **数据层**：统一领域接口；Tauri 使用 SQLite，Web 使用 IndexedDB
 - **系统层**：系统托盘、单实例、关闭窗口隐藏而非退出
 - **自动更新（Beta）**：包含签名、下载、安装与重启代码路径；需用自己的端点和密钥完成签名发布验证
@@ -295,6 +295,7 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 | `npm run typecheck` | 仅类型检查 |
 | `npm run check:modules` | 核对模块目录、当前默认配置与原生构建要求 |
 | `npm run check:protocol` | 核对应用协议与模块、数据端口、验收命令和交付边界 |
+| `npm run check:csp` | 核对生产 Tauri CSP 仅允许同源资源与 Tauri IPC |
 | `npm run check:layout` | 验证生产 CSS 的移动端布局契约 |
 | `npm run check:docs` | 检查 Markdown 相对链接 |
 | `npm run tauri dev` | 启动桌面应用（含 Rust 热重载） |
@@ -309,7 +310,7 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 
 ## 🛡 安全须知
 
-- 上线前将 `tauri.conf.json` 的 `app.security.csp` 从 `null` 改为具体 CSP。
+- 生产 Tauri CSP 已限制为同源资源与 Tauri IPC；引入外部服务前应精确声明所需来源，不能用通配符放宽。
 - `identifier` 发布后不可更改。
 - API Key 存 OS 钥匙串（keyring），不硬编码、不存 localStorage；已存密钥不提供读取命令。
 - 同步使用集合白名单；API Key、Token、Cookie、MCP 凭据和本地路径永不进入通用同步层。

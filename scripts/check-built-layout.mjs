@@ -8,10 +8,11 @@ const css = (
 ).join('\n')
 const compact = css.replace(/\s+/g, '')
 
-const hasMobileShell = /@media\(max-width:768px\)[\s\S]*?\.shell(?:\[[^\]]+\])?\{[^}]*flex-direction:column/.test(
+const mobileMedia = /@media\((?:max-width:768px|width<=768px)\)[\s\S]*?/
+const hasMobileShell = new RegExp(`${mobileMedia.source}\\.shell(?:\\[[^\\]]+\\])?\\{[^}]*flex-direction:column`).test(
   compact,
 )
-const hasSafeArea = /@media\(max-width:768px\)[\s\S]*?\.tabbar(?:\[[^\]]+\])?\{[^}]*padding-bottom:env\(safe-area-inset-bottom,0px\)/.test(
+const hasSafeArea = new RegExp(`${mobileMedia.source}\\.tabbar(?:\\[[^\\]]+\\])?\\{[^}]*padding-bottom:env\\(safe-area-inset-bottom,0px\\)`).test(
   compact,
 )
 

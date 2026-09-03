@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
-import tauriConfig from "./src-tauri/tauri.conf.json";
-import { isUpdaterEndpointConfigured } from "./src/lib/updater-config";
+import tauriConfig from "./src-tauri/tauri.conf.json" with { type: "json" };
+import { isUpdaterEndpointConfigured } from "./src/lib/updater-config.ts";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;

@@ -14,6 +14,7 @@
     "build:web": "vue-tsc --noEmit && vite build --mode web",
     "check:modules": "node --experimental-strip-types scripts/check-module-contract.mjs",
     "check:protocol": "node --experimental-strip-types scripts/check-app-protocol.mjs",
+    "check:csp": "node scripts/check-tauri-csp.mjs",
     "check:layout": "node scripts/check-built-layout.mjs",
     "check:docs": "node scripts/check-doc-links.mjs",
     "clean:appledouble": "node scripts/clean-appledouble.mjs",
@@ -78,13 +79,13 @@
     "@ai-sdk/openai": "^4.0.53",
     "@ai-sdk/vue": "^4.0.87",
     "@tauri-apps/cli": "^2",
-    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue": "^6.0.8",
     "ai": "^7.0.87",
     "fake-indexeddb": "^6.2.5",
     "playwright-core": "^1.62.1",
     "typescript": "~5.6.2",
-    "vite": "^6.0.3",
-    "vue-tsc": "^2.1.10",
+    "vite": "^8.2.2",
+    "vue-tsc": "^3.3.11",
     "zod": "^4.5.4"
   }
 }
