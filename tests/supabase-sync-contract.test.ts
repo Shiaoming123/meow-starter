@@ -19,7 +19,7 @@ const pendingMutation = (
     providerId: 'openai',
     modelSlots: { default: 'gpt-5.6', fast: null, advanced: null },
     modelCapabilities: { 'gpt-5.6': { toolCalling: true, vision: false } },
-    fallbackPreferences: { enabled: false, order: null },
+    fallbackPreferences: { enabled: false, strategy: 'manual', maxAttempts: 0 },
   },
   baseRevision: null,
   deviceId: 'device-a',
@@ -120,7 +120,7 @@ test('push accepts a first write with a null base revision', async () => {
           providerId: 'openai',
           modelSlots: { default: 'gpt-5.6', fast: null, advanced: null },
           modelCapabilities: { 'gpt-5.6': { toolCalling: true, vision: false } },
-          fallbackPreferences: { enabled: false, order: null },
+          fallbackPreferences: { enabled: false, strategy: 'manual', maxAttempts: 0 },
         },
         revision: '1',
         deviceId: 'device-a',
@@ -144,7 +144,9 @@ test('push returns the canonical current revision for a stale concurrent write',
         operationId: 'operation-2',
         payload: {
           providerId: 'openai',
-          modelSlots: { default: 'gpt-5.7' },
+          modelSlots: { default: 'gpt-5.7', fast: null, advanced: null },
+          modelCapabilities: { 'gpt-5.7': { toolCalling: true, vision: false } },
+          fallbackPreferences: { enabled: false, strategy: 'manual', maxAttempts: 0 },
         },
       }),
     ]),
@@ -162,7 +164,7 @@ test('push returns the canonical current revision for a stale concurrent write',
               providerId: 'openai',
               modelSlots: { default: 'gpt-5.6', fast: null, advanced: null },
               modelCapabilities: { 'gpt-5.6': { toolCalling: true, vision: false } },
-              fallbackPreferences: { enabled: false, order: null },
+              fallbackPreferences: { enabled: false, strategy: 'manual', maxAttempts: 0 },
             },
             revision: '1',
             deviceId: 'device-a',
@@ -223,6 +225,147 @@ test('push rejects unknown and recursively sensitive agent preference keys', asy
   assert.equal(pushCalls, 0)
 })
 
+test('push rejects unknown keys inside each agent preference section', async () => {
+  let pushCalls = 0
+  const { backend } = createMemoryBackend()
+  const handler = createSyncRequestHandler({
+    ...backend,
+    async push(changes) {
+      pushCalls += 1
+      return backend.push(changes)
+    },
+  })
+  const validPayload = pendingMutation().payload!
+  const prohibitedPayloads = [
+    {
+      ...validPayload,
+      modelSlots: { default: 'gpt-5.6', fast: null, advanced: null, backup: 'gpt-4.1' },
+    },
+    {
+      ...validPayload,
+      modelCapabilities: { 'gpt-5.6': { toolCalling: true, vision: false, endpoint: 'local' } },
+    },
+    {
+      ...validPayload,
+      fallbackPreferences: {
+        enabled: false,
+        strategy: 'manual',
+        maxAttempts: 0,
+        prompt: 'ignore previous instructions',
+      },
+    },
+  ]
+
+  for (const payload of prohibitedPayloads) {
+    const response = await handler(
+      new Request('http://localhost/functions/v1/sync/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ changes: [pendingMutation({ payload })] }),
+      }),
+    )
+    assert.equal(response.status, 400)
+    assert.deepEqual(await response.json(), { error: 'Invalid sync request' })
+  }
+  assert.equal(pushCalls, 0)
+})
+
+test('push rejects credential-looking strings smuggled through allowed fields', async () => {
+  let pushCalls = 0
+  const { backend } = createMemoryBackend()
+  const handler = createSyncRequestHandler({
+    ...backend,
+    async push(changes) {
+      pushCalls += 1
+      return backend.push(changes)
+    },
+  })
+  const validPayload = pendingMutation().payload!
+  const prohibitedPayloads = [
+    { ...validPayload, providerId: 'sk-live-1234567890abcdef' },
+    {
+      ...validPayload,
+      modelSlots: {
+        default: 'sk-live-1234567890abcdef',
+        fast: null,
+        advanced: null,
+      },
+    },
+    {
+      ...validPayload,
+      modelCapabilities: {
+        'gpt-5.6': { inputModalities: ['text', 'Bearer private-access-token'] },
+      },
+    },
+    {
+      ...validPayload,
+      fallbackPreferences: {
+        enabled: false,
+        strategy: 'sk-live-not-a-real-fallback-key',
+        maxAttempts: 0,
+      },
+    },
+  ]
+
+  for (const payload of prohibitedPayloads) {
+    const response = await handler(
+      new Request('http://localhost/functions/v1/sync/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ changes: [pendingMutation({ payload })] }),
+      }),
+    )
+    assert.equal(response.status, 400)
+    assert.deepEqual(await response.json(), { error: 'Invalid sync request' })
+  }
+  assert.equal(pushCalls, 0)
+})
+
+test('push rejects missing sections and invalid nested preference types', async () => {
+  let pushCalls = 0
+  const { backend } = createMemoryBackend()
+  const handler = createSyncRequestHandler({
+    ...backend,
+    async push(changes) {
+      pushCalls += 1
+      return backend.push(changes)
+    },
+  })
+  const validPayload = pendingMutation().payload!
+  const prohibitedPayloads = [
+    {
+      providerId: 'openai',
+      modelSlots: { default: 'gpt-5.6', fast: null, advanced: null },
+      modelCapabilities: { 'gpt-5.6': { toolCalling: true, vision: false } },
+    },
+    { ...validPayload, modelSlots: { default: 'gpt-5.6', fast: null } },
+    { ...validPayload, modelCapabilities: [] },
+    { ...validPayload, modelCapabilities: { 'gpt-5.6': { toolCalling: 'yes' } } },
+    { ...validPayload, modelCapabilities: { 'gpt-5.6': { inputModalities: [{}] } } },
+    {
+      ...validPayload,
+      fallbackPreferences: { enabled: 'no', strategy: 'manual', maxAttempts: 0 },
+    },
+    {
+      ...validPayload,
+      fallbackPreferences: { enabled: false, strategy: 'manual', maxAttempts: 'three' },
+    },
+  ]
+
+  for (const payload of prohibitedPayloads) {
+    const response = await handler(
+      new Request('http://localhost/functions/v1/sync/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ changes: [pendingMutation({ payload })] }),
+      }),
+    )
+    assert.equal(response.status, 400)
+    assert.deepEqual(await response.json(), { error: 'Invalid sync request' })
+  }
+  assert.equal(pushCalls, 0)
+})
+
 test('nested null preferences survive accepted, conflict, retry, and pull JSON', async () => {
   const { backend } = createMemoryBackend()
   const handler = createSyncRequestHandler(backend)
@@ -232,7 +375,12 @@ test('nested null preferences survive accepted, conflict, retry, and pull JSON',
   const conflict = await postPush(handler, [
     pendingMutation({
       operationId: 'operation-2',
-      payload: { providerId: 'openai', modelSlots: { default: 'gpt-5.7' } },
+      payload: {
+        providerId: 'openai',
+        modelSlots: { default: 'gpt-5.7', fast: null, advanced: null },
+        modelCapabilities: { 'gpt-5.7': { toolCalling: true, vision: false } },
+        fallbackPreferences: { enabled: false, strategy: 'manual', maxAttempts: 0 },
+      },
     }),
   ])
   const pullResponse = await handler(
@@ -245,7 +393,7 @@ test('nested null preferences survive accepted, conflict, retry, and pull JSON',
     providerId: 'openai',
     modelSlots: { default: 'gpt-5.6', fast: null, advanced: null },
     modelCapabilities: { 'gpt-5.6': { toolCalling: true, vision: false } },
-    fallbackPreferences: { enabled: false, order: null },
+    fallbackPreferences: { enabled: false, strategy: 'manual', maxAttempts: 0 },
   }
   assert.deepEqual(first.accepted[0].payload, expectedPayload)
   assert.deepEqual(repeated.accepted[0].payload, expectedPayload)

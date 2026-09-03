@@ -200,3 +200,101 @@ remains unavailable (`docker info` cannot connect to
 `/Users/wuling/.docker/run/docker.sock`), so executing the CHECK constraints,
 RPC validation, and database round-trip remains explicitly not run rather than
 being inferred from the pure tests.
+
+## Review fix round 2: structural schema and credential-like values
+
+The payload boundary is now structural rather than a recursive key-name scan.
+The Edge validator and PostgreSQL helper accept only this schema:
+
+- all four top-level members are required;
+- `providerId` is a bounded identifier string;
+- `modelSlots` has exactly `default`, `fast`, and `advanced`, each a bounded
+  identifier string or JSON null;
+- `modelCapabilities` is keyed by bounded model IDs; each value is an object
+  containing only boolean `toolCalling`, `vision`, `reasoning`, or
+  `structuredOutput`, non-negative safe-integer `contextWindow` or
+  `maxOutputTokens`, and bounded identifier-string arrays `inputModalities` or
+  `outputModalities`;
+- `fallbackPreferences` contains only boolean `enabled`, bounded identifier
+  string `strategy`, and non-negative safe-integer `maxAttempts` or
+  `retryDelayMs`.
+
+Unknown nested members, missing required sections/slots, wrong types, unsafe
+identifier text, and credential-shaped values are rejected. Credential patterns
+cover `sk-live`/`sk-test`/`sk-proj` and long `sk-` values, Supabase key prefixes,
+GitHub tokens, Slack tokens, bearer values, JWT-shaped strings, and private-key
+headers. The identifier grammar independently excludes whitespace-bearing
+values such as bearer/private-key text.
+
+The SQL helper has a single `jsonb` signature, so callers cannot bypass the
+root schema with the former internal recursion flag. The same helper remains in
+the `sync_records`, `sync_operations`, and `sync_change_log` CHECK constraints,
+and `sync_push` calls it before deduplication or writes. The canonical JSON
+builders were not changed; nullable model slots still survive accepted,
+conflict, retry, and pull results.
+
+### Review-fix round 2 TDD and validation evidence
+
+RED 1:
+
+```text
+node --experimental-strip-types --test tests/supabase-sync-contract.test.ts
+```
+
+Result: exit 1, 5 passed and 1 failed. A payload containing
+`modelSlots.backup` reached the backend and returned HTTP 200 instead of 400.
+
+RED 2, after the structural-key fix:
+
+```text
+node --experimental-strip-types --test tests/supabase-sync-contract.test.ts
+```
+
+Result: exit 1, 6 passed and 1 failed. A credential-shaped
+`sk-live-1234567890abcdef` value in the allowed `providerId` field reached the
+backend and returned HTTP 200 instead of 400.
+
+GREEN focused result: 8 tests passed, 0 failed. The added cases cover unknown
+nested keys in all sections, credential-like values in allowed provider/model/
+capability/fallback positions, missing sections/slots, and wrong nested types.
+
+Fresh regression gates after the round 2 implementation:
+
+| Check | Result |
+| --- | --- |
+| Focused Supabase contract test | Passed: 8 tests, 0 failures. |
+| Full `npm test` | Passed: 81 tests, 0 failures, 0 skipped. |
+| Deno Edge check | Passed with the pinned import map/lockfile. |
+| `npm run typecheck` | Passed. |
+| `npm run build` | Passed with the previously recorded Zod/Rollup comment warnings. |
+| `npm run build:web` | Passed with the same warnings. |
+| `npm run check:docs` | Passed. |
+| `git diff --check` | Passed. |
+
+An ephemeral `@electric-sql/pglite@0.3.14` PostgreSQL-compatible runtime was
+used without changing repository dependencies. It parsed and applied the full
+migration against minimal local `auth` fixtures, then produced:
+
+```text
+helper 3/3; CHECK 1/1; RPC 3/3; nested null preserved
+```
+
+This proves the migration parses in that runtime and that valid, `backup`, and
+`sk-live` fixtures take the intended helper/CHECK/RPC branches. It is a
+PostgreSQL-compatible source/behavior check, not Supabase local integration and
+not RLS isolation evidence. Docker remains unavailable: a fresh `docker info`
+exited 1 with `Cannot connect to the Docker daemon at
+unix:///Users/wuling/.docker/run/docker.sock`. Therefore Supabase migration
+application, database lint/advisors, two-user Auth/RLS isolation, and concurrent
+transaction behavior remain not run.
+
+Current Supabase guidance was refreshed on 2026-09-03. The changelog still has
+no breaking change specific to this validation path; the 2026-04-28 Data API
+exposure change remains relevant to the explicit grants. Current RLS guidance
+still requires RLS plus explicit grants/policies, and current Edge Function Auth
+guidance still says `verify_jwt = true` with `auth: 'user'` yields the caller's
+RLS-scoped client. The documentation web fetcher rejected Supabase's Markdown
+content type with HTTP 400, so the same official URLs were fetched successfully
+with `curl`. A one-off `npm exec --package=pgsql-parser` attempt could not expose
+the package to Node's module resolver; PGlite provided the successful local SQL
+evidence instead.

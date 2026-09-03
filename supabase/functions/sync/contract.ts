@@ -40,6 +40,30 @@ const ALLOWED_AGENT_PREFERENCE_KEYS = new Set([
   'modelCapabilities',
   'fallbackPreferences',
 ])
+const MODEL_SLOT_KEYS = new Set(['default', 'fast', 'advanced'])
+const BOOLEAN_CAPABILITY_KEYS = new Set([
+  'toolCalling',
+  'vision',
+  'reasoning',
+  'structuredOutput',
+])
+const NUMBER_CAPABILITY_KEYS = new Set(['contextWindow', 'maxOutputTokens'])
+const ARRAY_CAPABILITY_KEYS = new Set(['inputModalities', 'outputModalities'])
+const FALLBACK_BOOLEAN_KEYS = new Set(['enabled'])
+const FALLBACK_STRING_KEYS = new Set(['strategy'])
+const FALLBACK_NUMBER_KEYS = new Set(['maxAttempts', 'retryDelayMs'])
+const SAFE_IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9._:/+-]*$/
+const CREDENTIAL_VALUE_PATTERNS = [
+  /^sk[-_](?:live|test|proj)(?:[-_]|[A-Za-z0-9])/i,
+  /^sk-[A-Za-z0-9_-]{16,}$/i,
+  /^sb_(?:secret|publishable)_/i,
+  /^ghp_[A-Za-z0-9]{20,}$/i,
+  /^github_pat_/i,
+  /^xox[baprs]-/i,
+  /^bearer\s+\S+/i,
+  /^eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/,
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
+]
 const MAX_PUSH_CHANGES = 100
 const DECIMAL_SEQUENCE = /^(0|[1-9]\d*)$/
 const POSITIVE_DECIMAL_SEQUENCE = /^[1-9]\d*$/
@@ -56,53 +80,101 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function isSensitivePreferenceKey(key: string): boolean {
-  const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, '')
+function hasExactKeys(value: Record<string, unknown>, allowed: ReadonlySet<string>): boolean {
+  const keys = Object.keys(value)
+  return keys.length === allowed.size && keys.every((key) => allowed.has(key))
+}
+
+function isSafeIdentifier(value: unknown, maximumLength: number): value is string {
   return (
-    normalized === 'key' ||
-    normalized.includes('apikey') ||
-    normalized.includes('credential') ||
-    normalized.includes('secret') ||
-    normalized.includes('token') ||
-    normalized.includes('authorization') ||
-    normalized.includes('cookie') ||
-    normalized === 'session' ||
-    normalized.includes('endpoint') ||
-    normalized.includes('url') ||
-    normalized.includes('path') ||
-    normalized.includes('prompt') ||
-    normalized.includes('message') ||
-    normalized.includes('response') ||
-    normalized.includes('completion') ||
-    normalized.includes('usage') ||
-    normalized === 'error' ||
-    normalized === 'errors' ||
-    normalized.includes('rawerror') ||
-    normalized.includes('errorbody') ||
-    normalized.includes('providererror')
+    typeof value === 'string' &&
+    value.length > 0 &&
+    value.length <= maximumLength &&
+    SAFE_IDENTIFIER.test(value) &&
+    !CREDENTIAL_VALUE_PATTERNS.some((pattern) => pattern.test(value))
   )
 }
 
-function validatePreferenceKeys(value: unknown): void {
-  if (Array.isArray(value)) {
-    for (const item of value) validatePreferenceKeys(item)
-    return
+function validateModelSlots(value: unknown): void {
+  if (!isObject(value) || !hasExactKeys(value, MODEL_SLOT_KEYS)) {
+    throw new InvalidSyncRequest('Invalid model slots')
   }
-  if (!isObject(value)) return
-
-  for (const [key, child] of Object.entries(value)) {
-    if (isSensitivePreferenceKey(key)) {
-      throw new InvalidSyncRequest('Sensitive agent preference key')
+  for (const slot of MODEL_SLOT_KEYS) {
+    if (value[slot] !== null && !isSafeIdentifier(value[slot], 256)) {
+      throw new InvalidSyncRequest('Invalid model slot')
     }
-    validatePreferenceKeys(child)
+  }
+}
+
+function validateModelCapabilities(value: unknown): void {
+  if (!isObject(value)) throw new InvalidSyncRequest('Invalid model capabilities')
+
+  for (const [modelId, capabilities] of Object.entries(value)) {
+    if (!isSafeIdentifier(modelId, 256) || !isObject(capabilities)) {
+      throw new InvalidSyncRequest('Invalid model capabilities')
+    }
+    for (const [key, capability] of Object.entries(capabilities)) {
+      if (BOOLEAN_CAPABILITY_KEYS.has(key)) {
+        if (typeof capability !== 'boolean') throw new InvalidSyncRequest('Invalid capability')
+        continue
+      }
+      if (NUMBER_CAPABILITY_KEYS.has(key)) {
+        if (!Number.isSafeInteger(capability) || (capability as number) < 0) {
+          throw new InvalidSyncRequest('Invalid capability')
+        }
+        continue
+      }
+      if (ARRAY_CAPABILITY_KEYS.has(key)) {
+        if (
+          !Array.isArray(capability) ||
+          capability.length > 32 ||
+          capability.some((item) => !isSafeIdentifier(item, 64))
+        ) {
+          throw new InvalidSyncRequest('Invalid capability')
+        }
+        continue
+      }
+      throw new InvalidSyncRequest('Unknown capability')
+    }
+  }
+}
+
+function validateFallbackPreferences(value: unknown): void {
+  if (!isObject(value)) throw new InvalidSyncRequest('Invalid fallback preferences')
+
+  for (const [key, preference] of Object.entries(value)) {
+    if (FALLBACK_BOOLEAN_KEYS.has(key)) {
+      if (typeof preference !== 'boolean') {
+        throw new InvalidSyncRequest('Invalid fallback preference')
+      }
+      continue
+    }
+    if (FALLBACK_STRING_KEYS.has(key)) {
+      if (!isSafeIdentifier(preference, 64)) {
+        throw new InvalidSyncRequest('Invalid fallback preference')
+      }
+      continue
+    }
+    if (FALLBACK_NUMBER_KEYS.has(key)) {
+      if (!Number.isSafeInteger(preference) || (preference as number) < 0) {
+        throw new InvalidSyncRequest('Invalid fallback preference')
+      }
+      continue
+    }
+    throw new InvalidSyncRequest('Unknown fallback preference')
   }
 }
 
 function validateAgentPreferencesPayload(payload: Record<string, unknown>): void {
-  if (Object.keys(payload).some((key) => !ALLOWED_AGENT_PREFERENCE_KEYS.has(key))) {
+  if (!hasExactKeys(payload, ALLOWED_AGENT_PREFERENCE_KEYS)) {
     throw new InvalidSyncRequest('Unknown agent preference key')
   }
-  validatePreferenceKeys(payload)
+  if (!isSafeIdentifier(payload.providerId, 128)) {
+    throw new InvalidSyncRequest('Invalid provider ID')
+  }
+  validateModelSlots(payload.modelSlots)
+  validateModelCapabilities(payload.modelCapabilities)
+  validateFallbackPreferences(payload.fallbackPreferences)
 }
 
 function readString(

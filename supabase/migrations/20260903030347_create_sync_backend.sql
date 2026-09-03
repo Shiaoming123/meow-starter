@@ -1,7 +1,4 @@
-create function public.sync_agent_preferences_payload_is_safe(
-  p_payload jsonb,
-  p_root boolean default true
-)
+create function public.sync_agent_preferences_payload_is_safe(p_payload jsonb)
 returns boolean
 language plpgsql
 immutable
@@ -11,61 +8,197 @@ set search_path = ''
 as $$
 declare
   v_key text;
-  v_child jsonb;
-  v_normalized_key text;
+  v_value jsonb;
+  v_text text;
+  v_model_id text;
+  v_capabilities jsonb;
 begin
-  if p_root then
-    if jsonb_typeof(p_payload) is distinct from 'object' then
-      return false;
-    end if;
-    if p_payload - array[
+  if jsonb_typeof(p_payload) is distinct from 'object'
+    or not (p_payload ?& array[
+      'providerId',
+      'modelSlots',
+      'modelCapabilities',
+      'fallbackPreferences'
+    ])
+    or p_payload - array[
       'providerId',
       'modelSlots',
       'modelCapabilities',
       'fallbackPreferences'
     ] <> '{}'::jsonb then
+    return false;
+  end if;
+
+  if jsonb_typeof(p_payload -> 'providerId') is distinct from 'string' then
+    return false;
+  end if;
+  v_text := p_payload ->> 'providerId';
+  if char_length(v_text) not between 1 and 128
+    or v_text !~ '^[A-Za-z0-9][-A-Za-z0-9._:/+]*$'
+    or lower(v_text) ~ '^sk[-_](live|test|proj)([-_]|[a-z0-9])'
+    or lower(v_text) ~ '^sk-[a-z0-9_-]{16,}$'
+    or lower(v_text) ~ '^sb_(secret|publishable)_'
+    or lower(v_text) ~ '^ghp_[a-z0-9]{20,}$'
+    or lower(v_text) ~ '^github_pat_'
+    or lower(v_text) ~ '^xox[baprs]-'
+    or v_text ~ '^eyJ[A-Za-z0-9_-]+[.]eyJ[A-Za-z0-9_-]+[.][A-Za-z0-9_-]+$' then
+    return false;
+  end if;
+
+  if jsonb_typeof(p_payload -> 'modelSlots') is distinct from 'object'
+    or not (p_payload -> 'modelSlots') ?& array['default', 'fast', 'advanced']
+    or (p_payload -> 'modelSlots') - array['default', 'fast', 'advanced'] <> '{}'::jsonb then
+    return false;
+  end if;
+  foreach v_key in array array['default', 'fast', 'advanced']
+  loop
+    v_value := p_payload -> 'modelSlots' -> v_key;
+    if jsonb_typeof(v_value) = 'null' then
+      continue;
+    end if;
+    if jsonb_typeof(v_value) is distinct from 'string' then
+      return false;
+    end if;
+    v_text := v_value #>> '{}';
+    if char_length(v_text) not between 1 and 256
+      or v_text !~ '^[A-Za-z0-9][-A-Za-z0-9._:/+]*$'
+      or lower(v_text) ~ '^sk[-_](live|test|proj)([-_]|[a-z0-9])'
+      or lower(v_text) ~ '^sk-[a-z0-9_-]{16,}$'
+      or lower(v_text) ~ '^sb_(secret|publishable)_'
+      or lower(v_text) ~ '^ghp_[a-z0-9]{20,}$'
+      or lower(v_text) ~ '^github_pat_'
+      or lower(v_text) ~ '^xox[baprs]-'
+      or v_text ~ '^eyJ[A-Za-z0-9_-]+[.]eyJ[A-Za-z0-9_-]+[.][A-Za-z0-9_-]+$' then
+      return false;
+    end if;
+  end loop;
+
+  if jsonb_typeof(p_payload -> 'modelCapabilities') is distinct from 'object' then
+    return false;
+  end if;
+  for v_model_id, v_capabilities in
+    select key, value from jsonb_each(p_payload -> 'modelCapabilities')
+  loop
+    if char_length(v_model_id) not between 1 and 256
+      or v_model_id !~ '^[A-Za-z0-9][-A-Za-z0-9._:/+]*$'
+      or lower(v_model_id) ~ '^sk[-_](live|test|proj)([-_]|[a-z0-9])'
+      or lower(v_model_id) ~ '^sk-[a-z0-9_-]{16,}$'
+      or lower(v_model_id) ~ '^sb_(secret|publishable)_'
+      or lower(v_model_id) ~ '^ghp_[a-z0-9]{20,}$'
+      or lower(v_model_id) ~ '^github_pat_'
+      or lower(v_model_id) ~ '^xox[baprs]-'
+      or v_model_id ~ '^eyJ[A-Za-z0-9_-]+[.]eyJ[A-Za-z0-9_-]+[.][A-Za-z0-9_-]+$'
+      or jsonb_typeof(v_capabilities) is distinct from 'object'
+      or v_capabilities - array[
+        'toolCalling',
+        'vision',
+        'reasoning',
+        'structuredOutput',
+        'contextWindow',
+        'maxOutputTokens',
+        'inputModalities',
+        'outputModalities'
+      ] <> '{}'::jsonb then
+      return false;
+    end if;
+
+    foreach v_key in array array['toolCalling', 'vision', 'reasoning', 'structuredOutput']
+    loop
+      if v_capabilities ? v_key
+        and jsonb_typeof(v_capabilities -> v_key) is distinct from 'boolean' then
+        return false;
+      end if;
+    end loop;
+    foreach v_key in array array['contextWindow', 'maxOutputTokens']
+    loop
+      if not (v_capabilities ? v_key) then
+        continue;
+      end if;
+      if jsonb_typeof(v_capabilities -> v_key) is distinct from 'number' then
+        return false;
+      end if;
+      v_text := v_capabilities ->> v_key;
+      if v_text !~ '^(0|[1-9][0-9]*)$'
+        or v_text::numeric > 9007199254740991 then
+        return false;
+      end if;
+    end loop;
+    foreach v_key in array array['inputModalities', 'outputModalities']
+    loop
+      if not (v_capabilities ? v_key) then
+        continue;
+      end if;
+      v_value := v_capabilities -> v_key;
+      if jsonb_typeof(v_value) is distinct from 'array'
+        or jsonb_array_length(v_value) > 32 then
+        return false;
+      end if;
+      for v_value in select value from jsonb_array_elements(v_value)
+      loop
+        if jsonb_typeof(v_value) is distinct from 'string' then
+          return false;
+        end if;
+        v_text := v_value #>> '{}';
+        if char_length(v_text) not between 1 and 64
+          or v_text !~ '^[A-Za-z0-9][-A-Za-z0-9._:/+]*$'
+          or lower(v_text) ~ '^sk[-_](live|test|proj)([-_]|[a-z0-9])'
+          or lower(v_text) ~ '^sk-[a-z0-9_-]{16,}$'
+          or lower(v_text) ~ '^sb_(secret|publishable)_'
+          or lower(v_text) ~ '^ghp_[a-z0-9]{20,}$'
+          or lower(v_text) ~ '^github_pat_'
+          or lower(v_text) ~ '^xox[baprs]-'
+          or v_text ~ '^eyJ[A-Za-z0-9_-]+[.]eyJ[A-Za-z0-9_-]+[.][A-Za-z0-9_-]+$' then
+          return false;
+        end if;
+      end loop;
+    end loop;
+  end loop;
+
+  if jsonb_typeof(p_payload -> 'fallbackPreferences') is distinct from 'object'
+    or (p_payload -> 'fallbackPreferences') - array[
+      'enabled',
+      'strategy',
+      'maxAttempts',
+      'retryDelayMs'
+    ] <> '{}'::jsonb then
+    return false;
+  end if;
+  v_value := p_payload -> 'fallbackPreferences';
+  if v_value ? 'enabled'
+    and jsonb_typeof(v_value -> 'enabled') is distinct from 'boolean' then
+    return false;
+  end if;
+  if v_value ? 'strategy' then
+    if jsonb_typeof(v_value -> 'strategy') is distinct from 'string' then
+      return false;
+    end if;
+    v_text := v_value ->> 'strategy';
+    if char_length(v_text) not between 1 and 64
+      or v_text !~ '^[A-Za-z0-9][-A-Za-z0-9._:/+]*$'
+      or lower(v_text) ~ '^sk[-_](live|test|proj)([-_]|[a-z0-9])'
+      or lower(v_text) ~ '^sk-[a-z0-9_-]{16,}$'
+      or lower(v_text) ~ '^sb_(secret|publishable)_'
+      or lower(v_text) ~ '^ghp_[a-z0-9]{20,}$'
+      or lower(v_text) ~ '^github_pat_'
+      or lower(v_text) ~ '^xox[baprs]-'
+      or v_text ~ '^eyJ[A-Za-z0-9_-]+[.]eyJ[A-Za-z0-9_-]+[.][A-Za-z0-9_-]+$' then
       return false;
     end if;
   end if;
-
-  if jsonb_typeof(p_payload) = 'object' then
-    for v_key, v_child in select key, value from jsonb_each(p_payload)
-    loop
-      v_normalized_key := lower(regexp_replace(v_key, '[^a-zA-Z0-9]', '', 'g'));
-      if v_normalized_key = 'key'
-        or v_normalized_key like '%apikey%'
-        or v_normalized_key like '%credential%'
-        or v_normalized_key like '%secret%'
-        or v_normalized_key like '%token%'
-        or v_normalized_key like '%authorization%'
-        or v_normalized_key like '%cookie%'
-        or v_normalized_key = 'session'
-        or v_normalized_key like '%endpoint%'
-        or v_normalized_key like '%url%'
-        or v_normalized_key like '%path%'
-        or v_normalized_key like '%prompt%'
-        or v_normalized_key like '%message%'
-        or v_normalized_key like '%response%'
-        or v_normalized_key like '%completion%'
-        or v_normalized_key like '%usage%'
-        or v_normalized_key in ('error', 'errors')
-        or v_normalized_key like '%rawerror%'
-        or v_normalized_key like '%errorbody%'
-        or v_normalized_key like '%providererror%' then
+  foreach v_key in array array['maxAttempts', 'retryDelayMs']
+  loop
+    if not (v_value ? v_key) then
+      continue;
+    end if;
+    if jsonb_typeof(v_value -> v_key) is distinct from 'number' then
+      return false;
+    end if;
+    v_text := v_value ->> v_key;
+    if v_text !~ '^(0|[1-9][0-9]*)$'
+      or v_text::numeric > 9007199254740991 then
         return false;
-      end if;
-      if not public.sync_agent_preferences_payload_is_safe(v_child, false) then
-        return false;
-      end if;
-    end loop;
-  elsif jsonb_typeof(p_payload) = 'array' then
-    for v_child in select value from jsonb_array_elements(p_payload)
-    loop
-      if not public.sync_agent_preferences_payload_is_safe(v_child, false) then
-        return false;
-      end if;
-    end loop;
-  end if;
+    end if;
+  end loop;
 
   return true;
 end;
@@ -488,9 +621,9 @@ $$;
 
 revoke all on function public.sync_push(jsonb) from public, anon, authenticated;
 revoke all on function public.sync_pull(text) from public, anon, authenticated;
-revoke all on function public.sync_agent_preferences_payload_is_safe(jsonb, boolean)
+revoke all on function public.sync_agent_preferences_payload_is_safe(jsonb)
   from public, anon, authenticated;
 grant execute on function public.sync_push(jsonb) to authenticated;
 grant execute on function public.sync_pull(text) to authenticated;
-grant execute on function public.sync_agent_preferences_payload_is_safe(jsonb, boolean)
+grant execute on function public.sync_agent_preferences_payload_is_safe(jsonb)
   to authenticated;
