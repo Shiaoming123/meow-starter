@@ -19,6 +19,7 @@
 | --- | --- |
 | 快速了解项目定位与适配场景 | [project-guide.md](./project-guide.md) |
 | 配置本地开发与 exFAT 工作区 | [development.md](./development.md) |
+| 定义产品目标、数据与交付边界 | [application-protocol.md](./application-protocol.md) |
 | 了解 Release Kit 与发布边界 | [release-kit.md](./release-kit.md) |
 | 从模板做出第一个应用 | [blueprints/README.md](./blueprints/README.md) |
 | 用设计系统、写组件、加主题 | [design-system.md](./design-system.md) |
@@ -49,6 +50,7 @@
 | --- | --- |
 | project-guide.md | 项目适配指南：适合做什么 + 分类型注意事项 |
 | development.md | 本地开发：环境诊断、验证命令与 exFAT 处理 |
+| application-protocol.md | 应用协议：产品意图、能力、数据、降级与证据边界 |
 | release-kit.md | Release Kit：配置检查与发布成熟度边界 |
 | blueprints/ | 首个应用蓝图：本地笔记、开发者工具、本地 AI 伴侣 |
 | design-system.md | 设计系统：tokens + 组件 + 主题 + 性能 + 可达性 |

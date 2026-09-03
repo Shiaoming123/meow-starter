@@ -60,6 +60,7 @@
 | --- | --- |
 | 🚀 Get running | [Quick start](#-quick-start) → [Rename checklist](#-create-a-new-project) |
 | 🛠 Set up local development / exFAT workspace | [docs/development.md](./docs/development.md) |
+| 🧭 Define product intent, capabilities, and data boundaries | [docs/application-protocol.md](./docs/application-protocol.md) |
 | 📦 Understand the Release Kit and release boundary | [docs/release-kit.md](./docs/release-kit.md) |
 | 🎯 Check project fit | [docs/project-guide.md](./docs/project-guide.md) |
 | 🧭 Build a first application from the scaffold | [docs/blueprints/README.md](./docs/blueprints/README.md) |

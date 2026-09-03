@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "product": {
+    "name": "meow-starter",
+    "goal": "Provide a lightweight, composable, desktop-first foundation for AI-era applications.",
+    "nonGoals": [
+      "Do not make cloud sync, Agent services, or provider credentials part of the default path.",
+      "Do not claim signed delivery, hosted updates, store submission, deployed Web hosting, or real-device validation without separate evidence."
+    ]
+  },
+  "targets": {
+    "primary": ["desktop"],
+    "maturity": {
+      "desktop": "stable",
+      "web": "beta",
+      "mobile": "beta"
+    },
+    "degradation": {
+      "web": ["Skip desktop-only modules and use IndexedDB for local Todo data."],
+      "mobile": ["Skip desktop-only modules while retaining responsive UI and native SQL where supported."]
+    }
+  },
+  "modulePolicy": {
+    "enabled": ["core", "storage", "sqlite", "indexedDb", "tray", "updater", "themes"],
+    "disabled": ["sync", "agent", "shortcut", "clipboard", "notification", "autostart", "mcp"]
+  },
+  "data": {
+    "defaultMode": "local-first",
+    "ports": [
+      {
+        "id": "todos",
+        "format": "meow-starter/data-export",
+        "version": 1
+      }
+    ],
+    "sync": {
+      "enabled": false,
+      "provider": "none"
+    },
+    "exclusions": ["secrets", "sync state"]
+  },
+  "delivery": {
+    "desktopPackage": "local-smoke",
+    "signing": "unverified",
+    "updater": "template-only",
+    "webDeployment": "unverified",
+    "mobileNative": "unverified"
+  },
+  "acceptance": {
+    "required": ["test", "check:protocol", "typecheck", "build", "build:web", "check:modules", "check:docs"],
+    "conditional": ["rust:verify", "smoke:web-persistence", "smoke:windows-package"]
+  },
+  "evolution": {
+    "additive": "Add fields only in a schema version that the checker explicitly understands.",
+    "breaking": "Document a migration when removing or renaming a module, data format, or compatibility promise."
+  }
+}

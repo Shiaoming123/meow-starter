@@ -75,6 +75,7 @@
 | --- | --- |
 | 🚀 快速跑起来 | [快速开始](#-快速开始) → [改名清单](#-用它创建新项目) |
 | 🛠 配置本地开发 / exFAT 工作区 | [docs/development.md](./docs/development.md) |
+| 🧭 定义产品目标、能力与数据边界 | [docs/application-protocol.md](./docs/application-protocol.md) |
 | 📦 了解 Release Kit 与发布边界 | [docs/release-kit.md](./docs/release-kit.md) |
 | 🎯 判断适不适合我的项目 | [docs/project-guide.md](./docs/project-guide.md) |
 | 🧭 从模板做出第一个应用 | [docs/blueprints/README.md](./docs/blueprints/README.md) |
@@ -293,6 +294,7 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 | `npm test` | 运行无额外框架依赖的行为测试 |
 | `npm run typecheck` | 仅类型检查 |
 | `npm run check:modules` | 核对模块目录、当前默认配置与原生构建要求 |
+| `npm run check:protocol` | 核对应用协议与模块、数据端口、验收命令和交付边界 |
 | `npm run check:layout` | 验证生产 CSS 的移动端布局契约 |
 | `npm run check:docs` | 检查 Markdown 相对链接 |
 | `npm run tauri dev` | 启动桌面应用（含 Rust 热重载） |

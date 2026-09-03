@@ -26,6 +26,7 @@ jobs:
       - run: npm ci
       - run: npm run release:check
       - run: npm test
+      - run: npm run check:protocol
       - run: npm run typecheck
       - run: npm run build
       - run: npm run build:web

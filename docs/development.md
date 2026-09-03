@@ -12,7 +12,7 @@ npm run doctor
 npm run tauri dev
 ```
 
-For the Web-only app, use `npm run dev:web`. Before sharing a frontend change, run `npm run verify`; it runs `test`, `typecheck`, `build`, `build:web`, `check:layout`, and `check:docs` in that order. Use `npm run release:check` to inspect versions, identifiers, bundle icons, updater configuration, and signing-related configuration in template mode.
+For the Web-only app, use `npm run dev:web`. Before sharing a frontend change, run `npm run verify`; it runs `test`, `check:protocol`, `typecheck`, `build`, `build:web`, `check:layout`, and `check:docs` in that order. Use `npm run release:check` to inspect versions, identifiers, bundle icons, updater configuration, and signing-related configuration in template mode.
 
 `npm run doctor` reports the Node, npm, Rust, Cargo, and local Tauri CLI versions, the official Tauri platform-prerequisite guide, and the locations of `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json`. Missing tools include installation guidance. The command does not enumerate environment variables, secrets, or keychains.
 
@@ -42,6 +42,7 @@ CARGO_TARGET_DIR=/absolute/path/on/apfs npm run rust:verify
 | --- | --- |
 | Diagnose tools, configuration, and filesystem | `npm run doctor` |
 | Run the Node test suite | `npm test` |
+| Check the product-level application protocol | `npm run check:protocol` |
 | Run all frontend quality gates | `npm run verify` |
 | Check release configuration in template mode | `npm run release:check` |
 | Remove only AppleDouble sidecars | `npm run clean:appledouble` |
