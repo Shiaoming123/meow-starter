@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | 默认 Web | Beta | `npm run build:web`、本地浏览器 IndexedDB smoke | 已部署站点、账号服务 |
 | 默认桌面 | Stable baseline | `npm run verify`、`npm run rust:verify`、Windows 无签名安装 smoke | 签名、公证、在线更新 |
-| Android | Beta | SDK/NDK/JDK/ADB doctor、模拟器 `tauri android dev`、universal debug APK/AAB | 真机、签名、Google Play、更新通道 |
+| Android | Beta | SDK/NDK/JDK/ADB doctor、模拟器 `tauri android dev`、本地 universal debug APK/AAB、干净 GitHub runner 的 x86_64 debug APK workflow | 真机、签名、Google Play、更新通道 |
 | iOS | Deferred | 仅代码降级与文档 | Xcode 构建、模拟器、TestFlight、App Store |
 | 同步服务 | Preview foundation | 本地优先 outbox、IndexedDB 状态、allowlist、HTTPS/loopback HTTP transport 测试 | 账号、冲突产品规则、托管 API、多设备运行 |
 | 桌面更新 | Template only | 端点/公钥/CI 模板与严格 release gate | 自有端点、私钥签名、安装端更新 |
@@ -41,7 +41,7 @@ npm run check:android-artifact -- --apk src-tauri/gen/android/app/build/outputs/
 ```
 
 最后一条会在忽略的 `src-tauri/gen/android/` 树中生成 debug APK/AAB。它适合本地安装和 ABI/启动验证；不能替代 release signing。Windows 还需要 Developer Mode（或创建符号链接的等效权限）。
-GitHub 上也提供手动触发的 `android-debug` workflow：它在干净环境生成工程、构建 x86_64 debug APK、核验元数据并保存调试产物；它不是商店发布工作流。
+GitHub 上也提供手动触发的 `android-debug` workflow：它在干净环境生成工程、构建 x86_64 debug APK、核验元数据并保存调试产物。该工作流已在 `cc0507d` 的首次手动运行中成功；它不是商店发布工作流。
 
 ## 发布前的人工输入
 

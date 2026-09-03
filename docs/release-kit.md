@@ -25,7 +25,8 @@ debug artifacts do not carry an upload keystore or prove Google Play acceptance.
 After a debug build, run `npm run check:android-artifact -- --apk <path>` to
 check its package identity, version, SDK metadata, and included ABI list. The
 manual `android-debug` workflow runs the same check and uploads its debug APK;
-it deliberately does not sign or publish anything.
+it deliberately does not sign or publish anything. Its clean-runner path has
+been executed successfully once for the current Android debug baseline.
 
 ## Local release preparation
 
