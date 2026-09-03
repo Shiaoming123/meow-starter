@@ -37,6 +37,19 @@ Keep `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json` ver
 
 Only `template` and `release` are valid mode values. Unknown values fail instead of falling back to template mode.
 
+Tag releases run that strict mode before `tauri-action` starts. They also run:
+
+```bash
+npm run release:provenance
+```
+
+The command emits a non-secret JSON record containing the checked package
+version, source commit, clean-tree status, and (for a tag build) tag name. It
+fails if Git cannot resolve the commit, the source tree has changes, or a tag
+does not equal `v<package version>`. This is reproducibility provenance for the
+source input; it does not prove byte-for-byte reproducible binaries, signing,
+notarization, hosted updater availability, or a successful user installation.
+
 ## Optional local runtime smoke
 
 On Windows, `npm run smoke:windows-package` performs an explicit local package lifecycle check: it builds an unsigned NSIS installer with a transient `bundle.createUpdaterArtifacts=false` overlay, silently installs beneath a fresh `src-tauri/target/meow-windows-package-smoke-*` directory, redirects `APPDATA` and `LOCALAPPDATA` there, confirms the installed process remains alive briefly, then force-stops that child process and removes only the validated temporary directory.

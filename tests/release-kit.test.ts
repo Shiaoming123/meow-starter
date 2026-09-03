@@ -10,6 +10,7 @@ import { findAppleDoubleFiles, removeAppleDoubleFiles } from '../scripts/release
 import { inspectReleaseConfig } from '../scripts/release-kit/config.mjs'
 import { inspectEnvironment, prepareCargoEnvironment } from '../scripts/release-kit/environment.mjs'
 import { getNpmInvocation, runNpmCommand } from '../scripts/release-kit/npm-command.mjs'
+import { createReleaseProvenance } from '../scripts/release-kit/provenance.mjs'
 import { isRunnableTestFile } from '../scripts/run-tests.mjs'
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url))
@@ -58,6 +59,39 @@ test('runs the Windows npm invocation through an injected runner', () => {
     ['/d', '/s', '/c', 'npm.cmd --version'],
     { encoding: 'utf8', windowsHide: true },
   ]])
+})
+
+test('creates release provenance only for a clean source revision matching its tag', () => {
+  const result = createReleaseProvenance({
+    packageJson: { version: '1.2.3' },
+    environment: { GITHUB_REF_NAME: 'v1.2.3', GITHUB_REF_TYPE: 'tag' },
+    runGit: (args) => {
+      if (args[0] === 'rev-parse') return { status: 0, stdout: 'abc123\n' }
+      if (args[0] === 'status') return { status: 0, stdout: '' }
+      throw new Error(`Unexpected git arguments: ${args.join(' ')}`)
+    },
+  })
+
+  assert.deepEqual(result.errors, [])
+  assert.deepEqual(result.provenance, {
+    version: '1.2.3',
+    commit: 'abc123',
+    sourceTree: 'clean',
+    tag: 'v1.2.3',
+  })
+})
+
+test('rejects provenance when a tag does not match the checked version', () => {
+  const result = createReleaseProvenance({
+    packageJson: { version: '1.2.3' },
+    environment: { GITHUB_REF_NAME: 'v1.2.4', GITHUB_REF_TYPE: 'tag' },
+    runGit: (args) => ({
+      status: 0,
+      stdout: args[0] === 'status' ? '' : 'abc123\n',
+    }),
+  })
+
+  assert.match(result.errors.join('\n'), /Release tag v1.2.4 must match package version v1.2.3/)
 })
 
 test('warns about AppleDouble files on macOS exFAT volumes', async (t) => {

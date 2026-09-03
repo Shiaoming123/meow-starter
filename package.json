@@ -19,6 +19,7 @@
     "clean:appledouble": "node scripts/clean-appledouble.mjs",
     "doctor": "node scripts/doctor.mjs",
     "release:check": "node scripts/release-check.mjs",
+    "release:provenance": "node scripts/release-provenance.mjs",
     "rust:verify": "node scripts/rust-verify.mjs",
     "smoke:web-persistence": "node scripts/smoke-web-persistence.mjs",
     "smoke:windows-package": "node scripts/smoke-windows-package.mjs",
