@@ -7,7 +7,7 @@ The Release Kit makes a checkout diagnosable and validates release configuration
 | Stage | Current maturity | What is available now | Still required |
 | --- | --- | --- | --- |
 | Local checks | Available | `npm run doctor`, `npm run verify`, and `npm run release:check` | Project-specific platform validation |
-| Desktop build/package | Configured, not release proof | The existing release workflow has macOS arm64/x64, Windows, and Linux draft-release build jobs | Run and inspect a real build for the target and installer format |
+| Desktop build/package | Local Windows smoke available, not release proof | The existing release workflow has macOS arm64/x64, Windows, and Linux draft-release build jobs; Windows can locally build an unsigned NSIS installer, install it beneath the ignored target tree, and check short process liveness | Run and inspect a real build for every target and installer format; signing and distribution remain separate |
 | Desktop code signing | Deferred | Workflow accepts optional signing inputs | Certificate ownership, secret provisioning, signed-artifact verification |
 | macOS notarization | Deferred | Workflow accepts optional Apple signing/notarization inputs | Apple account, certificates, notarization submission, and installed-artifact validation |
 | Updater signing/delivery | Template only | Updater code and signing configuration are present | A real HTTPS endpoint, public key, private-key signing, hosted artifacts, and update-path validation |
@@ -36,6 +36,12 @@ npm run release:check -- --mode=release
 Keep `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json` versions aligned. A valid identifier, bundle icons, and HTTPS updater endpoint are configuration checks, not a substitute for a signed end-to-end release.
 
 Only `template` and `release` are valid mode values. Unknown values fail instead of falling back to template mode.
+
+## Optional local runtime smoke
+
+On Windows, `npm run smoke:windows-package` performs an explicit local package lifecycle check: it builds an unsigned NSIS installer with a transient `bundle.createUpdaterArtifacts=false` overlay, silently installs beneath a fresh `src-tauri/target/meow-windows-package-smoke-*` directory, redirects `APPDATA` and `LOCALAPPDATA` there, confirms the installed process remains alive briefly, then force-stops that child process and removes only the validated temporary directory.
+
+The command leaves the generated NSIS bundle under the ignored Tauri target directory and does not need a signing private key. It is deliberately not a signed release, updater-delivery, offline-installation, tray graceful-exit, store, or macOS/Linux package test.
 
 ## Credentials and handoff
 

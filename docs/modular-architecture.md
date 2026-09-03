@@ -60,6 +60,27 @@
 | 运行时层 | 同一配置适配 Web、桌面与移动端 | 不满足平台/能力的模块跳过 `setup()` |
 | Rust 层 | 避免原生插件/依赖进二进制 | 不 feature 就不编译、不占体积 |
 
+### 1.1 可执行兼容性契约
+
+四层门控中，运行时选择与原生构建是两个独立平面，不能把前端布尔开关误解为完整的原生安装配置。
+
+| 平面 | 单一事实来源 | 执行时机 | 负责什么 |
+| --- | --- | --- | --- |
+| 运行时选择 | `src/modules/contract.ts` + `src/modules/config.ts` | 应用启动前 | 用平台、能力和依赖筛选模块；不兼容模块不会被动态导入 |
+| 原生构建 | `src-tauri/Cargo.toml` + `src-tauri/capabilities/default.json` | Rust 编译与应用权限授予前 | 声明 Cargo feature 与 Tauri permission；不会由前端自动修改 |
+
+每个契约条目都包含模块 id、依赖、支持平台、运行时能力与原生构建要求。loader 在导入前以它筛选，并在导入后比较模块声明；二者不同会在 `setup()` 前失败，避免“文档说不能用、代码却先加载”的漂移。
+
+修改 `defaultModuleConfig` 中的原生可选模块后，运行：
+
+```bash
+npm run check:modules          # 桌面目标（默认）
+npm run check:modules -- web   # Web 目标
+npm run check:modules -- mobile
+```
+
+检查会报告缺少的 Cargo feature 或 Tauri permission，但不会替开发者添加 feature、修改权限、初始化移动工程或证明插件在真实设备可用。它是源配置一致性门禁，不是打包或发布证明。
+
 ---
 
 ## 2. 目标目录结构

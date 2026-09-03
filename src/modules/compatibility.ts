@@ -32,11 +32,11 @@ export function moduleCompatibility(
   return { supported: true }
 }
 
-export function selectCompatibleModules(
-  modules: readonly Module[],
+export function selectCompatibleModules<T extends Module>(
+  modules: readonly T[],
   runtime: RuntimeInfo,
   onSkipped: (reason: string) => void = () => undefined,
-): Module[] {
+): T[] {
   return modules.filter((module) => {
     const compatibility = moduleCompatibility(module, runtime)
     if (!compatibility.supported) {

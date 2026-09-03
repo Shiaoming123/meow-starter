@@ -36,7 +36,7 @@
 
 `meow-starter` 是一个**模块化、AI Native** 的全平台应用脚手架。它把跨端开发里最烦的样板代码全部做完——数据层、托盘、更新、设计系统——同时把 AI 能力（Agent、本地推理、MCP）做成**可插拔模块**，让你按需启用。
 
-**核心理念**：核心轻量、能力可选、按需引入。不写一行 Agent 代码，它就是干净的桌面脚手架；打开一个开关，它就变成 AI 应用。
+**核心理念**：核心轻量、能力可选、按需引入。不写一行 Agent 代码，它就是干净的桌面脚手架；Preview 能力须由项目显式配置并完成验证后才能成为产品功能。
 
 ### Web + 五端覆盖
 
@@ -77,6 +77,7 @@
 | 🛠 配置本地开发 / exFAT 工作区 | [docs/development.md](./docs/development.md) |
 | 📦 了解 Release Kit 与发布边界 | [docs/release-kit.md](./docs/release-kit.md) |
 | 🎯 判断适不适合我的项目 | [docs/project-guide.md](./docs/project-guide.md) |
+| 🧭 从模板做出第一个应用 | [docs/blueprints/README.md](./docs/blueprints/README.md) |
 | 🏗 理解架构 | [架构图](#-架构) + [模块化架构](./docs/modular-architecture.md) |
 | 🎨 用设计系统/组件 | [docs/design-system.md](./docs/design-system.md) |
 | 🤖 接入 Agent（对话/工具） | [docs/agent-integration.md](./docs/agent-integration.md) |
@@ -146,6 +147,19 @@ npm run dev:web
 | `autostart` | 可选 | 关 | 开机自启（P1） |
 
 > 完整设计见 [docs/modular-architecture.md](./docs/modular-architecture.md)。关闭的模块不会进入默认运行时加载路径；依赖安装量与最终产物体积仍应以 lockfile 和构建产物为准。
+
+### 可执行兼容性契约
+
+`src/modules/contract.ts` 是模块的平台、运行时能力、依赖与原生构建要求的静态目录。装配器会先按此目录筛选当前运行时，再动态导入模块；加载后的模块声明不一致会在初始化前失败。
+
+原生构建是独立平面：前端开关不会自动打开 Cargo feature 或授予 Tauri 权限。改动默认模块配置后，按目标运行：
+
+```bash
+npm run check:modules          # 桌面目标（默认）
+npm run check:modules -- web   # Web 目标
+```
+
+该检查只核对仓库中的配置是否自洽；不修改 Cargo 或权限文件，也不证明插件、安装包、签名或真机行为。
 
 ### 成熟度约定
 
@@ -218,6 +232,8 @@ npm run dev:web
 
 > 📌 每条迁移**只写一条 SQL 语句**——底层 sqlx 的 `execute` 不支持多语句。
 
+Todo 示例还提供可选、版本化的 JSON 数据端口：`await exportTodos()` 生成应用领域数据，`await importTodos(json)` 在完整校验通过后追加记录并返回数量。它不导出数据库文件、密钥、Agent 或同步状态；导入不会覆盖现有数据，重复导入会产生重复记录。产品 UI 应在调用导入前取得用户明确确认。
+
 ### 系统托盘
 
 `src-tauri/src/tray.rs` 注册左键切换窗口、右键菜单（显示/隐藏、检查更新、退出）。配合单实例，重复启动聚焦已有窗口。
@@ -272,8 +288,11 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 | `npm run dev:web` | 启动显式 Web 开发模式 |
 | `npm run build` | 类型检查 + 前端构建 |
 | `npm run build:web` | 类型检查 + Web 静态构建 |
+| `npm run smoke:web-persistence` | 可选：真实浏览器新增 Todo、刷新后验证 IndexedDB 持久化 |
+| `npm run smoke:windows-package` | 可选：Windows 未签名 NSIS 打包、受限目录安装与启动存活检查 |
 | `npm test` | 运行无额外框架依赖的行为测试 |
 | `npm run typecheck` | 仅类型检查 |
+| `npm run check:modules` | 核对模块目录、当前默认配置与原生构建要求 |
 | `npm run check:layout` | 验证生产 CSS 的移动端布局契约 |
 | `npm run check:docs` | 检查 Markdown 相对链接 |
 | `npm run tauri dev` | 启动桌面应用（含 Rust 热重载） |
@@ -281,6 +300,10 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 | `npm run tauri:signer` | 生成更新签名密钥 |
 | `npm run add:agent` | 安装 Agent 依赖 |
 | `npm run add:mcp` | 安装 MCP 依赖 |
+
+两项 smoke 都是本机验收，不进入默认 CI 或 `npm run verify`。Web smoke 不下载浏览器，会优先使用已安装的 Edge / Chrome；未自动发现时设置 `MEOW_BROWSER_PATH` 为浏览器可执行文件。Windows smoke 会临时关闭更新产物生成、把安装和应用数据限制在 `src-tauri/target/meow-windows-package-smoke-*`，并强制结束其自己启动的子进程。
+
+它们不证明代码签名、更新端点交付、离线安装、托盘的优雅退出、商店审核或任何平台的发布就绪。
 
 ## 🛡 安全须知
 

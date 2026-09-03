@@ -32,6 +32,21 @@ jobs:
       - run: npm run check:layout
       - run: npm run check:docs
 
+  windows-smoke:
+    name: Windows npm and diagnostics
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run doctor
+
   rust:
     name: cargo check
     runs-on: ubuntu-latest

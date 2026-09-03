@@ -29,7 +29,13 @@ npm run preview:web
 | 云端 Agent | 需要服务端 Gateway | Rust 安全代理 | 不在浏览器保存 Provider Key |
 | 本地 Ollama | 需开发者配置网络与 CORS | Preview | 不作为 Web 默认路径 |
 
-运行时信息定义在 `src/lib/platform.ts`。模块通过 `platforms` 与 `requiredCapabilities` 声明兼容条件，装配器不会执行不满足条件的模块。
+运行时信息定义在 `src/lib/platform.ts`。模块通过 `src/modules/contract.ts` 的 `platforms` 与 `requiredCapabilities` 声明兼容条件；装配器会在动态导入前跳过不满足条件的模块，而不是只跳过它的 `setup()`。
+
+原生构建配置与 Web 运行时选择是独立的。运行以下检查可确认 Web 目标不会要求 Cargo feature 或 Tauri permission；该检查不构建桌面安装包，也不验证浏览器以外的平台：
+
+```bash
+npm run check:modules -- web
+```
 
 ## 本地存储
 
@@ -51,6 +57,12 @@ App / domain code
 - 多标签并发要通过事务和版本升级流程协调，不能假设等同桌面数据库锁。
 
 参考：[MDN IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) 与 [浏览器存储配额](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria)。
+
+### 可选的数据导出与导入
+
+Todo 示例提供 `await exportTodos()` 与 `await importTodos(json)`，用于让具体产品自行接入下载、文件选择或其他用户界面。JSON 只包含 Todo 的标题、完成状态和创建时间，并带有固定格式与版本；本地数据库 id、SQLite/IndexedDB 文件、密钥、Agent 状态和同步状态都不在范围内。
+
+导入会先验证整个内容，再追加新记录并返回数量：不会清空或覆盖已有数据，重复导入会追加重复项。调用者必须先向用户说明这个语义并获得明确确认。该端口不是云同步、冲突合并或完整数据库恢复功能。
 
 ### 增加新的领域存储
 
@@ -93,7 +105,20 @@ export interface NoteStore {
 npm test
 npm run typecheck
 npm run build:web
+npm run check:modules -- web
 npm run check:layout
 ```
 
 浏览器验收至少覆盖：新增 Todo、刷新后仍存在、原生模块入口不显示、控制台无 Tauri IPC 调用错误，以及窄屏底部导航布局。
+
+### 可选的真实浏览器 smoke
+
+在已安装 Edge 或 Chrome 的机器上运行：
+
+```bash
+npm run smoke:web-persistence
+```
+
+该命令会构建 Web 模式，只监听 `127.0.0.1:4175`，用临时浏览器上下文新增一个唯一 Todo、刷新页面后确认它仍存在，并检查首屏、桌面专属「自动更新」入口与页面错误。它不下载浏览器；自动发现失败时，请把 `MEOW_BROWSER_PATH` 设为浏览器可执行文件的绝对路径。
+
+这是本机 Chrome/Edge 的持久化 smoke，不代表跨浏览器、无痕模式、配额回收、已部署站点或 Web 发布的验证。

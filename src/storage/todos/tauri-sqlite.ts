@@ -45,5 +45,14 @@ export function createTauriSqliteTodoStore(
       const database = await loadDatabase()
       await database.execute('DELETE FROM todos WHERE id = $1', [id])
     },
+    async appendImported(records) {
+      const database = await loadDatabase()
+      for (const record of records) {
+        await database.execute(
+          'INSERT INTO todos (title, done, created_at) VALUES ($1, $2, $3)',
+          [record.title, record.done, record.createdAt],
+        )
+      }
+    },
   }
 }

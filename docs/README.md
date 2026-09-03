@@ -20,6 +20,7 @@
 | 快速了解项目定位与适配场景 | [project-guide.md](./project-guide.md) |
 | 配置本地开发与 exFAT 工作区 | [development.md](./development.md) |
 | 了解 Release Kit 与发布边界 | [release-kit.md](./release-kit.md) |
+| 从模板做出第一个应用 | [blueprints/README.md](./blueprints/README.md) |
 | 用设计系统、写组件、加主题 | [design-system.md](./design-system.md) |
 | 理解模块化架构、扩展模块 | [modular-architecture.md](./modular-architecture.md) |
 | 了解全部 AI Native 能力规划 | [ai-capabilities.md](./ai-capabilities.md) |
@@ -35,6 +36,7 @@
 - **新用户 / 决策者** → 先读 [project-guide.md](./project-guide.md)，判断项目是否适合
 - **贡献者 / Agent** → 先读 [development.md](./development.md)，再遵守 [../AGENTS.md](../AGENTS.md)
 - **发布负责人** → 读 [release-kit.md](./release-kit.md)，确认已验证范围与待完成的平台工作
+- **准备做首个应用的开发者** → 先读 [blueprints/README.md](./blueprints/README.md)，按产品类型选择一条窄路径
 - **前端开发者** → 先读 [design-system.md](./design-system.md)，再动手写组件
 - **架构师 / 进阶开发者** → 先读 [modular-architecture.md](./modular-architecture.md) 与 [agent-integration.md](./agent-integration.md)
 - **AI 应用开发者** → 按需读 [agent-integration.md](./agent-integration.md)、[local-inference.md](./local-inference.md)、[mcp.md](./mcp.md)
@@ -48,14 +50,15 @@
 | project-guide.md | 项目适配指南：适合做什么 + 分类型注意事项 |
 | development.md | 本地开发：环境诊断、验证命令与 exFAT 处理 |
 | release-kit.md | Release Kit：配置检查与发布成熟度边界 |
+| blueprints/ | 首个应用蓝图：本地笔记、开发者工具、本地 AI 伴侣 |
 | design-system.md | 设计系统：tokens + 组件 + 主题 + 性能 + 可达性 |
-| modular-architecture.md | 模块化架构：四层门控 + Module 契约 + 平台能力 |
+| modular-architecture.md | 模块化架构：运行时与原生构建双平面契约 + 平台能力 |
 | ai-capabilities.md | AI Native 能力清单：P1-P3 落地节奏 |
 | agent-integration.md | Agent 集成方案：框架对比 + 双轨设计 + 分阶段路径 |
 | local-inference.md | 本地推理：Ollama 接入 + 密钥安全 |
 | mcp.md | MCP 接入：连接外部工具到 Agent |
 | mobile.md | 移动端适配（Android/iOS）：前置依赖 + 初始化 + 降级 |
-| web.md | Web 适配：IndexedDB + 平台能力 + 静态部署 |
+| web.md | Web 适配：IndexedDB、版本化 Todo 数据端口、平台能力与静态部署 |
 | sync.md | 同步接缝：outbox + HTTP + 云端/LAN/CRDT 方案选择 |
 
 ## 架构图

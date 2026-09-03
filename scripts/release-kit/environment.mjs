@@ -1,10 +1,14 @@
 import { spawnSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { runNpmCommand } from './npm-command.mjs'
+
+function getToolVersionFromResult(tool) {
+  return tool.status === 0 ? tool.stdout.trim() : 'missing'
+}
 
 function getToolVersion(command, args, runCommand) {
-  const tool = runCommand(command, args, { encoding: 'utf8' })
-  return tool.status === 0 ? tool.stdout.trim() : 'missing'
+  return getToolVersionFromResult(runCommand(command, args, { encoding: 'utf8' }))
 }
 
 function getFilesystemType(root, platform) {
@@ -54,7 +58,11 @@ export async function inspectEnvironment(root, options = {}) {
   const warnings = []
   const tools = {
     node: getToolVersion('node', ['--version'], runCommand),
-    npm: getToolVersion('npm', ['--version'], runCommand),
+    npm: getToolVersionFromResult(runNpmCommand(['--version'], {
+      platform,
+      runCommand,
+      spawnOptions: { encoding: 'utf8' },
+    })),
     rust: getToolVersion('rustc', ['--version'], runCommand),
     cargo: getToolVersion('cargo', ['--version'], runCommand),
     tauri: getToolVersion(

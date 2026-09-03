@@ -24,6 +24,25 @@ test('memory adapter implements the TodoStore contract', async () => {
   await verifiesTodoStore(createInMemoryTodoStore())
 })
 
+test('memory adapter appends imported Todos with new local ids', async () => {
+  const store = createInMemoryTodoStore()
+  await store.add('existing')
+
+  await store.appendImported([
+    { title: 'restored', done: 1, createdAt: '2026-09-02 00:00:00' },
+  ])
+
+  const listed = await store.list()
+  const restored = listed.find((todo) => todo.title === 'restored')
+  assert.deepEqual(restored, {
+    id: 2,
+    title: 'restored',
+    done: 1,
+    created_at: '2026-09-02 00:00:00',
+  })
+  assert.equal(listed.find((todo) => todo.title === 'existing')?.id, 1)
+})
+
 test('IndexedDB adapter implements the TodoStore contract and survives reopening', async () => {
   const databaseName = `meow-test-todos-${Date.now()}`
   await deleteDB(databaseName)
@@ -32,6 +51,21 @@ test('IndexedDB adapter implements the TodoStore contract and survives reopening
     (await createIndexedDbTodoStore({ databaseName }).list()).map(({ title }) => title),
     ['first'],
   )
+})
+
+test('IndexedDB adapter persists appended import records after reopening', async () => {
+  const databaseName = `meow-test-import-${Date.now()}`
+  await deleteDB(databaseName)
+  const store = createIndexedDbTodoStore({ databaseName })
+
+  await store.appendImported([
+    { title: 'restored', done: 1, createdAt: '2026-09-02 00:00:00' },
+  ])
+
+  const reopened = createIndexedDbTodoStore({ databaseName })
+  assert.deepEqual(await reopened.list(), [
+    { id: 1, title: 'restored', done: 1, created_at: '2026-09-02 00:00:00' },
+  ])
 })
 
 test('public Todo functions delegate to the registered store', async () => {
@@ -63,10 +97,14 @@ test('Tauri SQLite adapter preserves the existing SQL boundary', async () => {
   await store.add('new')
   await store.toggle(7, true)
   await store.remove(7)
+  await store.appendImported([
+    { title: 'restored', done: 1, createdAt: '2026-09-02 00:00:00' },
+  ])
 
   assert.deepEqual(calls.slice(1).map(({ bindValues }) => bindValues), [
     ['new'],
     [1, 7],
     [7],
+    ['restored', 1, '2026-09-02 00:00:00'],
   ])
 })

@@ -36,7 +36,7 @@
 
 `meow-starter` is a **modular, AI-native** desktop app scaffold. It handles the boilerplate that makes desktop development tedious — data layer, tray, updater, design system — while packaging AI capabilities (Agent, local inference, MCP) as **pluggable modules** you enable on demand.
 
-**Core philosophy**: lightweight core, optional capabilities, on-demand inclusion. Write zero agent code and it's a clean desktop scaffold; flip a switch and it becomes an AI app.
+**Core philosophy**: lightweight core, optional capabilities, on-demand inclusion. Write zero agent code and it is a clean desktop scaffold; a Preview capability becomes product functionality only after explicit project configuration and verification.
 
 ## ✨ Features
 
@@ -62,6 +62,7 @@
 | 🛠 Set up local development / exFAT workspace | [docs/development.md](./docs/development.md) |
 | 📦 Understand the Release Kit and release boundary | [docs/release-kit.md](./docs/release-kit.md) |
 | 🎯 Check project fit | [docs/project-guide.md](./docs/project-guide.md) |
+| 🧭 Build a first application from the scaffold | [docs/blueprints/README.md](./docs/blueprints/README.md) |
 | 🏗 Understand architecture | [Architecture](#-architecture) + [modular-architecture.md](./docs/modular-architecture.md) |
 | 🎨 Use design system/components | [docs/design-system.md](./docs/design-system.md) |
 | 🤖 Integrate Agent | [docs/agent-integration.md](./docs/agent-integration.md) |
@@ -91,6 +92,19 @@ npm run dev:web
 ```
 
 **Prerequisites**: Node.js 22+ / Rust 1.77.2+ / platform deps (see [Tauri docs](https://tauri.app/start/prerequisites/)).
+
+## Runtime smoke checks
+
+These opt-in commands provide local evidence and are not part of CI or `npm run verify`:
+
+```bash
+npm run smoke:web-persistence
+npm run smoke:windows-package # Windows only
+```
+
+The Web command builds Web mode, uses an already installed Edge or Chrome to add a Todo and verify it after reload, and never downloads a browser. Set `MEOW_BROWSER_PATH` when automatic discovery cannot find the executable. The Windows command builds an unsigned NSIS installer with updater artifacts temporarily disabled, installs and redirects app data under `src-tauri/target/meow-windows-package-smoke-*`, then checks that its own child process stays alive briefly before cleanup.
+
+Neither command proves signing, hosted updater delivery, offline installation, graceful tray exit, store acceptance, or release readiness.
 
 ## 🧩 Create a new project (rename checklist)
 
@@ -128,6 +142,23 @@ Each capability is a pluggable module, toggled in `src/modules/config.ts`:
 | `autostart` | optional | off | Auto-start on boot |
 
 > Full design: [docs/modular-architecture.md](./docs/modular-architecture.md). Disabled modules are not loaded on the default runtime path; use the lockfile and build output to judge install and distribution size.
+
+### Executable compatibility contract
+
+`src/modules/contract.ts` is the static catalog for module platforms, runtime capabilities, dependencies, and native build requirements. The loader filters this catalog before dynamic import and rejects a loaded module whose declaration differs before setup begins.
+
+Native build configuration is a separate plane: a frontend toggle never enables a Cargo feature or grants a Tauri permission. After changing the default module configuration, run the check for the intended target:
+
+```bash
+npm run check:modules          # desktop target (default)
+npm run check:modules -- web   # Web target
+```
+
+This check proves checked-in configuration consistency only. It does not change Cargo or permissions, or prove plugin behavior, packages, signing, or device behavior.
+
+### Versioned local data port
+
+The Todo example exposes an opt-in JSON boundary through `await exportTodos()` and `await importTodos(json)`. It exports only application-owned Todo fields, validates the whole payload before writes, and appends rather than overwrites local data. It does not export database files, keys, Agent state, or sync state; product UI must ask for explicit confirmation before import, and repeated imports intentionally create duplicates.
 
 ### Maturity model
 
