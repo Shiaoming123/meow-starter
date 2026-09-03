@@ -243,6 +243,8 @@ npm run add:agent   # 装 ai + @ai-sdk/vue + provider 包
 
 支持云端模型（OpenAI/Anthropic）与本地模型（Ollama）。云端密钥存 OS 钥匙串，WebView 只可写入、删除和检查是否存在，无法读回明文；请求由 Rust 代理发往固定官方 API。详见 [docs/agent-integration.md](./docs/agent-integration.md) 与 [docs/local-inference.md](./docs/local-inference.md)。
 
+> ⚠️ **云端代理有白名单**：默认只放行 `api.openai.com` 与 `api.anthropic.com`。Ollama / vLLM 等本地模型走直连不受影响，但 DeepSeek、Moonshot、Groq 等 OpenAI 兼容云服务若配置钥匙串密钥会被拒绝。扩展方法见 [docs/agent-integration.md §3.4.1](./docs/agent-integration.md)。
+
 ### MCP 接入
 
 默认关闭。让 Agent 连接外部 MCP server：
