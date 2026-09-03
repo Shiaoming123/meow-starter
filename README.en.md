@@ -130,6 +130,19 @@ Each capability is a pluggable module, toggled in `src/modules/config.ts`:
 
 > Full design: [docs/modular-architecture.md](./docs/modular-architecture.md). Disabled modules are not loaded on the default runtime path; use the lockfile and build output to judge install and distribution size.
 
+### Executable compatibility contract
+
+`src/modules/contract.ts` is the static catalog for module platforms, runtime capabilities, dependencies, and native build requirements. The loader filters this catalog before dynamic import and rejects a loaded module whose declaration differs before setup begins.
+
+Native build configuration is a separate plane: a frontend toggle never enables a Cargo feature or grants a Tauri permission. After changing the default module configuration, run the check for the intended target:
+
+```bash
+npm run check:modules          # desktop target (default)
+npm run check:modules -- web   # Web target
+```
+
+This check proves checked-in configuration consistency only. It does not change Cargo or permissions, or prove plugin behavior, packages, signing, or device behavior.
+
 ### Maturity model
 
 | Level | Meaning | Current capabilities |

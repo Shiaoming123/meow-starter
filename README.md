@@ -148,6 +148,19 @@ npm run dev:web
 
 > 完整设计见 [docs/modular-architecture.md](./docs/modular-architecture.md)。关闭的模块不会进入默认运行时加载路径；依赖安装量与最终产物体积仍应以 lockfile 和构建产物为准。
 
+### 可执行兼容性契约
+
+`src/modules/contract.ts` 是模块的平台、运行时能力、依赖与原生构建要求的静态目录。装配器会先按此目录筛选当前运行时，再动态导入模块；加载后的模块声明不一致会在初始化前失败。
+
+原生构建是独立平面：前端开关不会自动打开 Cargo feature 或授予 Tauri 权限。改动默认模块配置后，按目标运行：
+
+```bash
+npm run check:modules          # 桌面目标（默认）
+npm run check:modules -- web   # Web 目标
+```
+
+该检查只核对仓库中的配置是否自洽；不修改 Cargo 或权限文件，也不证明插件、安装包、签名或真机行为。
+
 ### 成熟度约定
 
 | 级别 | 含义 | 当前能力 |
@@ -275,6 +288,7 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 | `npm run build:web` | 类型检查 + Web 静态构建 |
 | `npm test` | 运行无额外框架依赖的行为测试 |
 | `npm run typecheck` | 仅类型检查 |
+| `npm run check:modules` | 核对模块目录、当前默认配置与原生构建要求 |
 | `npm run check:layout` | 验证生产 CSS 的移动端布局契约 |
 | `npm run check:docs` | 检查 Markdown 相对链接 |
 | `npm run tauri dev` | 启动桌面应用（含 Rust 热重载） |

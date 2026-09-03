@@ -52,7 +52,7 @@
 | release-kit.md | Release Kit：配置检查与发布成熟度边界 |
 | blueprints/ | 首个应用蓝图：本地笔记、开发者工具、本地 AI 伴侣 |
 | design-system.md | 设计系统：tokens + 组件 + 主题 + 性能 + 可达性 |
-| modular-architecture.md | 模块化架构：四层门控 + Module 契约 + 平台能力 |
+| modular-architecture.md | 模块化架构：运行时与原生构建双平面契约 + 平台能力 |
 | ai-capabilities.md | AI Native 能力清单：P1-P3 落地节奏 |
 | agent-integration.md | Agent 集成方案：框架对比 + 双轨设计 + 分阶段路径 |
 | local-inference.md | 本地推理：Ollama 接入 + 密钥安全 |

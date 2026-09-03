@@ -29,7 +29,13 @@ npm run preview:web
 | 云端 Agent | 需要服务端 Gateway | Rust 安全代理 | 不在浏览器保存 Provider Key |
 | 本地 Ollama | 需开发者配置网络与 CORS | Preview | 不作为 Web 默认路径 |
 
-运行时信息定义在 `src/lib/platform.ts`。模块通过 `platforms` 与 `requiredCapabilities` 声明兼容条件，装配器不会执行不满足条件的模块。
+运行时信息定义在 `src/lib/platform.ts`。模块通过 `src/modules/contract.ts` 的 `platforms` 与 `requiredCapabilities` 声明兼容条件；装配器会在动态导入前跳过不满足条件的模块，而不是只跳过它的 `setup()`。
+
+原生构建配置与 Web 运行时选择是独立的。运行以下检查可确认 Web 目标不会要求 Cargo feature 或 Tauri permission；该检查不构建桌面安装包，也不验证浏览器以外的平台：
+
+```bash
+npm run check:modules -- web
+```
 
 ## 本地存储
 
@@ -93,6 +99,7 @@ export interface NoteStore {
 npm test
 npm run typecheck
 npm run build:web
+npm run check:modules -- web
 npm run check:layout
 ```
 
