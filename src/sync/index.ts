@@ -7,6 +7,7 @@ export { createBrowserAuthStorage } from './supabase/auth-storage'
 export { createTauriSqliteSyncStateStore } from './tauri-sqlite-store'
 export { createHttpSyncTransport } from './transports/http'
 export type {
+  AuthenticatedSyncScope,
   PendingSyncMutation,
   SyncConflict,
   SyncMutation,

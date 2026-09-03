@@ -59,7 +59,7 @@ await provider.syncOnce()
 
 ## 可选 Supabase 客户端
 
-`createSupabaseSyncClient()` 只在应用明确启用 sync 并导入后调用时创建。构造时不执行登录、同步、云连接，也不会自动恢复或刷新持久化 Auth session；它禁用 Auth 自动刷新，并在实际同步请求时只读取当前 session 的短期 `access_token`，再交给固定的 `${url}/functions/v1/sync` HTTP transport。调用者不能加入任意 Authorization header，也不能传入 service-role/secret key。
+`createSupabaseSyncClient()` 只在应用明确启用 sync 并导入后调用时创建。构造时不执行登录、同步、云连接，也不会自动恢复或刷新持久化 Auth session；它禁用 Auth 自动刷新。每次 `syncOnce()` 开始时，transport 从同一次 Auth session 读取 `user.id` 和短期 `access_token`，形成只供本次同步使用的认证 scope；引擎先确认该 subject 与持久化 store 的 `ownerId` 完全一致，再读取 outbox/checkpoint 或发出 push/pull。没有 session 或账号不一致时会 fail closed，本次同步不会读取、确认或推进旧账号状态，也不会应用新账号的远端数据。调用者不能加入任意 Authorization header，也不能传入 service-role/secret key。
 
 Web 使用浏览器 local storage；桌面应用必须注入自己的安全存储适配器（例如 OS keychain 后的适配器）：
 
@@ -79,7 +79,8 @@ const client = createSupabaseSyncClient({
 })
 
 const provider = createOutboxSyncEngine({
-  store: createIndexedDbSyncStateStore(),
+  // authenticatedUserId 来自刚完成的显式登录流程。
+  store: createIndexedDbSyncStateStore({ ownerId: authenticatedUserId }),
   policy: createAllowlistSyncPolicy(['agent_preferences']),
   transport: client.transport,
   applyRemote: applyAgentPreferences,
@@ -98,6 +99,8 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ### 用户可见的开关路径
 
 模板没有预置账户页面；接入者应在“设置 → 账户与同步”提供显式流程：默认显示“仅本地”，用户登录并确认要同步 `agent_preferences` 后才启用模块和创建 provider；显示当前账号与同步状态；“关闭同步”立即停止调度、卸载 provider 并保留本机 outbox/数据。“清除本机同步数据”必须是单独确认操作，不能作为关闭同步的副作用。
+
+账号生命周期必须遵守同一条规则：一个 durable store/provider 只属于创建它时的一个 Auth `user.id`。登录后用该 `user.id` 创建 owner-scoped store，再创建 provider；切换账号或登出前先停止同步调度并丢弃旧 provider，认证状态改变后为新 `user.id` 重新创建 store/provider。不得把 A 的 store/provider 复用于 B，也不得把“关闭同步”“登出”或“切换账号”实现为清空 A 的 outbox/checkpoint。即使采用者遗漏了这一步，引擎的逐次认证 scope 校验仍会拒绝错配，而不是把 B 的响应写入 A 的本地范围。
 
 ## Supabase 采用方案
 

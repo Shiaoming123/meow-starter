@@ -127,6 +127,74 @@ test('push failure keeps pending outbox changes', async () => {
   assert.deepEqual(await store.listPending(100), [local])
 })
 
+test('authenticated subject mismatch fails before touching owner-scoped state or transport', async () => {
+  const local = pendingMutation()
+  const baseStore = createInMemorySyncStateStore([local], 'cursor-a', 'owner-a')
+  let stateCalls = 0
+  const store = {
+    ...baseStore,
+    async listPending(limit: number) {
+      stateCalls += 1
+      return baseStore.listPending(limit)
+    },
+    async getCheckpoint() {
+      stateCalls += 1
+      return baseStore.getCheckpoint()
+    },
+  }
+  let applied = false
+  let baseTransportCalls = 0
+  let scopedTransportCalls = 0
+  const scopedTransport: SyncTransport = {
+    async push() {
+      scopedTransportCalls += 1
+      return { accepted: [mutation()], conflicts: [] }
+    },
+    async pull() {
+      scopedTransportCalls += 1
+      return {
+        changes: [mutation({ operationId: 'owner-b-change' })],
+        checkpoint: 'cursor-b',
+      }
+    },
+  }
+  const transport: SyncTransport = {
+    async getAuthenticatedScope() {
+      return { subject: 'owner-b', transport: scopedTransport }
+    },
+    async push() {
+      baseTransportCalls += 1
+      return { accepted: [mutation()], conflicts: [] }
+    },
+    async pull() {
+      baseTransportCalls += 1
+      return {
+        changes: [mutation({ operationId: 'owner-b-change' })],
+        checkpoint: 'cursor-b',
+      }
+    },
+  }
+
+  await assert.rejects(
+    createOutboxSyncEngine({
+      store,
+      transport,
+      policy: createAllowlistSyncPolicy(['notes']),
+      async applyRemote() {
+        applied = true
+      },
+    }).syncOnce(),
+    /authenticated sync subject does not match state owner/i,
+  )
+
+  assert.equal(stateCalls, 0)
+  assert.equal(baseTransportCalls, 0)
+  assert.equal(scopedTransportCalls, 0)
+  assert.equal(applied, false)
+  assert.deepEqual(await baseStore.listPending(100), [local])
+  assert.equal(await baseStore.getCheckpoint(), 'cursor-a')
+})
+
 test('remote apply failure does not advance the checkpoint', async () => {
   const store = createInMemorySyncStateStore([], 'cursor-0')
   const transport: SyncTransport = {

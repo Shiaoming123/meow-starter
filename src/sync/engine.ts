@@ -26,6 +26,19 @@ function assertAllowed(
   }
 }
 
+async function getTransportForSync(
+  store: SyncStateStore,
+  transport: SyncTransport,
+): Promise<SyncTransport> {
+  if (!transport.getAuthenticatedScope) return transport
+
+  const scope = await transport.getAuthenticatedScope()
+  if (scope.subject !== store.ownerId) {
+    throw new Error('Authenticated sync subject does not match state owner')
+  }
+  return scope.transport
+}
+
 export function createOutboxSyncEngine(
   options: OutboxSyncEngineOptions,
 ): SyncProvider {
@@ -33,13 +46,14 @@ export function createOutboxSyncEngine(
 
   return {
     async syncOnce() {
+      const transport = await getTransportForSync(options.store, options.transport)
       const pending = await options.store.listPending(batchSize)
       assertAllowed(pending, options.policy)
 
       let uploaded = 0
       let conflicts: SyncConflict[] = []
       if (pending.length > 0) {
-        const pushed = await options.transport.push(pending)
+        const pushed = await transport.push(pending)
         conflicts = pushed.conflicts
         assertAllowed(
           conflicts.map(({ current }) => current),
@@ -61,7 +75,7 @@ export function createOutboxSyncEngine(
       }
 
       const previousCheckpoint = await options.store.getCheckpoint()
-      const pulled = await options.transport.pull(previousCheckpoint)
+      const pulled = await transport.pull(previousCheckpoint)
       assertAllowed(pulled.changes, options.policy)
 
       for (const change of pulled.changes) {

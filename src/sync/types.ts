@@ -23,7 +23,13 @@ export interface SyncPushResult {
   conflicts: SyncConflict[]
 }
 
+export interface AuthenticatedSyncScope {
+  readonly subject: string
+  readonly transport: SyncTransport
+}
+
 export interface SyncTransport {
+  getAuthenticatedScope?(): Promise<AuthenticatedSyncScope>
   push(
     changes: readonly PendingSyncMutation[],
   ): Promise<SyncPushResult>

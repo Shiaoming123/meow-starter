@@ -1,11 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 import { createHttpSyncTransport } from '../transports/http.ts'
-import type { SyncTransport } from '../types.ts'
+import type { AuthenticatedSyncScope, SyncTransport } from '../types.ts'
 import type { SupabaseAuthStorage } from './auth-storage.ts'
 
 export interface SupabaseAuthFacade {
   getSession(): Promise<{
-    data: { session: { access_token: string } | null }
+    data: {
+      session: {
+        access_token: string
+        user: { id: string }
+      } | null
+    }
   }>
 }
 
@@ -75,17 +80,39 @@ export function createSupabaseSyncClient(
       skipAutoInitialize: true,
     },
   }).auth
+  const baseUrl = new URL('functions/v1/sync', projectUrl).href
 
   async function getAccessToken(): Promise<string | undefined> {
     const session = (await auth.getSession()).data.session
     return session?.access_token
   }
 
+  async function getAuthenticatedScope(): Promise<AuthenticatedSyncScope> {
+    const session = (await auth.getSession()).data.session
+    if (!session) throw new Error('Authenticated Supabase sync session is required')
+    if (!session.user.id.trim()) {
+      throw new Error('Authenticated Supabase sync subject is required')
+    }
+    if (!session.access_token.trim()) {
+      throw new Error('Authenticated Supabase sync access token is required')
+    }
+
+    return {
+      subject: session.user.id,
+      transport: createHttpSyncTransport({
+        baseUrl,
+        getAccessToken: async () => session.access_token,
+      }),
+    }
+  }
+
+  const transport: SyncTransport = {
+    ...createHttpSyncTransport({ baseUrl, getAccessToken }),
+    getAuthenticatedScope,
+  }
+
   return {
     getAccessToken,
-    transport: createHttpSyncTransport({
-      baseUrl: new URL('functions/v1/sync', projectUrl).href,
-      getAccessToken,
-    }),
+    transport,
   }
 }
