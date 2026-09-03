@@ -12,6 +12,7 @@
     "dev:web": "vite --mode web",
     "build": "vue-tsc --noEmit && vite build",
     "build:web": "vue-tsc --noEmit && vite build --mode web",
+    "check:modules": "node --experimental-strip-types scripts/check-module-contract.mjs",
     "check:layout": "node scripts/check-built-layout.mjs",
     "check:docs": "node scripts/check-doc-links.mjs",
     "clean:appledouble": "node scripts/clean-appledouble.mjs",
