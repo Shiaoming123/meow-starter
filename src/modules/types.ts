@@ -22,7 +22,7 @@ export interface Module {
   /** 模块名（展示用） */
   name: string
   /** 依赖的其他模块 id（如 agent 依赖 sqlite） */
-  dependencies: string[]
+  dependencies: readonly string[]
   /** 模块支持的平台；省略表示所有平台。 */
   platforms?: readonly RuntimePlatform[]
   /** 模块启动前必须具备的运行时能力。 */

@@ -1,4 +1,5 @@
-import type { Module } from './types'
+import { type ModuleId } from './contract.ts'
+import type { Module } from './types.ts'
 
 /**
  * 模块配置 —— 唯一入口，用户只需改这一个文件。
@@ -10,35 +11,11 @@ import type { Module } from './types'
  * 注意：使用 Rust 插件的原生模块还需启用同名 Cargo feature。
  * 纯 Web 模块（如 indexedDb）没有对应的 Cargo feature。
  */
-export interface ModuleConfig {
+export type ModuleConfig = Record<ModuleId, boolean> & {
   /** 核心模块（设计系统 + 基础组件 + 主题 + Icon），始终启用 */
   core: true
   /** 领域存储契约与内存回退，始终启用 */
   storage: true
-  /** 数据层（SQLite） */
-  sqlite: boolean
-  /** Web 持久化数据层（IndexedDB） */
-  indexedDb: boolean
-  /** 本地优先同步接口与内置 outbox 引擎（默认不联网） */
-  sync: boolean
-  /** 系统托盘 */
-  tray: boolean
-  /** 自动更新 */
-  updater: boolean
-  /** 主题系统（4 套风格主题） */
-  themes: boolean
-  /** Agent 运行时（需装 ai + @ai-sdk/vue） */
-  agent: boolean
-  /** 全局快捷键唤起（P1） */
-  shortcut: boolean
-  /** 剪贴板读写（P1） */
-  clipboard: boolean
-  /** 系统通知（P1） */
-  notification: boolean
-  /** 开机自启动（P1） */
-  autostart: boolean
-  /** MCP 接入（P3，需 @ai-sdk/mcp，依赖 agent） */
-  mcp: boolean
 }
 
 /**
@@ -68,10 +45,12 @@ export const defaultModuleConfig: ModuleConfig = {
  * loader.ts 会解包 .default。
  * 只有 config 里为 true 的模块，其 loader 才会被调用（从而被 Vite 打包）。
  */
-export const moduleRegistry: Record<
-  keyof ModuleConfig,
+export type ModuleLoaders = Record<
+  ModuleId,
   (() => Promise<{ default: Module }>) | null
-> = {
+>
+
+export const moduleRegistry: ModuleLoaders = {
   core: () => import('./core'),
   storage: () => import('./storage'),
   sqlite: () => import('./sqlite'),
