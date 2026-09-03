@@ -22,6 +22,19 @@
 
 > 移动端构建需要完整的原生工具链，请按你的目标平台逐步配置。**脚手架本身不绑定这些环境**——装好依赖后，`tauri android init` / `tauri ios init` 就能生成工程。
 
+先运行不读取或打印路径/密钥内容的诊断：
+
+```bash
+npm run mobile:doctor
+```
+
+它分别报告 Android SDK/NDK/JDK、`adb`、Rust targets 和可见
+Android device/emulator，以及 macOS 上的 Xcode、CocoaPods 和 iOS Rust
+targets。`missing-prerequisites` 或 `unavailable` 是明确的环境状态，不是
+构建或设备失败；检测到设备也不等于已运行真机 smoke。只有在所需工具链和
+用户选定的设备/模拟器都就绪后，才运行下面显式的 `tauri android dev` 或
+`tauri ios dev`，并把其真实输出作为设备验证证据。
+
 ### 1.1 Android（约 20–30 GB，需 Android Studio）
 
 **第一步：装 Android Studio + SDK 组件**

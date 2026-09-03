@@ -20,6 +20,7 @@
     "doctor": "node scripts/doctor.mjs",
     "release:check": "node scripts/release-check.mjs",
     "release:provenance": "node scripts/release-provenance.mjs",
+    "mobile:doctor": "node scripts/mobile-doctor.mjs",
     "rust:verify": "node scripts/rust-verify.mjs",
     "smoke:web-persistence": "node scripts/smoke-web-persistence.mjs",
     "smoke:windows-package": "node scripts/smoke-windows-package.mjs",
