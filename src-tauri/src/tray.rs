@@ -27,7 +27,7 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> Result<(), Box<dyn std::er
 
     TrayIconBuilder::with_id("main-tray")
         .icon(icon)
-        .tooltip("Tauri Vue 模板")
+        .tooltip("Meow Starter")
         .menu(&menu)
         // 左键交给 on_tray_icon_event 处理，右键才弹菜单
         .show_menu_on_left_click(false)
