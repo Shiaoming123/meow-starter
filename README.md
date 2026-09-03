@@ -2,7 +2,11 @@
   <strong>中文</strong> · <a href="./README.en.md">English</a>
 </p>
 
-<h1 align="center">🐾 meow-starter</h1>
+<p align="center">
+  <img src="./public/meow-mark.svg" alt="meow-starter 青蓝渐变猫爪与 M 形标志" width="120"/>
+</p>
+
+<h1 align="center">meow-starter</h1>
 
 <p align="center">
   <strong>AI Native、桌面优先、Web 可用的跨平台应用脚手架</strong><br/>
@@ -111,7 +115,7 @@ npm run dev:web
 1. `package.json` 的 `name`
 2. `src-tauri/Cargo.toml` 的 `name` 与 `[lib] name`（lib 名 = 包名下划线 + `_lib`）
 3. `src-tauri/tauri.conf.json` 的 `productName` 与 `identifier`（⚠️ identifier 发布后不可改）
-4. `src-tauri/icons/` 换成自己的图标
+4. 替换 `public/meow-mark.svg`，再运行 `npm run tauri -- icon public/meow-mark.svg -o src-tauri/icons` 生成自己的打包图标
 5. 重新生成更新签名密钥（`npm run tauri:signer`）
 6. 将 `plugins.updater.endpoints` 中的 `OWNER/REPO` 替换为自己的仓库
 7. 更新 `package.json` 与 `src-tauri/Cargo.toml` 的 repository/homepage/author 元数据

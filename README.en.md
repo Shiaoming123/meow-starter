@@ -2,7 +2,11 @@
   <a href="./README.md">中文</a> · <strong>English</strong>
 </p>
 
-<h1 align="center">🐾 meow-starter</h1>
+<p align="center">
+  <img src="./public/meow-mark.svg" alt="meow-starter cyan-to-teal cat paw and M mark" width="120"/>
+</p>
+
+<h1 align="center">meow-starter</h1>
 
 <p align="center">
   <strong>An AI-native, desktop-first, Web-capable cross-platform scaffold</strong><br/>
@@ -91,7 +95,7 @@ npm run dev:web
 1. `name` in `package.json`
 2. `name` and `[lib] name` in `src-tauri/Cargo.toml`
 3. `productName` and `identifier` in `src-tauri/tauri.conf.json` (⚠️ identifier is immutable after release)
-4. Your own icons in `src-tauri/icons/`
+4. Replace `public/meow-mark.svg`, then run `npm run tauri -- icon public/meow-mark.svg -o src-tauri/icons` to generate your package icons
 5. Regenerate the update signing key (`npm run tauri:signer`)
 6. Replace `OWNER/REPO` in `plugins.updater.endpoints` with your repository
 7. Update repository/homepage/author metadata in `package.json` and `src-tauri/Cargo.toml`
