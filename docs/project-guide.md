@@ -68,6 +68,6 @@
 
 1. **identifier 发布后不可改**（`src-tauri/tauri.conf.json`），否则用户收不到更新。
 2. **capabilities 最小权限原则**：只开用到的插件权限，别复制粘贴全量权限。
-3. **图标**：`src-tauri/icons/` 需替换成自己的（`tauri icon` 命令一键生成全套）。
+3. **图标**：替换 `public/meow-mark.svg`，再运行 `npm run tauri -- icon public/meow-mark.svg -o src-tauri/icons` 生成全套打包图标。
 4. **包管理器**：本模板统一 npm，CI 用 `npm ci`，新增依赖保持一致。
 5. **Rust 冷构建慢**：CI 上 macOS 约 114s、Windows 约 248s，首次编译要有预期；日常 `tauri dev` 有热更新，无感。

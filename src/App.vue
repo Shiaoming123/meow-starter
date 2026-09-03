@@ -119,7 +119,7 @@ onUnmounted(() => unlistenTray?.())
   <div class="shell">
     <aside class="sidebar" :class="{ 'sidebar--collapsed': !sidebarOpen }">
       <div class="sidebar__brand">
-        <span class="brand-mark">M</span>
+        <img class="brand-mark" src="/meow-mark.svg" alt="Meow Starter" />
         <span v-if="sidebarOpen" class="brand-name">Meow Starter</span>
       </div>
 
@@ -356,15 +356,11 @@ onUnmounted(() => unlistenTray?.())
 }
 
 .brand-mark {
-  display: grid;
-  place-items: center;
+  display: block;
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-md);
-  background: var(--accent);
-  color: var(--accent-text);
-  font-weight: var(--font-medium);
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .brand-name {
