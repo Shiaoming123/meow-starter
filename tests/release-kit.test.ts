@@ -9,6 +9,7 @@ import test from 'node:test'
 import { findAppleDoubleFiles, removeAppleDoubleFiles } from '../scripts/release-kit/appledouble.mjs'
 import { inspectReleaseConfig } from '../scripts/release-kit/config.mjs'
 import { inspectEnvironment, prepareCargoEnvironment } from '../scripts/release-kit/environment.mjs'
+import { getNpmInvocation, runNpmCommand } from '../scripts/release-kit/npm-command.mjs'
 import { isRunnableTestFile } from '../scripts/run-tests.mjs'
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url))
@@ -24,6 +25,39 @@ test('ignores AppleDouble test sidecars', () => {
   assert.equal(isRunnableTestFile('._agent.test.ts'), false)
   assert.equal(isRunnableTestFile('tests/agent.test.ts'), true)
   assert.equal(isRunnableTestFile('tests/._agent.test.ts'), false)
+})
+
+test('builds a cmd invocation for npm on Windows', () => {
+  assert.deepEqual(
+    getNpmInvocation(['run', 'test'], { platform: 'win32', commandShell: 'cmd.exe' }),
+    {
+      command: 'cmd.exe',
+      args: ['/d', '/s', '/c', 'npm.cmd run test'],
+      options: { windowsHide: true },
+    },
+  )
+})
+
+test('runs the Windows npm invocation through an injected runner', () => {
+  const calls = []
+  const expected = { status: 0, stdout: '10.0.0', stderr: '' }
+
+  const result = runNpmCommand(['--version'], {
+    platform: 'win32',
+    commandShell: 'cmd.exe',
+    spawnOptions: { encoding: 'utf8' },
+    runCommand: (...args) => {
+      calls.push(args)
+      return expected
+    },
+  })
+
+  assert.equal(result, expected)
+  assert.deepEqual(calls, [[
+    'cmd.exe',
+    ['/d', '/s', '/c', 'npm.cmd --version'],
+    { encoding: 'utf8', windowsHide: true },
+  ]])
 })
 
 test('warns about AppleDouble files on macOS exFAT volumes', async (t) => {
@@ -63,9 +97,9 @@ test('reports Tauri prerequisites, config locations, and missing-tool guidance',
   assert.match(summary, /Cargo: missing/)
   assert.match(summary, /Tauri CLI: missing/)
   assert.match(summary, /Tauri prerequisites: https:\/\/tauri\.app\/start\/prerequisites\//)
-  assert.match(summary, new RegExp(`Package config: ${join(fixtureRoot, 'package.json')}`))
-  assert.match(summary, new RegExp(`Rust config: ${join(fixtureRoot, 'src-tauri', 'Cargo.toml')}`))
-  assert.match(summary, new RegExp(`Tauri config: ${join(fixtureRoot, 'src-tauri', 'tauri.conf.json')}`))
+  assert.ok(summary.includes(`Package config: ${join(fixtureRoot, 'package.json')}`))
+  assert.ok(summary.includes(`Rust config: ${join(fixtureRoot, 'src-tauri', 'Cargo.toml')}`))
+  assert.ok(summary.includes(`Tauri config: ${join(fixtureRoot, 'src-tauri', 'tauri.conf.json')}`))
   assert.match(warnings, /Install Node\.js 22 or newer/)
   assert.match(warnings, /rustup/)
   assert.match(warnings, /npm install/)
@@ -91,7 +125,7 @@ test('uses a warned Cargo target fallback only on macOS exFAT', () => {
     { filesystemType: 'apfs', platform: 'darwin', temporaryDirectory: '/fallback' },
   )
 
-  assert.equal(exfatResult.environment.CARGO_TARGET_DIR, '/fallback/meow-starter-cargo-target')
+  assert.equal(exfatResult.environment.CARGO_TARGET_DIR, join('/fallback', 'meow-starter-cargo-target'))
   assert.match(exfatResult.warnings.join('\n'), /filesystem type has not been verified/)
   assert.equal('CARGO_TARGET_DIR' in apfsResult.environment, false)
 })
@@ -113,8 +147,16 @@ test('finds and removes only regular AppleDouble sidecars without following syml
   await mkdir(join(root, 'nested'))
   await writeFile(nestedSidecar, 'metadata')
   await writeFile(outsideSidecar, 'metadata')
-  await symlink(outsideSidecar, join(root, '._linked-sidecar'))
-  await symlink(outside, join(root, 'linked-directory'))
+  try {
+    await symlink(outsideSidecar, join(root, '._linked-sidecar'))
+    await symlink(outside, join(root, 'linked-directory'))
+  } catch (error) {
+    if (error?.code === 'EPERM') {
+      t.skip('Windows symbolic links require Developer Mode or elevation')
+      return
+    }
+    throw error
+  }
 
   assert.deepEqual(await findAppleDoubleFiles(root), [sidecar, nestedSidecar])
   assert.deepEqual(await removeAppleDoubleFiles(root), [sidecar, nestedSidecar])
