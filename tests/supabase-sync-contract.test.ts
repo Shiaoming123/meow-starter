@@ -321,6 +321,38 @@ test('push rejects credential-looking strings smuggled through allowed fields', 
   assert.equal(pushCalls, 0)
 })
 
+test('push rejects credential, URL, and path patterns in sync metadata IDs', async () => {
+  let pushCalls = 0
+  const { backend } = createMemoryBackend()
+  const handler = createSyncRequestHandler({
+    ...backend,
+    async push(changes) {
+      pushCalls += 1
+      return backend.push(changes)
+    },
+  })
+  const prohibitedValues = [
+    'sk-live-1234567890abcdef',
+    'https://private.example/sync',
+    '/Users/example/private-sync-data',
+  ]
+
+  for (const field of ['operationId', 'recordId', 'deviceId'] as const) {
+    for (const value of prohibitedValues) {
+      const response = await handler(
+        new Request('http://localhost/functions/v1/sync/push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ changes: [pendingMutation({ [field]: value })] }),
+        }),
+      )
+      assert.equal(response.status, 400, `${field} accepted ${value}`)
+      assert.deepEqual(await response.json(), { error: 'Invalid sync request' })
+    }
+  }
+  assert.equal(pushCalls, 0)
+})
+
 test('push rejects missing sections and invalid nested preference types', async () => {
   let pushCalls = 0
   const { backend } = createMemoryBackend()

@@ -50,8 +50,8 @@ conflict-record operation succeeds.
 The repository includes a versioned Supabase project configuration, migration,
 and one `sync` Edge Function. The function is invoked below
 `/functions/v1/sync/{push,pull}` and requires a user JWT. It uses the caller's
-RLS-scoped database client; `service_role` and secret keys are never sent to or
-embedded in the WebView.
+JWT-scoped database client to invoke the authenticated sync RPCs; `service_role`
+and secret keys are never sent to or embedded in the WebView.
 
 The migration creates three owner-scoped tables:
 
@@ -63,12 +63,14 @@ The migration creates three owner-scoped tables:
 
 All exposed tables enable RLS and have explicit `TO authenticated` ownership
 policies using `(select auth.uid()) = owner_id`. Update policies include both
-`USING` and `WITH CHECK`, and corresponding select policies are present. The
-sync write path is a transaction/RPC that records an operation exactly once,
-compares the expected revision, writes the canonical record/tombstone, and
-appends the change log atomically. A mismatched revision returns a conflict,
-not a successful update. Pull reads only the authenticated owner's records after
-its checkpoint with a fixed page limit.
+`USING` and `WITH CHECK`, and corresponding select policies are present. Client
+roles receive no direct table privileges: the only authenticated database API is
+`sync_push`/`sync_pull`. Those security-definer RPCs pin an empty `search_path`,
+reject a missing `auth.uid()`, and owner-scope every statement. The sync write
+path records an operation exactly once, compares the expected revision, writes
+the canonical record/tombstone, and appends the change log atomically. A
+mismatched revision returns a conflict, not a successful update. Pull reads only
+the authenticated owner's records after its checkpoint with a fixed page limit.
 
 The client gets the short-lived user access token from Supabase Auth and passes
 it only to the existing HTTP transport. Authentication/session persistence uses
@@ -174,8 +176,9 @@ automatically replayed with a different provider.
 - Network failures retain all outbox entries and do not move the checkpoint.
 - Conflicts retain the original operation and become visible state; no default
   last-write-wins overwrite occurs.
-- Unauthorized Supabase requests fail before data access; cross-owner reads and
-  writes are rejected by RLS.
+- Unauthorized Supabase requests fail before data access; direct table access is
+  withheld, RLS remains enabled as defense in depth, and both RPCs derive their
+  owner scope from `auth.uid()`.
 - Provider discovery, settings, and smoke errors are sanitized and never expose
   a key, token, full request, or full provider response.
 - Unavailable packages, credentials, or native capability leave the Agent
@@ -185,10 +188,12 @@ automatically replayed with a different provider.
 
 Unit tests cover CAS acceptance, conflict non-acknowledgement, resolver paths,
 tombstones, operation idempotency, persistent-store restart, and safe protocol
-selection. Supabase integration tests use two authenticated test users to prove
-RLS isolation, duplicate-operation idempotency, concurrent revision conflict,
-and ordered pull checkpoints. Provider tests cover catalog/proxy policy,
-adapter selection, sanitized usage recording, and smoke gating.
+selection. A PGlite regression applies the migration and exercises table
+privileges, owner-scoped RPC access, duplicate-operation idempotency, CAS, and
+ordered pull checkpoints. Full Supabase integration still uses two authenticated
+test users to prove Auth/Data API/RLS behavior. Provider tests cover
+catalog/proxy policy, adapter selection, sanitized usage recording, and smoke
+gating.
 
 Required repository gates are `npm test`, `npm run typecheck`, `npm run build`,
 `npm run build:web`, and `npm run check:docs`. Supabase integration and real

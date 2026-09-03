@@ -64,6 +64,7 @@ const CREDENTIAL_VALUE_PATTERNS = [
   /^eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/,
   /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
 ]
+const SAFE_SYNC_METADATA_IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/
 const MAX_PUSH_CHANGES = 100
 const DECIMAL_SEQUENCE = /^(0|[1-9]\d*)$/
 const POSITIVE_DECIMAL_SEQUENCE = /^[1-9]\d*$/
@@ -91,6 +92,19 @@ function isSafeIdentifier(value: unknown, maximumLength: number): value is strin
     value.length > 0 &&
     value.length <= maximumLength &&
     SAFE_IDENTIFIER.test(value) &&
+    !CREDENTIAL_VALUE_PATTERNS.some((pattern) => pattern.test(value))
+  )
+}
+
+function isSafeSyncMetadataIdentifier(
+  value: unknown,
+  maximumLength: number,
+): value is string {
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    value.length <= maximumLength &&
+    SAFE_SYNC_METADATA_IDENTIFIER.test(value) &&
     !CREDENTIAL_VALUE_PATTERNS.some((pattern) => pattern.test(value))
   )
 }
@@ -193,12 +207,21 @@ function readPendingMutation(value: unknown): PendingSyncMutation {
   if (!isObject(value)) throw new InvalidSyncRequest('Invalid change')
 
   const operationId = readString(value, 'operationId', 128)
+  if (!isSafeSyncMetadataIdentifier(operationId, 128)) {
+    throw new InvalidSyncRequest('Invalid operationId')
+  }
   const collection = readString(value, 'collection', 64)
   if (!ALLOWED_COLLECTIONS.has(collection)) {
     throw new InvalidSyncRequest('Collection is not allowed')
   }
   const recordId = readString(value, 'recordId', 256)
+  if (!isSafeSyncMetadataIdentifier(recordId, 256)) {
+    throw new InvalidSyncRequest('Invalid recordId')
+  }
   const deviceId = readString(value, 'deviceId', 256)
+  if (!isSafeSyncMetadataIdentifier(deviceId, 256)) {
+    throw new InvalidSyncRequest('Invalid deviceId')
+  }
   const occurredAt = readString(value, 'occurredAt', 64)
   if (!Number.isFinite(Date.parse(occurredAt))) {
     throw new InvalidSyncRequest('Invalid occurredAt')

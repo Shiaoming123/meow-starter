@@ -1,3 +1,22 @@
+create function public.sync_metadata_identifier_is_safe(p_value text, p_max_length integer)
+returns boolean
+language sql
+immutable
+strict
+security invoker
+set search_path = ''
+as $$
+  select char_length(p_value) between 1 and p_max_length
+    and p_value ~ '^[A-Za-z0-9][-A-Za-z0-9._+]*$'
+    and lower(p_value) !~ '^sk[-_](live|test|proj)([-_]|[a-z0-9])'
+    and lower(p_value) !~ '^sk-[a-z0-9_-]{16,}$'
+    and lower(p_value) !~ '^sb_(secret|publishable)_'
+    and lower(p_value) !~ '^ghp_[a-z0-9]{20,}$'
+    and lower(p_value) !~ '^github_pat_'
+    and lower(p_value) !~ '^xox[baprs]-'
+    and p_value !~ '^eyJ[A-Za-z0-9_-]+[.]eyJ[A-Za-z0-9_-]+[.][A-Za-z0-9_-]+$'
+$$;
+
 create function public.sync_agent_preferences_payload_is_safe(p_payload jsonb)
 returns boolean
 language plpgsql
@@ -217,10 +236,16 @@ create table public.sync_records (
   updated_at timestamptz not null default statement_timestamp(),
   primary key (owner_id, collection, record_id),
   constraint sync_records_collection_check check (collection = 'agent_preferences'),
-  constraint sync_records_record_id_check check (char_length(record_id) between 1 and 256),
+  constraint sync_records_record_id_check check (
+    public.sync_metadata_identifier_is_safe(record_id, 256)
+  ),
   constraint sync_records_revision_check check (revision > 0),
-  constraint sync_records_operation_id_check check (char_length(last_operation_id) between 1 and 128),
-  constraint sync_records_device_id_check check (char_length(last_device_id) between 1 and 256),
+  constraint sync_records_operation_id_check check (
+    public.sync_metadata_identifier_is_safe(last_operation_id, 128)
+  ),
+  constraint sync_records_device_id_check check (
+    public.sync_metadata_identifier_is_safe(last_device_id, 256)
+  ),
   constraint sync_records_payload_check check (
     (tombstone and payload is null)
     or (
@@ -238,7 +263,9 @@ create table public.sync_operations (
   canonical_change jsonb not null,
   created_at timestamptz not null default statement_timestamp(),
   primary key (owner_id, operation_id),
-  constraint sync_operations_operation_id_check check (char_length(operation_id) between 1 and 128),
+  constraint sync_operations_operation_id_check check (
+    public.sync_metadata_identifier_is_safe(operation_id, 128)
+  ),
   constraint sync_operations_outcome_check check (outcome in ('accepted', 'conflict')),
   constraint sync_operations_canonical_change_check check (
     jsonb_typeof(canonical_change) = 'object'
@@ -265,10 +292,16 @@ create table public.sync_change_log (
   unique (owner_id, operation_id),
   constraint sync_change_log_collection_check check (collection = 'agent_preferences'),
   constraint sync_change_log_kind_check check (kind in ('upsert', 'delete')),
-  constraint sync_change_log_record_id_check check (char_length(record_id) between 1 and 256),
-  constraint sync_change_log_operation_id_check check (char_length(operation_id) between 1 and 128),
+  constraint sync_change_log_record_id_check check (
+    public.sync_metadata_identifier_is_safe(record_id, 256)
+  ),
+  constraint sync_change_log_operation_id_check check (
+    public.sync_metadata_identifier_is_safe(operation_id, 128)
+  ),
   constraint sync_change_log_revision_check check (revision = server_sequence and revision > 0),
-  constraint sync_change_log_device_id_check check (char_length(device_id) between 1 and 256),
+  constraint sync_change_log_device_id_check check (
+    public.sync_metadata_identifier_is_safe(device_id, 256)
+  ),
   constraint sync_change_log_payload_check check (
     (kind = 'delete' and payload is null)
     or (
@@ -330,14 +363,10 @@ revoke all on table public.sync_records from public, anon, authenticated;
 revoke all on table public.sync_operations from public, anon, authenticated;
 revoke all on table public.sync_change_log from public, anon, authenticated;
 
-grant select, insert, update on table public.sync_records to authenticated;
-grant select, insert on table public.sync_operations to authenticated;
-grant select, insert on table public.sync_change_log to authenticated;
-
 create function public.sync_push(p_changes jsonb)
 returns jsonb
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $$
 declare
@@ -382,11 +411,11 @@ begin
     v_payload := v_change -> 'payload';
     v_device_id := v_change ->> 'deviceId';
 
-    if v_operation_id is null or char_length(v_operation_id) not between 1 and 128
+    if public.sync_metadata_identifier_is_safe(v_operation_id, 128) is not true
       or v_collection is distinct from 'agent_preferences'
-      or v_record_id is null or char_length(v_record_id) not between 1 and 256
+      or public.sync_metadata_identifier_is_safe(v_record_id, 256) is not true
       or v_kind is null or v_kind not in ('upsert', 'delete')
-      or v_device_id is null or char_length(v_device_id) not between 1 and 256
+      or public.sync_metadata_identifier_is_safe(v_device_id, 256) is not true
       or (v_change ->> 'occurredAt') is null
       or char_length(v_change ->> 'occurredAt') not between 1 and 64
       or not (v_change ? 'baseRevision') then
@@ -559,7 +588,7 @@ create function public.sync_pull(p_checkpoint text default null)
 returns jsonb
 language plpgsql
 stable
-security invoker
+security definer
 set search_path = ''
 as $$
 declare
@@ -623,7 +652,7 @@ revoke all on function public.sync_push(jsonb) from public, anon, authenticated;
 revoke all on function public.sync_pull(text) from public, anon, authenticated;
 revoke all on function public.sync_agent_preferences_payload_is_safe(jsonb)
   from public, anon, authenticated;
+revoke all on function public.sync_metadata_identifier_is_safe(text, integer)
+  from public, anon, authenticated;
 grant execute on function public.sync_push(jsonb) to authenticated;
 grant execute on function public.sync_pull(text) to authenticated;
-grant execute on function public.sync_agent_preferences_payload_is_safe(jsonb)
-  to authenticated;

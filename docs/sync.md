@@ -265,10 +265,11 @@ iOS 需要本地网络隐私声明，Android 新版本的附近 Wi-Fi 能力需�
 | 等级 | 可证明的内容 | 不能证明的内容 |
 | --- | --- | --- |
 | 离线单元/构建检查 | URL/key 拒绝规则、session token 提取、合约和本地状态行为 | Auth、RLS、Postgres 或真实网络 |
+| PGlite migration 回归 | migration 可执行、客户端角色无直接表权限、RPC 的 owner/CAS/幂等/日志语义 | Supabase Auth、PostgREST、Edge Runtime、托管配置或真实网络 |
 | 本地 Supabase 集成 | CLI/Docker 环境下的 migration、Function、双用户 RLS/并发路径 | 公网 TLS、托管配置、真实两台设备 |
 | 已部署两设备验证 | 采用者项目上的登录、RLS、断网恢复、冲突与 checkpoint | 所有业务领域或正式发布就绪 |
 
-本任务只具备离线单元/构建检查；本地 Supabase 集成和已部署两设备验证需要采用者的 Docker/项目/设备，不能由此仓库的测试替代。
+本任务具备离线单元/构建检查和 PGlite migration 回归；本地 Supabase 集成和已部署两设备验证仍需要采用者的 Docker/项目/设备，不能由此仓库的测试替代。
 
 - 断网写入后重启应用，outbox 不丢失。
 - 重复上传同一 operation 不产生重复记录。
