@@ -12,10 +12,20 @@ The Release Kit makes a checkout diagnosable and validates release configuration
 | macOS notarization | Deferred | Workflow accepts optional Apple signing/notarization inputs | Apple account, certificates, notarization submission, and installed-artifact validation |
 | Updater signing/delivery | Template only | Updater code and signing configuration are present | A real HTTPS endpoint, public key, private-key signing, hosted artifacts, and update-path validation |
 | Windows/Linux distribution | Deferred | Desktop build jobs exist | Distributor/signing decisions and installation validation |
-| Android/iOS package and store | Deferred | Responsive UI and desktop-capability degradation only | Native project initialization, toolchains, accounts, certificates, device testing, and store submission |
+| Android package | Local debug evidence | Android emulator `tauri android dev` and local universal debug APK/AAB build have completed | Recreate the ignored generated project on a clean checkout; real-device smoke, signing, Play Console, and store submission |
+| iOS package and store | Deferred | Responsive UI and desktop-capability degradation only | Native project initialization, Xcode/CocoaPods, accounts, certificates, device testing, and store submission |
 | Web deployment | Deferred | `npm run build:web` creates a static build | Select/configure a provider and validate a deployed site |
 
 An unsigned desktop artifact is not evidence of a signed, notarized, store-ready, or auto-updatable release. Likewise, a responsive mobile interface is not an APK, AAB, IPA, TestFlight build, or store submission.
+
+`src-tauri/gen/` is intentionally ignored. The Android Gradle project and its
+debug APK/AAB are local build outputs, so a clean checkout must regenerate it
+with `npm run tauri -- android init --ci` before rebuilding. The verified local
+debug artifacts do not carry an upload keystore or prove Google Play acceptance.
+After a debug build, run `npm run check:android-artifact -- --apk <path>` to
+check its package identity, version, SDK metadata, and included ABI list. The
+manual `android-debug` workflow runs the same check and uploads its debug APK;
+it deliberately does not sign or publish anything.
 
 ## Local release preparation
 

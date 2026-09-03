@@ -14,7 +14,7 @@
 | 前端 | ✅ 桌面侧边栏 + 移动端底部 tab | 保持响应式与安全区适配 |
 | 桌面专属能力 | tray / single-instance / updater | 移动端安全降级 |
 
-**核心理念延续**：跨端复用的能力（SQLite、Agent、主题、设计系统、MCP）保持不变，桌面专属能力按平台降级。
+**核心理念延续**：SQLite、主题和设计系统跨端复用，桌面专属能力按平台降级。Agent 的原生 feature 目前仅面向桌面，MCP 又依赖 Agent；二者在移动端仍是未启用的 Preview 路径。
 
 ---
 
@@ -181,7 +181,7 @@ Tauri 移动端用独立的 capability 文件（`src-tauri/capabilities/` 下，
 
 | 能力 | Android 权限 | iOS 权限 | 说明 |
 |---|---|---|---|
-| 网络（Agent/更新/MCP） | `INTERNET` | 默认 | 访问云端模型 / MCP server |
+| 网络（Agent/MCP，未来按需） | `INTERNET` | 默认 | 访问经产品授权的云端模型 / MCP server；移动端不装配 updater |
 | SQLite 存储 | 默认 | 默认 | 数据落沙盒 |
 | 通知 | `POST_NOTIFICATIONS` | 用户授权 | P1 notification 模块 |
 | 剪贴板 | 默认 | 默认 | P1 clipboard 模块 |
@@ -200,7 +200,7 @@ Tauri 移动端用独立的 capability 文件（`src-tauri/capabilities/` 下，
 | 自动更新 `updater` | ⚠️ 移动端走应用商店更新，updater 插件需降级 |
 | 全局快捷键 `shortcut` | ❌ 移动端无概念，feature 关闭 |
 
-**实现**：Cargo.toml 已有 `[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]` 处理 single-instance；`tray` 模块已 `#[cfg(desktop)]`；前端用 `isTauri()` + 平台检测决定是否渲染托盘相关 UI。
+**实现**：Cargo.toml 已有 `[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]` 处理 single-instance 与 updater；`tray` 模块已 `#[cfg(desktop)]`；前端用运行时平台能力决定是否渲染桌面入口。
 
 ---
 
@@ -223,15 +223,15 @@ Tauri 移动端用独立的 capability 文件（`src-tauri/capabilities/` 下，
 
 ## 6. 分阶段实施
 
-> **成熟度：Beta。** M1–M2 已在浏览器构建产物中验证；M3–M5 尚未在 Android Studio / Xcode、模拟器或真机中验证。“代码已适配”不等于“移动端已可发布”。
+> **成熟度：Beta。** M1–M2 已在浏览器构建产物中验证；Android M3 已在本机 SDK、模拟器和 `tauri android dev` 上验证，且已生成本地 universal debug APK/AAB。iOS M4 未开始；M5 的签名、真机与商店部分仍未验证。“本地 debug 已通过”不等于“移动端已可发布”。
 
 | 阶段 | 内容 | 前置 | 可独立验证 |
 |---|---|---|---|
 | **M1** | 前端响应式（viewport + 底部 tab） | 无 | 浏览器 DevTools 手机模拟 |
 | **M2** | 桌面能力降级（cfg 排除 + 前端检测） | 无 | 桌面三端 CI 仍绿 |
-| **M3** | `tauri android init` 生成 Android 工程 | Android Studio + NDK | `tauri android dev` 真机/模拟器 |
-| **M4** | `tauri ios init` 生成 iOS 工程 | Xcode + Cocoapods | `tauri ios dev` 模拟器 |
-| **M5** | 移动端 capabilities + 签名打包 | 开发者账号 | `tauri android build` / `ios build` |
+| **M3** | `tauri android init` 生成 Android 工程 | Android Studio + NDK | 已完成：模拟器 `tauri android dev` |
+| **M4** | `tauri ios init` 生成 iOS 工程 | Xcode + Cocoapods | 待 macOS 环境：`tauri ios dev` |
+| **M5** | 移动端 capabilities + 签名打包 | 开发者账号 | 部分完成：本地 debug APK/AAB；签名/真机/商店待完成 |
 
 **建议停手点**：M1-M2 是纯代码层，无需重前置依赖，可立即做并保持 CI 绿。M3-M5 依赖 Android Studio / Xcode，属于「环境就绪后」的工作，且需要真机/模拟器验证，不适合在无移动端环境的本机空做。
 
@@ -253,5 +253,5 @@ Tauri 移动端用独立的 capability 文件（`src-tauri/capabilities/` 下，
 
 1. **框架层面**：Tauri 2 原生支持移动端，脚手架只需补「初始化 + 降级 + 响应式」三步。
 2. **代码层面（M1-M2）**：已经完成，并由构建产物检查持续验证窄屏布局与底部安全区。
-3. **工程层面（M3-M5）**：依赖 Android Studio / Xcode，需真实移动端环境，建议按需执行。
-4. **建议先做 M1-M2**，把「代码就绪」状态落地；M3-M5 由使用者按需在自己机器上执行（README 给出明确命令）。
+3. **工程层面**：Android M3 与无签名 debug 打包已有本地证据；iOS 和所有商店交付仍需对应环境、账号与证书。
+4. **下一步**：Android 先在真机安装/启动并配置签名；iOS 在 macOS 上单独建立同等证据链。详见 [delivery-path.md](./delivery-path.md)。

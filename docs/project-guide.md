@@ -6,7 +6,7 @@
 
 这是一个 **「本地优先、桌面优先、Web 可用」的应用发射台**。它预置了 SQLite / IndexedDB 领域数据层、系统托盘、自动更新、跨平台 CI 与可选同步接缝，把常见样板代码做完，让你只专注业务功能。
 
-> 适合 vibe coding：描述需求 → AI 写 Vue 组件 + 少量 Rust/SQL → `tauri dev` 看效果 → 打 tag 自动出三端安装包。
+> 适合 vibe coding：描述需求 → AI 写 Vue 组件 + 少量 Rust/SQL → `tauri dev` 看效果 → 配置项目自己的更新端点与签名并通过严格 release gate 后，再打 tag 创建三端 draft release。
 
 ## 二、最适合的项目类型（强烈推荐）
 

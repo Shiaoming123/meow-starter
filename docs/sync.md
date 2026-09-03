@@ -78,6 +78,8 @@ Authorization: Bearer <short-lived-session>
 ```
 
 非回环地址必须使用 HTTPS，URL 不允许携带用户名或密码。调用者只能提供短期 access token，不能注入任意鉴权 Header。
+同步引擎只会确认本次提交中、且由 transport 明确接受的唯一 operation id；
+transport 返回未知或重复 id 不会让上传计数虚高，也不会确认额外 outbox 项。
 
 ## 数据分级
 

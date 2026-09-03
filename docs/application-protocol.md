@@ -37,12 +37,16 @@ secrets.
   distribution proof.
 - `template-only`: code/configuration exists but an adopter must configure and
   verify their own delivery path.
+- `local-debug`: a generated native project has completed a local debug build
+  and emulator run; it is not a signed artifact, real-device result, store
+  submission, or hosted delivery channel.
 - `unverified`: no platform delivery claim has been demonstrated here.
 
 The current protocol intentionally says nothing stronger about signing, hosted
-updates, deployed Web hosting, or mobile-native execution. Runtime maturity is
-a separate statement: desktop is the primary stable runtime path; Web and
-mobile are Beta adaptations with documented capability degradation.
+updates, deployed Web hosting, real-device execution, or store submission.
+Android has `local-debug` evidence only. Runtime maturity is a separate
+statement: desktop is the primary stable runtime path; Web and mobile are Beta
+adaptations with documented capability degradation.
 
 ## Changing an application safely
 

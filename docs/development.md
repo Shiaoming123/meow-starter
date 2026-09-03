@@ -44,6 +44,7 @@ CARGO_TARGET_DIR=/absolute/path/on/apfs npm run rust:verify
 | Run the Node test suite | `npm test` |
 | Check the product-level application protocol | `npm run check:protocol` |
 | Check the production Tauri content-security policy | `npm run check:csp` |
+| Verify an existing Android debug APK's identity and ABI metadata | `npm run check:android-artifact -- --apk <path-to-apk>` |
 | Check desktop, Web, or mobile module compatibility | `npm run check:modules [-- web|mobile]` |
 | Run all frontend quality gates | `npm run verify` |
 | Check release configuration in template mode | `npm run release:check` |

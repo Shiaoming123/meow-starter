@@ -40,7 +40,7 @@
 
 ## ✨ Features
 
-- **Frontend**: Vue 3.5 + TypeScript + Vite 6, follows system dark mode
+- **Frontend**: Vue 3.5 + TypeScript + Vite 8, follows system dark mode
 - **Data**: one domain interface with SQLite on Tauri and IndexedDB on Web
 - **System**: tray, single-instance, close-to-tray instead of quit
 - **Auto-update (Beta)**: sign, download, install, and relaunch code path; signed-release verification is project-specific
@@ -51,7 +51,7 @@
 - **Secret safety (Preview)**: stored keys cannot be read back by the WebView; OpenAI/Anthropic requests use a fixed-target Rust proxy (allowlist: `api.openai.com` / `api.anthropic.com` only — see [docs/agent-integration.md](./docs/agent-integration.md) to extend)
 - **Local inference (Preview)**: Ollama/OpenAI-compatible presets requiring local environment verification
 - **MCP (Preview)**: HTTP/SSE client adapter; the full Agent tool loop is still being verified
-- **Engineering**: GitHub Actions 3-platform build matrix + CI gates
+- **Engineering**: GitHub Actions CI gates + a 3-platform draft-release template that requires a real endpoint and signing setup
 - **No Electron**: ~3–20 MB bundles vs ~300 MB
 
 ## 🗺 Start here (full-path guide)
@@ -62,6 +62,7 @@
 | 🛠 Set up local development / exFAT workspace | [docs/development.md](./docs/development.md) |
 | 🧭 Define product intent, capabilities, and data boundaries | [docs/application-protocol.md](./docs/application-protocol.md) |
 | 📦 Understand the Release Kit and release boundary | [docs/release-kit.md](./docs/release-kit.md) |
+| 🛤️ Move from local scaffold to service and release | [docs/delivery-path.md](./docs/delivery-path.md) |
 | 🎯 Check project fit | [docs/project-guide.md](./docs/project-guide.md) |
 | 🧭 Build a first application from the scaffold | [docs/blueprints/README.md](./docs/blueprints/README.md) |
 | 🏗 Understand architecture | [Architecture](#-architecture) + [modular-architecture.md](./docs/modular-architecture.md) |
@@ -71,6 +72,7 @@
 | 🧩 Connect MCP tools | [docs/mcp.md](./docs/mcp.md) |
 | 🌐 Run and deploy the Web app | [docs/web.md](./docs/web.md) |
 | 🔄 Add account, cloud, or LAN sync | [docs/sync.md](./docs/sync.md) |
+| 📱 Adapt Android / iOS | [docs/mobile.md](./docs/mobile.md) |
 | 🧠 See AI capability roadmap | [docs/ai-capabilities.md](./docs/ai-capabilities.md) |
 | 🤝 Contribute / feedback | [CONTRIBUTING.md](./CONTRIBUTING.md) · [Discussions](https://github.com/Shiaoming123/meow-starter/discussions) |
 

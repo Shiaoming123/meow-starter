@@ -1,0 +1,54 @@
+name: android-debug
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  debug-apk:
+    name: Android x86_64 debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-linux-android
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install Android build components
+        run: sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;35.0.0" "ndk;27.1.12297006"
+
+      - run: npm ci
+      - run: npm run tauri -- android init --ci
+      - name: Build debug APK
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.1.12297006
+        run: npm run tauri -- android build --debug --target x86_64 --apk
+
+      - name: Verify APK metadata
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.1.12297006
+        run: |
+          APK=$(find src-tauri/gen/android/app/build/outputs/apk -type f -name '*.apk' -print -quit)
+          test -n "$APK"
+          npm run check:android-artifact -- --apk "$APK"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: meow-starter-android-x86_64-debug-apk
+          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error

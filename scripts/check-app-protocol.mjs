@@ -14,7 +14,7 @@ const EXPECTED_DELIVERY = {
   signing: 'unverified',
   updater: 'template-only',
   webDeployment: 'unverified',
-  mobileNative: 'unverified',
+  mobileNative: 'local-debug',
 }
 
 export function validateApplicationProtocol({

@@ -100,6 +100,36 @@ test('sync uploads accepted changes, applies pulled changes and advances checkpo
   assert.equal(await store.getCheckpoint(), 'cursor-1')
 })
 
+test('sync acknowledges only unique operation ids from the submitted batch', async () => {
+  const local = mutation()
+  const store = createInMemorySyncStateStore([local])
+  const acknowledgements: string[][] = []
+  const acknowledge = store.acknowledge
+  store.acknowledge = async (operationIds) => {
+    acknowledgements.push([...operationIds])
+    await acknowledge(operationIds)
+  }
+  const transport: SyncTransport = {
+    async push() {
+      return { acceptedOperationIds: ['op-1', 'unknown', 'op-1'] }
+    },
+    async pull() {
+      return { changes: [] }
+    },
+  }
+
+  const result = await createOutboxSyncEngine({
+    store,
+    transport,
+    policy: createAllowlistSyncPolicy(['notes']),
+    async applyRemote() {},
+  }).syncOnce()
+
+  assert.equal(result.uploaded, 1)
+  assert.deepEqual(acknowledgements, [['op-1']])
+  assert.deepEqual(await store.listPending(100), [])
+})
+
 test('push failure keeps pending outbox changes', async () => {
   const local = mutation()
   const store = createInMemorySyncStateStore([local])

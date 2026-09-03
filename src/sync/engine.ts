@@ -34,8 +34,12 @@ export function createOutboxSyncEngine(
       let uploaded = 0
       if (pending.length > 0) {
         const pushed = await options.transport.push(pending)
-        await options.store.acknowledge(pushed.acceptedOperationIds)
-        uploaded = pushed.acceptedOperationIds.length
+        const submitted = new Set(pending.map((change) => change.operationId))
+        const acceptedOperationIds = [
+          ...new Set(pushed.acceptedOperationIds.filter((operationId) => submitted.has(operationId))),
+        ]
+        await options.store.acknowledge(acceptedOperationIds)
+        uploaded = acceptedOperationIds.length
       }
 
       const previousCheckpoint = await options.store.getCheckpoint()

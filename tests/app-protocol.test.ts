@@ -19,6 +19,7 @@ const packageJson = {
     'rust:verify': 'node scripts/rust-verify.mjs',
     'smoke:web-persistence': 'node scripts/smoke-web-persistence.mjs',
     'smoke:windows-package': 'node scripts/smoke-windows-package.mjs',
+    'check:android-artifact': 'node scripts/check-android-artifact.mjs',
   },
 }
 
@@ -53,11 +54,11 @@ function validProtocol() {
       signing: 'unverified',
       updater: 'template-only',
       webDeployment: 'unverified',
-      mobileNative: 'unverified',
+      mobileNative: 'local-debug',
     },
     acceptance: {
       required: ['test', 'check:protocol', 'check:csp', 'typecheck', 'build', 'build:web', 'check:modules', 'check:docs'],
-      conditional: ['rust:verify', 'smoke:web-persistence', 'smoke:windows-package'],
+      conditional: ['rust:verify', 'smoke:web-persistence', 'smoke:windows-package', 'check:android-artifact'],
     },
     evolution: {
       additive: 'Add fields in a new schema version.',
@@ -101,4 +102,11 @@ test('rejects a declared acceptance command that is not executable', () => {
   protocol.acceptance.required.push('missing:command')
 
   assert.match(validate(protocol).errors.join('\n'), /acceptance\.required references missing package script "missing:command"/)
+})
+
+test('rejects a mobile delivery claim that does not match recorded local evidence', () => {
+  const protocol = validProtocol()
+  protocol.delivery.mobileNative = 'unverified'
+
+  assert.match(validate(protocol).errors.join('\n'), /delivery must retain the currently evidenced release boundary/)
 })

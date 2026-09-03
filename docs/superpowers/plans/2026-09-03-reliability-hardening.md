@@ -24,7 +24,7 @@
 - [x] Observe the current peer conflict with the existing Vite-only update, then keep the compatible group together.
 - [x] Upgrade only `vite` to `^8.2.2`, `@vitejs/plugin-vue` to `^6.0.8`, and `vue-tsc` to `^3.3.11`; retain TypeScript 5.6.
 - [x] Run `npm ci`, `npm run verify`, three `check:modules` profiles, and `npm run rust:verify`.
-- [ ] Commit the completed hardening changes together after final verification.
+- [x] Commit the completed hardening changes together after final verification.
 
 ### Task 2: Close declared module gates
 
@@ -32,7 +32,7 @@
 
 - [x] Add each desktop/Web/mobile module command to normal verification and frontend CI without duplicating implementation checks.
 - [x] Run `npm run verify` and validate CI YAML by its current command paths.
-- [ ] Commit the completed hardening changes together after final verification.
+- [x] Commit the completed hardening changes together after final verification.
 
 ### Task 3: Enforce production CSP
 
@@ -41,7 +41,7 @@
 - [x] Write a failing CSP validator test that rejects null/wildcard and requires the Tauri IPC sources.
 - [x] Add the minimal same-origin/IPC CSP and its focused documentation.
 - [x] Run focused tests, `npm run verify`, `npm run rust:verify`, and a local Tauri build.
-- [ ] Commit the completed hardening changes together after final verification.
+- [x] Commit the completed hardening changes together after final verification.
 
 ### Task 4: Persist the local sync outbox
 
@@ -50,7 +50,7 @@
 - [x] Write failing tests proving an adapter reopened with the same database preserves pending mutations/checkpoint and only acknowledges accepted IDs.
 - [x] Implement the IndexedDB `SyncStateStore` adapter with transactions; keep sync disabled and provider-free.
 - [x] Run focused sync tests, `npm run verify`, and Web persistence smoke when a browser is available.
-- [ ] Commit the completed hardening changes together after final verification.
+- [x] Commit the completed hardening changes together after final verification.
 
 ### Task 5: Platform evidence and Android readiness
 

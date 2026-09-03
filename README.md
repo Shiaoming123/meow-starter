@@ -43,13 +43,13 @@
 | 平台 | 状态 | 说明 |
 | --- | --- | --- |
 | Web | Beta | Vite 静态构建 + IndexedDB 持久化；原生模块按能力自动跳过 |
-| macOS | Stable | release workflow 覆盖构建、签名与公证配置 |
-| Windows | Stable | release workflow 覆盖 MSVC + WebView2 打包 |
-| Linux | Stable | release workflow 覆盖 Ubuntu 构建；其他发行版需项目自行验证 |
+| macOS | Stable | 默认桌面能力有门禁；发布工作流仍需真实端点、签名与公证配置 |
+| Windows | Stable | 默认桌面能力有门禁；本地无签名 NSIS 生命周期 smoke 已可运行 |
+| Linux | Stable | 默认桌面能力有门禁；Ubuntu 发布构建模板仍需项目实际验证 |
 | iOS | Beta | 响应式与桌面能力降级已落地；尚未在 Xcode/真机持续验证 |
-| Android | Beta | 响应式与桌面能力降级已落地；尚未在 Android 工具链/真机持续验证 |
+| Android | Beta | 模拟器 `android dev` 与本地 debug APK/AAB 已验证；未签名、未真机/上架 |
 
-> 移动端当前表示“代码适配可用”，不是“已验证可发布”。原生工程初始化需要 Android Studio + NDK / Xcode + CocoaPods，详见 [docs/mobile.md](./docs/mobile.md)。
+> Android 现在有本地 debug 证据，但这不是签名、真机、商店或正式更新交付的证据。完整边界与下一步见 [docs/delivery-path.md](./docs/delivery-path.md)。
 
 ## ✨ 特性
 
@@ -64,7 +64,7 @@
 - **密钥安全（Preview）**：已存密钥不可从 WebView 读回；OpenAI/Anthropic 请求由固定目标的 Rust 代理注入
 - **本地推理（Preview）**：提供 Ollama/OpenAI-compatible 预设，需开发者验证本机环境
 - **MCP 接入（Preview）**：提供 HTTP/SSE client 适配器，完整 Agent 工具闭环仍在验证
-- **工程化**：GitHub Actions 三端打包 + CI 质量门禁
+- **工程化**：GitHub Actions CI 门禁 + 需配置端点/密钥后才可启用的三端 draft-release 模板
 - **无 Electron**：安装包约 3–20 MB，远小于 Electron 的 ~300 MB
 
 ## 🗺 从这里开始（全链路指引）
@@ -77,6 +77,7 @@
 | 🛠 配置本地开发 / exFAT 工作区 | [docs/development.md](./docs/development.md) |
 | 🧭 定义产品目标、能力与数据边界 | [docs/application-protocol.md](./docs/application-protocol.md) |
 | 📦 了解 Release Kit 与发布边界 | [docs/release-kit.md](./docs/release-kit.md) |
+| 🛤️ 从本地脚手架走到服务与发布 | [docs/delivery-path.md](./docs/delivery-path.md) |
 | 🎯 判断适不适合我的项目 | [docs/project-guide.md](./docs/project-guide.md) |
 | 🧭 从模板做出第一个应用 | [docs/blueprints/README.md](./docs/blueprints/README.md) |
 | 🏗 理解架构 | [架构图](#-架构) + [模块化架构](./docs/modular-architecture.md) |

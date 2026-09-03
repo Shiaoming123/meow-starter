@@ -44,11 +44,11 @@
     "signing": "unverified",
     "updater": "template-only",
     "webDeployment": "unverified",
-    "mobileNative": "unverified"
+    "mobileNative": "local-debug"
   },
   "acceptance": {
     "required": ["test", "check:protocol", "check:csp", "typecheck", "build", "build:web", "check:modules", "check:docs"],
-    "conditional": ["rust:verify", "smoke:web-persistence", "smoke:windows-package", "mobile:doctor"]
+    "conditional": ["rust:verify", "smoke:web-persistence", "smoke:windows-package", "mobile:doctor", "check:android-artifact"]
   },
   "evolution": {
     "additive": "Add fields only in a schema version that the checker explicitly understands.",
