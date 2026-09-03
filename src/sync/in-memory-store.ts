@@ -29,7 +29,9 @@ function copyConflict(conflict: SyncConflict): SyncConflict {
 export function createInMemorySyncStateStore(
   initial: readonly PendingSyncMutation[] = [],
   initialCheckpoint?: string,
+  ownerId = 'local',
 ): SyncStateStore {
+  if (!ownerId.trim()) throw new Error('Sync state owner ID is required')
   const pending = new Map(
     initial.map((mutation) => [mutation.operationId, copyPendingMutation(mutation)]),
   )
@@ -38,6 +40,7 @@ export function createInMemorySyncStateStore(
   let checkpoint = initialCheckpoint
 
   return {
+    ownerId,
     async enqueue(change) {
       pending.set(change.operationId, copyPendingMutation(change))
     },

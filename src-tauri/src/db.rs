@@ -56,5 +56,56 @@ pub fn migrations() -> Vec<Migration> {
             sql: "CREATE TABLE IF NOT EXISTS sync_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
             kind: MigrationKind::Up,
         },
+        // Versions 4-7 had no account scope. Keep those rows quarantined instead of
+        // guessing which account owns them, then recreate the active tables with
+        // owner-scoped composite keys.
+        Migration {
+            version: 8,
+            description: "quarantine_unscoped_sync_outbox",
+            sql: "ALTER TABLE sync_outbox RENAME TO sync_outbox_unscoped",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 9,
+            description: "create_owner_scoped_sync_outbox",
+            sql: "CREATE TABLE sync_outbox (owner_id TEXT NOT NULL, operation_id TEXT NOT NULL, mutation TEXT NOT NULL, PRIMARY KEY (owner_id, operation_id))",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 10,
+            description: "quarantine_unscoped_sync_conflicts",
+            sql: "ALTER TABLE sync_conflicts RENAME TO sync_conflicts_unscoped",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 11,
+            description: "create_owner_scoped_sync_conflicts",
+            sql: "CREATE TABLE sync_conflicts (owner_id TEXT NOT NULL, operation_id TEXT NOT NULL, conflict TEXT NOT NULL, PRIMARY KEY (owner_id, operation_id))",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 12,
+            description: "quarantine_unscoped_sync_applied_operations",
+            sql: "ALTER TABLE sync_applied_operations RENAME TO sync_applied_operations_unscoped",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 13,
+            description: "create_owner_scoped_sync_applied_operations",
+            sql: "CREATE TABLE sync_applied_operations (owner_id TEXT NOT NULL, operation_id TEXT NOT NULL, PRIMARY KEY (owner_id, operation_id))",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 14,
+            description: "quarantine_unscoped_sync_metadata",
+            sql: "ALTER TABLE sync_metadata RENAME TO sync_metadata_unscoped",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 15,
+            description: "create_owner_scoped_sync_metadata",
+            sql: "CREATE TABLE sync_metadata (owner_id TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (owner_id, key))",
+            kind: MigrationKind::Up,
+        },
     ]
 }

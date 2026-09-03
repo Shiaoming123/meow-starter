@@ -47,8 +47,10 @@ export function createOutboxSyncEngine(
         )
 
         for (const conflict of conflicts) {
-          await options.applyRemote(conflict.current)
-          await options.store.markAppliedOperation(conflict.current.operationId)
+          if (!(await options.store.hasAppliedOperation(conflict.current.operationId))) {
+            await options.applyRemote(conflict.current)
+            await options.store.markAppliedOperation(conflict.current.operationId)
+          }
           await options.store.recordConflict(conflict)
         }
 

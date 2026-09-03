@@ -14,9 +14,12 @@ export type {
   SyncProvider,
   SyncResult,
   SyncStateStore,
+  SyncStateStoreScope,
   SyncTransport,
   SyncPushResult,
 } from './types'
+export type { IndexedDbSyncStateStoreOptions } from './indexeddb-store'
+export type { TauriSqliteSyncStateStoreOptions } from './tauri-sqlite-store'
 export type {
   CreateSupabaseSyncClientOptions,
   SupabaseAuthFacade,

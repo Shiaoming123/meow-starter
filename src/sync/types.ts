@@ -32,7 +32,11 @@ export interface SyncTransport {
   ): Promise<{ changes: SyncMutation[]; checkpoint?: string }>
 }
 
-export interface SyncStateStore {
+export interface SyncStateStoreScope {
+  readonly ownerId: string
+}
+
+export interface SyncStateStore extends SyncStateStoreScope {
   enqueue(change: PendingSyncMutation): Promise<void>
   listPending(limit: number): Promise<PendingSyncMutation[]>
   acknowledge(operationIds: readonly string[]): Promise<void>

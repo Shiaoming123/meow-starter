@@ -313,6 +313,38 @@ test('a conflict canonical operation is not reapplied when it appears in a later
   assert.equal(await store.getCheckpoint(), 'cursor-1')
 })
 
+test('an unresolved conflict does not reapply its canonical operation on a later sync run', async () => {
+  const local = pendingMutation({ baseRevision: '1' })
+  const current = mutation({ operationId: 'remote-2', revision: '2' })
+  const store = createInMemorySyncStateStore([local], 'cursor-0')
+  const applied: SyncMutation[] = []
+  const transport: SyncTransport = {
+    async push() {
+      return {
+        accepted: [],
+        conflicts: [{ operationId: local.operationId, current }],
+      }
+    },
+    async pull() {
+      return { changes: [], checkpoint: 'cursor-1' }
+    },
+  }
+  const provider = createOutboxSyncEngine({
+    store,
+    transport,
+    policy: createAllowlistSyncPolicy(['notes']),
+    async applyRemote(change) {
+      applied.push(change)
+    },
+  })
+
+  await provider.syncOnce()
+  await provider.syncOnce()
+
+  assert.deepEqual(applied, [current])
+  assert.deepEqual(await store.listPending(100), [local])
+})
+
 test('conflict recording failure keeps accepted pending work and the checkpoint', async () => {
   const local = pendingMutation({ baseRevision: '1' })
   const current = mutation({ operationId: 'remote-2', revision: '2' })
