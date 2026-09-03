@@ -116,10 +116,24 @@ and a deployed two-device test as distinct evidence tiers.
 
 Provider definitions are a curated catalog. A provider's trusted endpoint and
 `protocol` determine the adapter; `type` is not sufficient. The initial catalog
-has OpenAI Responses/Chat Completions, Anthropic Messages, Google Gemini, and
-the local no-key OpenAI-compatible protocol. Each cloud catalog entry is added
-in TypeScript and Rust together: fixed host, HTTPS-only validation, credential
-header style, model-discovery route, security tests, and an AI SDK adapter.
+has OpenAI Responses, Anthropic Messages, Google Gemini, and the following
+fixed-domain OpenAI Chat Completions-compatible providers: DeepSeek, Groq,
+Mistral, xAI, OpenRouter, Together AI, Fireworks AI, Perplexity, and Cerebras.
+The catalog also has a local no-key OpenAI-compatible protocol for Ollama, LM
+Studio, vLLM, and llama.cpp. Each cloud catalog entry is added in TypeScript and
+Rust together: fixed host, HTTPS-only validation, credential-header style,
+model-discovery route, security tests, and an AI SDK adapter.
+
+The catalog explicitly records which API protocol an endpoint implements:
+`openai-responses`, `openai-chat-completions`, `anthropic-messages`,
+`google-generative-ai`, or `openai-compatible-local`. This makes the provider
+selection deterministic and allows one adapter to safely cover multiple
+providers only when their documented protocol is genuinely compatible. A
+provider may be displayed only after its endpoint/protocol policy and adapter
+test pass. Azure OpenAI and other tenant-specific cloud endpoints are not
+treated as generic compatible URLs: they require a later server-side gateway
+or a customer-owned fixed-domain policy, so their API key can never be routed
+by a WebView-selected arbitrary host.
 
 Only localhost/local-network profiles with `apiKeyRef.kind === 'none'` may use
 a user-entered OpenAI-compatible endpoint. A key-backed profile cannot select
