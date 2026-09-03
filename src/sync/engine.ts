@@ -1,4 +1,6 @@
 import type {
+  PendingSyncMutation,
+  SyncConflict,
   SyncMutation,
   SyncPolicy,
   SyncProvider,
@@ -14,7 +16,10 @@ export interface OutboxSyncEngineOptions {
   batchSize?: number
 }
 
-function assertAllowed(changes: readonly SyncMutation[], policy: SyncPolicy): void {
+function assertAllowed(
+  changes: readonly (PendingSyncMutation | SyncMutation)[],
+  policy: SyncPolicy,
+): void {
   const denied = changes.find((change) => !policy.allows(change.collection))
   if (denied) {
     throw new Error(`Sync collection "${denied.collection}" is not allowed by policy`)
@@ -32,10 +37,19 @@ export function createOutboxSyncEngine(
       assertAllowed(pending, options.policy)
 
       let uploaded = 0
+      let conflicts: SyncConflict[] = []
       if (pending.length > 0) {
         const pushed = await options.transport.push(pending)
-        await options.store.acknowledge(pushed.acceptedOperationIds)
-        uploaded = pushed.acceptedOperationIds.length
+        await options.store.acknowledge(
+          pushed.accepted.map(({ operationId }) => operationId),
+        )
+        uploaded = pushed.accepted.length
+        conflicts = pushed.conflicts
+
+        for (const conflict of conflicts) {
+          await options.applyRemote(conflict.current)
+          await options.store.recordConflict(conflict)
+        }
       }
 
       const previousCheckpoint = await options.store.getCheckpoint()
@@ -43,7 +57,9 @@ export function createOutboxSyncEngine(
       assertAllowed(pulled.changes, options.policy)
 
       for (const change of pulled.changes) {
+        if (await options.store.hasAppliedOperation(change.operationId)) continue
         await options.applyRemote(change)
+        await options.store.markAppliedOperation(change.operationId)
       }
 
       if (pulled.checkpoint !== undefined) {
@@ -54,6 +70,7 @@ export function createOutboxSyncEngine(
         uploaded,
         downloaded: pulled.changes.length,
         checkpoint: pulled.checkpoint ?? previousCheckpoint,
+        conflicts,
       }
     },
   }

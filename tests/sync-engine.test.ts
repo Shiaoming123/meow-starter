@@ -3,7 +3,25 @@ import test from 'node:test'
 import { createOutboxSyncEngine } from '../src/sync/engine.ts'
 import { createInMemorySyncStateStore } from '../src/sync/in-memory-store.ts'
 import { createAllowlistSyncPolicy } from '../src/sync/policy.ts'
-import type { SyncMutation, SyncTransport } from '../src/sync/types.ts'
+import type {
+  PendingSyncMutation,
+  SyncMutation,
+  SyncTransport,
+} from '../src/sync/types.ts'
+
+const pendingMutation = (
+  overrides: Partial<PendingSyncMutation> = {},
+): PendingSyncMutation => ({
+  operationId: 'op-1',
+  collection: 'notes',
+  recordId: 'note-1',
+  kind: 'upsert',
+  payload: { title: 'hello' },
+  baseRevision: null,
+  deviceId: 'device-a',
+  occurredAt: '2026-09-02T00:00:00.000Z',
+  ...overrides,
+})
 
 const mutation = (overrides: Partial<SyncMutation> = {}): SyncMutation => ({
   operationId: 'op-1',
@@ -11,7 +29,7 @@ const mutation = (overrides: Partial<SyncMutation> = {}): SyncMutation => ({
   recordId: 'note-1',
   kind: 'upsert',
   payload: { title: 'hello' },
-  revision: 'device-a:1',
+  revision: '1',
   deviceId: 'device-a',
   occurredAt: '2026-09-02T00:00:00.000Z',
   ...overrides,
@@ -26,10 +44,10 @@ test('empty allowlist rejects all collections and explicit entries are exact', (
 })
 
 test('in-memory sync store enqueues by id and replaces duplicate operations', async () => {
-  const store = createInMemorySyncStateStore([mutation()])
-  await store.enqueue(mutation({ operationId: 'op-2', recordId: 'note-2' }))
+  const store = createInMemorySyncStateStore([pendingMutation()])
+  await store.enqueue(pendingMutation({ operationId: 'op-2', recordId: 'note-2' }))
   await store.enqueue(
-    mutation({ operationId: 'op-2', recordId: 'note-2', payload: { title: 'latest' } }),
+    pendingMutation({ operationId: 'op-2', recordId: 'note-2', payload: { title: 'latest' } }),
   )
 
   assert.deepEqual(
@@ -45,7 +63,7 @@ test('in-memory sync store enqueues by id and replaces duplicate operations', as
 })
 
 test('sync uploads accepted changes, applies pulled changes and advances checkpoint', async () => {
-  const local = mutation()
+  const local = pendingMutation()
   const remote = mutation({
     operationId: 'op-2',
     recordId: 'note-2',
@@ -57,7 +75,7 @@ test('sync uploads accepted changes, applies pulled changes and advances checkpo
   const transport: SyncTransport = {
     async push(changes) {
       assert.deepEqual(changes, [local])
-      return { acceptedOperationIds: ['op-1'] }
+      return { accepted: [mutation()], conflicts: [] }
     },
     async pull(checkpoint) {
       assert.equal(checkpoint, 'cursor-0')
@@ -74,14 +92,19 @@ test('sync uploads accepted changes, applies pulled changes and advances checkpo
     },
   }).syncOnce()
 
-  assert.deepEqual(result, { uploaded: 1, downloaded: 1, checkpoint: 'cursor-1' })
+  assert.deepEqual(result, {
+    uploaded: 1,
+    downloaded: 1,
+    checkpoint: 'cursor-1',
+    conflicts: [],
+  })
   assert.deepEqual(await store.listPending(100), [])
   assert.deepEqual(applied, [remote])
   assert.equal(await store.getCheckpoint(), 'cursor-1')
 })
 
 test('push failure keeps pending outbox changes', async () => {
-  const local = mutation()
+  const local = pendingMutation()
   const store = createInMemorySyncStateStore([local])
   const transport: SyncTransport = {
     async push() {
@@ -108,7 +131,7 @@ test('remote apply failure does not advance the checkpoint', async () => {
   const store = createInMemorySyncStateStore([], 'cursor-0')
   const transport: SyncTransport = {
     async push() {
-      return { acceptedOperationIds: [] }
+      return { accepted: [], conflicts: [] }
     },
     async pull() {
       return { changes: [mutation({ operationId: 'remote-1' })], checkpoint: 'cursor-1' }
@@ -130,7 +153,9 @@ test('remote apply failure does not advance the checkpoint', async () => {
 })
 
 test('disallowed local collection fails before transport', async () => {
-  const store = createInMemorySyncStateStore([mutation({ collection: 'secrets' })])
+  const store = createInMemorySyncStateStore([
+    pendingMutation({ collection: 'secrets' }),
+  ])
   const transport: SyncTransport = {
     async push() {
       throw new Error('transport must not run')
@@ -156,7 +181,7 @@ test('disallowed remote collection fails before applying or advancing checkpoint
   let applied = false
   const transport: SyncTransport = {
     async push() {
-      return { acceptedOperationIds: [] }
+      return { accepted: [], conflicts: [] }
     },
     async pull() {
       return {
@@ -179,4 +204,65 @@ test('disallowed remote collection fails before applying or advancing checkpoint
   )
   assert.equal(applied, false)
   assert.equal(await store.getCheckpoint(), 'cursor-0')
+})
+
+test('push conflicts remain pending, apply canonical remote state, and are recorded', async () => {
+  const local = pendingMutation({ baseRevision: '1' })
+  const current = mutation({ operationId: 'remote-2', revision: '2' })
+  const store = createInMemorySyncStateStore([local], 'cursor-0')
+  const applied: SyncMutation[] = []
+  const transport: SyncTransport = {
+    async push(changes) {
+      assert.deepEqual(changes, [local])
+      return {
+        accepted: [],
+        conflicts: [{ operationId: local.operationId, current }],
+      }
+    },
+    async pull() {
+      return { changes: [], checkpoint: 'cursor-1' }
+    },
+  }
+
+  const result = await createOutboxSyncEngine({
+    store,
+    transport,
+    policy: createAllowlistSyncPolicy(['notes']),
+    async applyRemote(change) {
+      applied.push(change)
+    },
+  }).syncOnce()
+
+  assert.equal(result.uploaded, 0)
+  assert.deepEqual(result.conflicts, [{ operationId: local.operationId, current }])
+  assert.deepEqual(await store.listPending(100), [local])
+  assert.deepEqual(applied, [current])
+  assert.deepEqual(await store.listConflicts(), [{ operationId: local.operationId, current }])
+})
+
+test('remote operations are applied at most once by operation ID', async () => {
+  const remote = mutation({ operationId: 'remote-1', revision: '2' })
+  const store = createInMemorySyncStateStore()
+  const applied: SyncMutation[] = []
+  const transport: SyncTransport = {
+    async push() {
+      return { accepted: [], conflicts: [] }
+    },
+    async pull() {
+      return { changes: [remote] }
+    },
+  }
+  const provider = createOutboxSyncEngine({
+    store,
+    transport,
+    policy: createAllowlistSyncPolicy(['notes']),
+    async applyRemote(change) {
+      applied.push(change)
+    },
+  })
+
+  await provider.syncOnce()
+  await provider.syncOnce()
+
+  assert.deepEqual(applied, [remote])
 })

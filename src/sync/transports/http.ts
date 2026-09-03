@@ -1,4 +1,4 @@
-import type { SyncMutation, SyncTransport } from '../types'
+import type { SyncConflict, SyncMutation, SyncTransport } from '../types'
 
 export interface HttpSyncTransportOptions {
   baseUrl: string
@@ -37,6 +37,14 @@ function isSyncMutation(value: unknown): value is SyncMutation {
   )
 }
 
+function isSyncConflict(value: unknown): value is SyncConflict {
+  return (
+    isObject(value) &&
+    typeof value.operationId === 'string' &&
+    isSyncMutation(value.current)
+  )
+}
+
 export function createHttpSyncTransport(
   options: HttpSyncTransportOptions,
 ): SyncTransport {
@@ -71,12 +79,17 @@ export function createHttpSyncTransport(
       })
       if (
         !isObject(value) ||
-        !Array.isArray(value.acceptedOperationIds) ||
-        !value.acceptedOperationIds.every((item) => typeof item === 'string')
+        !Array.isArray(value.accepted) ||
+        !value.accepted.every(isSyncMutation) ||
+        !Array.isArray(value.conflicts) ||
+        !value.conflicts.every(isSyncConflict)
       ) {
         throw new Error('Invalid sync push response')
       }
-      return { acceptedOperationIds: value.acceptedOperationIds }
+      return {
+        accepted: value.accepted,
+        conflicts: value.conflicts,
+      }
     },
     async pull(checkpoint) {
       const url = new URL('pull', baseUrl)

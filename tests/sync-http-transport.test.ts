@@ -2,15 +2,26 @@ import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import test from 'node:test'
 import { createHttpSyncTransport } from '../src/sync/transports/http.ts'
-import type { SyncMutation } from '../src/sync/types.ts'
+import type { PendingSyncMutation, SyncMutation } from '../src/sync/types.ts'
 
-const change: SyncMutation = {
+const change: PendingSyncMutation = {
   operationId: 'op-1',
   collection: 'notes',
   recordId: 'note-1',
   kind: 'upsert',
   payload: { title: 'hello' },
-  revision: 'device-a:1',
+  baseRevision: '1',
+  deviceId: 'device-a',
+  occurredAt: '2026-09-02T00:00:00.000Z',
+}
+
+const canonicalChange: SyncMutation = {
+  operationId: 'op-1',
+  collection: 'notes',
+  recordId: 'note-1',
+  kind: 'upsert',
+  payload: { title: 'hello' },
+  revision: '2',
   deviceId: 'device-a',
   occurredAt: '2026-09-02T00:00:00.000Z',
 }
@@ -39,9 +50,9 @@ test('HTTP transport sends authenticated push and checkpointed pull requests', a
       })
       response.setHeader('Content-Type', 'application/json')
       if (request.url?.startsWith('/sync/pull')) {
-        response.end(JSON.stringify({ changes: [change], checkpoint: 'cursor-2' }))
+        response.end(JSON.stringify({ changes: [canonicalChange], checkpoint: 'cursor-2' }))
       } else {
-        response.end(JSON.stringify({ acceptedOperationIds: ['op-1'] }))
+        response.end(JSON.stringify({ accepted: [canonicalChange], conflicts: [] }))
       }
     })
   })
@@ -58,10 +69,11 @@ test('HTTP transport sends authenticated push and checkpointed pull requests', a
     })
 
     assert.deepEqual(await transport.push([change]), {
-      acceptedOperationIds: ['op-1'],
+      accepted: [canonicalChange],
+      conflicts: [],
     })
     assert.deepEqual(await transport.pull('cursor-1'), {
-      changes: [change],
+      changes: [canonicalChange],
       checkpoint: 'cursor-2',
     })
 
