@@ -40,16 +40,20 @@
   <text x="82" y="170" fill="#66768b" font-size="13">App shell、设计系统与模块装配；禁用能力不会进入默认运行时加载路径</text>
 
   <g font-size="13" font-weight="640">
-    <rect x="82" y="191" width="168" height="39" rx="10" fill="#f0fbf7" stroke="#b7e8d7"/>
-    <text x="104" y="215" fill="#176c55">core / themes</text>
-    <rect x="264" y="191" width="181" height="39" rx="10" fill="#f0fbf7" stroke="#b7e8d7"/>
-    <text x="286" y="215" fill="#176c55">typed module loader</text>
-    <rect x="459" y="191" width="156" height="39" rx="10" fill="#f0fbf7" stroke="#b7e8d7"/>
-    <text x="481" y="215" fill="#176c55">SQLite UI</text>
-    <rect x="629" y="191" width="171" height="39" rx="10" fill="#eef6ff" stroke="#b9d7f1"/>
-    <text x="651" y="215" fill="#276ba7">mobile layout · β</text>
-    <rect x="814" y="191" width="298" height="39" rx="10" fill="#fff4ef" stroke="#f2c1ae"/>
-    <text x="836" y="215" fill="#a8482f">Agent / MCP / Ollama · Preview</text>
+    <rect x="82" y="191" width="118" height="39" rx="10" fill="#f0fbf7" stroke="#b7e8d7"/>
+    <text x="100" y="215" fill="#176c55">core / themes</text>
+    <rect x="211" y="191" width="118" height="39" rx="10" fill="#f0fbf7" stroke="#b7e8d7"/>
+    <text x="229" y="215" fill="#176c55">module loader</text>
+    <rect x="340" y="191" width="139" height="39" rx="10" fill="#f0fbf7" stroke="#b7e8d7"/>
+    <text x="358" y="215" fill="#176c55">storage contract</text>
+    <rect x="490" y="191" width="152" height="39" rx="10" fill="#eef6ff" stroke="#b9d7f1"/>
+    <text x="508" y="215" fill="#276ba7">SQLite · IndexedDB</text>
+    <rect x="653" y="191" width="146" height="39" rx="10" fill="#eef6ff" stroke="#b9d7f1"/>
+    <text x="671" y="215" fill="#276ba7">mobile layout · β</text>
+    <rect x="810" y="191" width="125" height="39" rx="10" fill="#fff4ef" stroke="#f2c1ae"/>
+    <text x="828" y="215" fill="#a8482f">sync · Preview</text>
+    <rect x="946" y="191" width="166" height="39" rx="10" fill="#fff4ef" stroke="#f2c1ae"/>
+    <text x="964" y="215" fill="#a8482f">Agent / MCP / Ollama</text>
   </g>
 
   <path d="M600 254V278" stroke="#7b8da4" stroke-width="2" marker-end="url(#arrow)"/>
@@ -102,5 +106,5 @@
     <text x="984" y="675" fill="#276ba7" font-weight="650">GitHub Releases</text>
   </g>
 
-  <text x="54" y="742" fill="#8090a2" font-size="12">Default path: Vue shell → typed IPC → Rust core　·　AI path remains opt-in Preview</text>
+  <text x="54" y="742" fill="#8090a2" font-size="12">Default path: Vue shell → typed IPC → Rust core　·　Web path: storage contract → IndexedDB, native modules skipped　·　AI &amp; sync remain opt-in</text>
 </svg>
