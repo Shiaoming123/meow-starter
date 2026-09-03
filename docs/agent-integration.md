@@ -339,6 +339,30 @@ export interface AgentConfig {
 
 **默认值刻意保守**：`enabled: false`、`tools.builtins: []`、`shell` 默认不开启、`secureProxy: true`、`approval.mode: 'confirm'`。
 
+#### 3.4.1 云端代理白名单（接入第三方服务前必读）
+
+`secureProxy` 生效时，云端请求由 Rust 侧代为发出并注入密钥。为了防止「把 OS 钥匙串里的密钥发往任意地址」，前后端各维护一份**固定白名单**，必须同时通过：
+
+| 层 | 位置 | 当前放行 |
+|---|---|---|
+| 前端 | `src/agent/providers/proxy-policy.ts` → `allowedOrigins` | `https://api.openai.com`、`https://api.anthropic.com` |
+| Rust | `src-tauri/src/agent/proxy.rs` → `validate_target` | 同上（枚举 `ProxyProvider`，硬编码 host） |
+
+校验条件（任一条不满足即拒绝）：scheme 为 `https`、host 精确等于白名单值、端口 443、路径为 `/v1` 或 `/v1/*`、URL 不含 userinfo 与 fragment、请求方法为 `POST`、请求体 ≤ 2 MiB；客户端另启用 `https_only` 与**禁用重定向**，避免白名单被 302 绕过。
+
+因此：
+
+- **本地模型不受影响** —— Ollama / vLLM 用 `apiKeyRef: { kind: 'none' }`，走直连，不经过代理。
+- **`openai-compatible` + keychain 会被拒绝** —— DeepSeek、Moonshot、Groq、OpenRouter 等兼容端点尚不在白名单内，配置后运行会抛「带密钥的 `openai-compatible` 端点尚无 Rust 侧白名单，已拒绝连接」。
+
+**扩展白名单的步骤**（改完请同步补测试，CI 会跑 `cargo test` 与 `npm test`）：
+
+1. Rust 侧：在 `src-tauri/src/agent/proxy.rs` 的 `ProxyProvider` 增加枚举变体，并在 `validate_target` 中给出 `expected_host` 与鉴权头拼装规则（OpenAI 用 `Authorization: Bearer`，Anthropic 用 `x-api-key` + `anthropic-version`）。
+2. 前端：在 `proxy-policy.ts` 的 `allowedOrigins` 增加 `provider → origin` 映射，并把新类型加入 `isSecureProxyProvider` 的类型守卫。
+3. 补测：Rust 侧沿用 `mod tests` 中「接受正确来源 / 拒绝跨站、http、带凭据、越权路径」两组断言的写法；前端在 `tests/agent-proxy-policy.test.ts` 增加对应用例。
+
+> 为什么不做成用户可配置：放开成配置项等于允许 WebView 侧决定把钥匙串密钥发往哪个地址，等于把 SSRF 与密钥外泄的口子一起打开。扩展白名单属于**代码级改动**，需要走 review。
+
 Rust 侧 `Cargo.toml` 增加可选 feature，避免不需要 Agent 的项目承担编译与体积成本：
 
 ```toml
@@ -356,7 +380,7 @@ agent-sidecar = ["agent"] # + Pi RPC 子进程管理
 | `tauri-plugin-store` | 存 Agent 用户偏好（默认模型、主题、审批规则） |
 | `tauri-plugin-dialog` | 文件选择 / 目录授权，复用于 `allowPaths` 授权流程 |
 | 主题系统（`src/assets/themes/`） | ChatPanel 等组件直接消费 CSS 变量，自动继承 4 套主题 |
-| Icon 系统（`@lucide/vue`） | Agent UI 复用现有 `Icon.vue` 动态按需加载 |
+| Icon 系统（`@lucide/vue`） | Agent UI 复用现有 `Icon.vue`；新图标在 `src/assets/icons/registry.ts` 加一条静态 import 与一条映射 |
 | 自动更新 | sidecar 轨下，Pi 二进制随 App 更新分发 |
 
 ---

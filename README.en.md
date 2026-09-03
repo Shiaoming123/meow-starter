@@ -44,7 +44,7 @@
 - **Modular**: config, lazy loading, runtime capabilities, and native Cargo features
 - **Sync foundation (Preview)**: opt-in outbox engine, allowlist policy, and HTTP transport without vendor lock-in
 - **Agent (Preview)**: Vercel AI SDK inline adapter and extension interfaces; off by default
-- **Secret safety (Preview)**: stored keys cannot be read back by the WebView; OpenAI/Anthropic requests use a fixed-target Rust proxy
+- **Secret safety (Preview)**: stored keys cannot be read back by the WebView; OpenAI/Anthropic requests use a fixed-target Rust proxy (allowlist: `api.openai.com` / `api.anthropic.com` only — see [docs/agent-integration.md](./docs/agent-integration.md) to extend)
 - **Local inference (Preview)**: Ollama/OpenAI-compatible presets requiring local environment verification
 - **MCP (Preview)**: HTTP/SSE client adapter; the full Agent tool loop is still being verified
 - **Engineering**: GitHub Actions 3-platform build matrix + CI gates
