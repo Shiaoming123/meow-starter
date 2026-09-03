@@ -17,7 +17,11 @@ export function auditModuleContract({
   for (const contract of contracts) {
     const { nativeBuild } = contract
     const enabled = nativeBuild.kind === 'bundled' || config[contract.id] === true
-    if (!enabled || nativeBuild.kind === 'none') continue
+    if (
+      !enabled ||
+      nativeBuild.kind === 'none' ||
+      (contract.platforms && !contract.platforms.includes(platform))
+    ) continue
 
     if (
       nativeBuild.kind === 'cargo-feature' &&
@@ -41,6 +45,22 @@ export function auditModuleContract({
   return { errors }
 }
 
+export function capabilityPermissions(capabilities, platform) {
+  const supportedTargets =
+    platform === 'desktop'
+      ? new Set(['linux', 'macOS', 'windows'])
+      : platform === 'mobile'
+        ? new Set(['android', 'iOS'])
+        : new Set()
+
+  return capabilities.flatMap(({ permissions = [], platforms }) => {
+    if (!platforms || platforms.some((target) => supportedTargets.has(target))) {
+      return permissions
+    }
+    return []
+  })
+}
+
 function hasCargoFeature(cargoToml, feature) {
   const escapedFeature = feature.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   return new RegExp(`^${escapedFeature}\\s*=`, 'm').test(cargoToml)
@@ -58,7 +78,7 @@ function main() {
   const platform = parsePlatform(process.argv.slice(2))
   const root = new URL('../', import.meta.url)
   const cargoToml = readFileSync(new URL('src-tauri/Cargo.toml', root), 'utf8')
-  const capability = JSON.parse(
+  const capabilities = JSON.parse(
     readFileSync(new URL('src-tauri/capabilities/default.json', root), 'utf8'),
   )
   const result = auditModuleContract({
@@ -66,7 +86,7 @@ function main() {
     config: defaultModuleConfig,
     platform,
     cargoToml,
-    permissions: capability.permissions,
+    permissions: capabilityPermissions(capabilities, platform),
   })
 
   if (result.errors.length > 0) {

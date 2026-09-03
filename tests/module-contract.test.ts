@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { auditModuleContract } from '../scripts/check-module-contract.mjs'
+import {
+  auditModuleContract,
+  capabilityPermissions,
+} from '../scripts/check-module-contract.mjs'
 import { moduleContracts, moduleIds } from '../src/modules/contract.ts'
 import { selectCompatibleModules } from '../src/modules/compatibility.ts'
 import { defaultModuleConfig, moduleRegistry } from '../src/modules/config.ts'
@@ -63,4 +66,17 @@ test('audit reports every missing native requirement for an enabled module', () 
     'Module "shortcut" requires Cargo feature "shortcut".',
     'Module "shortcut" requires Tauri permission "global-shortcut:default".',
   ])
+})
+
+test('capability permissions apply only to the matching runtime targets', () => {
+  const capabilities = [
+    { permissions: ['core:default'] },
+    { platforms: ['linux', 'macOS', 'windows'], permissions: ['updater:default'] },
+  ]
+
+  assert.deepEqual(capabilityPermissions(capabilities, 'desktop'), [
+    'core:default',
+    'updater:default',
+  ])
+  assert.deepEqual(capabilityPermissions(capabilities, 'mobile'), ['core:default'])
 })

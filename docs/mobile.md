@@ -60,12 +60,17 @@ export NDK_HOME="$ANDROID_HOME/ndk/$(ls -1 $ANDROID_HOME/ndk | sort -V | tail -1
 # export ANDROID_HOME="$HOME/Android/Sdk"
 ```
 
-Windows 可在用户环境变量中设置同样的三个值：`JAVA_HOME` 指向 Android
-Studio 的 `jbr` 目录，`ANDROID_HOME`（以及兼容用途的
+Windows 可在用户环境变量中设置同样的三个值：`JAVA_HOME` 应指向与 Gradle
+兼容的 JDK 21，`ANDROID_HOME`（以及兼容用途的
 `ANDROID_SDK_ROOT`）指向 `%LOCALAPPDATA%\Android\Sdk`，`NDK_HOME` 指向
 其中具体的 `ndk\<版本>` 目录。将 `platform-tools` 与
 `cmdline-tools\latest\bin` 加入用户 `Path`，然后重新打开终端再运行
 `adb` 或 `npm run mobile:doctor`。
+
+Android Studio 的内置 JBR 可能比生成工程的 Gradle 支持得更早；例如 JBR
+为 Java 25 而 Gradle 8.14 时，会在 `Unsupported class file major version 69`
+处失败。此时安装一个独立的 JDK 21，并将 `JAVA_HOME` 指向它，而不是修改
+项目的 Gradle wrapper。
 
 > Windows 上的 `tauri android dev` 需要将 Rust `.so` 链接进生成的
 > Android 工程。启用 Windows **Developer Mode**（或由管理员授予创建符号

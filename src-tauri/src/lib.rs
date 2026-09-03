@@ -27,8 +27,12 @@ pub fn run() {
             tauri_plugin_sql::Builder::default()
                 .add_migrations(db::DB_URL, db::migrations())
                 .build(),
-        )
-        .plugin(tauri_plugin_updater::Builder::new().build());
+        );
+
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    }
 
     // —— 可选模块：按 Cargo feature 装配（与前端 modules.config.ts 的 P1 模块对应） ——
 

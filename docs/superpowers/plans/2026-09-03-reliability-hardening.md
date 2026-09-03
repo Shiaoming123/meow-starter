@@ -58,5 +58,5 @@
 
 - [x] Run the existing Windows smoke and record its explicit unsigned-package outcome.
 - [x] Install Android Studio/SDK command-line tooling, platform-tools, NDK, Rust Android targets; set non-secret user environment paths and verify `npm run mobile:doctor`.
-- [x] Initialize an Android emulator and attempt `tauri android dev`; report the confirmed Windows symbolic-link prerequisite. Do not modify iOS.
+- [x] Initialize an Android emulator and run `tauri android dev`; configure the Windows symbolic-link and JDK 21 prerequisites, then verify the installed app remains running. Do not modify iOS.
 - [x] Keep SDK installation local-only and exclude generated Android files from the commit.
