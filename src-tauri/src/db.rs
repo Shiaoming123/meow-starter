@@ -32,5 +32,29 @@ pub fn migrations() -> Vec<Migration> {
             sql: "CREATE INDEX IF NOT EXISTS idx_todos_done ON todos(done)",
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 4,
+            description: "create_sync_outbox",
+            sql: "CREATE TABLE IF NOT EXISTS sync_outbox (operation_id TEXT PRIMARY KEY, mutation TEXT NOT NULL)",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 5,
+            description: "create_sync_conflicts",
+            sql: "CREATE TABLE IF NOT EXISTS sync_conflicts (operation_id TEXT PRIMARY KEY, conflict TEXT NOT NULL)",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 6,
+            description: "create_sync_applied_operations",
+            sql: "CREATE TABLE IF NOT EXISTS sync_applied_operations (operation_id TEXT PRIMARY KEY)",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 7,
+            description: "create_sync_metadata",
+            sql: "CREATE TABLE IF NOT EXISTS sync_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
+            kind: MigrationKind::Up,
+        },
     ]
 }
