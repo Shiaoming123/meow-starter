@@ -90,7 +90,11 @@ test('Supabase sync client rejects non-HTTPS non-local project URLs', () => {
 })
 
 test('Supabase sync client rejects a secret or service-role key', () => {
-  for (const publishableKey of ['sb_secret_do_not_use', 'eyJhbGciOiJub25lIn0.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.']) {
+  for (const publishableKey of [
+    'sb_secret_do_not_use',
+    'sb_service_role_do_not_use',
+    'eyJhbGciOiJub25lIn0.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.',
+  ]) {
     assert.throws(
       () =>
         createSupabaseSyncClient({
@@ -101,5 +105,59 @@ test('Supabase sync client rejects a secret or service-role key', () => {
         }),
       /service-role and secret keys are not allowed/,
     )
+  }
+})
+
+test('Supabase sync client accepts only non-whitespace publishable key values', () => {
+  for (const publishableKey of [
+    '',
+    '   ',
+    ' sb_publishable_test',
+    'sb_publishable_test ',
+    'arbitrary-string',
+    'sb_publishable_',
+  ]) {
+    assert.throws(
+      () =>
+        createSupabaseSyncClient({
+          url: 'https://project.supabase.co',
+          publishableKey,
+          storage,
+          auth: authWith(),
+        }),
+      /publishable key/,
+    )
+  }
+})
+
+test('Supabase sync client construction does not recover or refresh persisted Auth sessions', async () => {
+  const originalFetch = globalThis.fetch
+  let fetchCalls = 0
+  globalThis.fetch = async () => {
+    fetchCalls += 1
+    return new Response('{}', { status: 500 })
+  }
+
+  try {
+    createSupabaseSyncClient({
+      url: 'https://project.supabase.co',
+      publishableKey: 'sb_publishable_test',
+      storage: {
+        getItem: () =>
+          JSON.stringify({
+            access_token: 'expired-access-token',
+            refresh_token: 'refresh-token',
+            expires_at: 0,
+            user: { id: 'user-1' },
+          }),
+        setItem: () => undefined,
+        removeItem: () => undefined,
+      },
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    assert.equal(fetchCalls, 0)
+  } finally {
+    globalThis.fetch = originalFetch
   }
 })

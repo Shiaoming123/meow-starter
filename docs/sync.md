@@ -59,7 +59,7 @@ await provider.syncOnce()
 
 ## 可选 Supabase 客户端
 
-`createSupabaseSyncClient()` 只在应用明确启用 sync 并导入后调用时创建。构造时不执行登录、同步或云连接；它只从 Auth 的当前 session 读取短期 `access_token`，并把它交给固定的 `${url}/functions/v1/sync` HTTP transport。调用者不能加入任意 Authorization header，也不能传入 service-role/secret key。
+`createSupabaseSyncClient()` 只在应用明确启用 sync 并导入后调用时创建。构造时不执行登录、同步、云连接，也不会自动恢复或刷新持久化 Auth session；它禁用 Auth 自动刷新，并在实际同步请求时只读取当前 session 的短期 `access_token`，再交给固定的 `${url}/functions/v1/sync` HTTP transport。调用者不能加入任意 Authorization header，也不能传入 service-role/secret key。
 
 Web 使用浏览器 local storage；桌面应用必须注入自己的安全存储适配器（例如 OS keychain 后的适配器）：
 
@@ -131,14 +131,59 @@ POST /push
 Authorization: Bearer <short-lived-session>
 Content-Type: application/json
 
-{"changes":[SyncMutation]}
+{"changes":[PendingSyncMutation]}
 ```
 
 返回：
 
 ```json
-{"accepted":[{"operationId":"op-1","collection":"agent_preferences","recordId":"profile-1","kind":"upsert","revision":"2","deviceId":"device-a","occurredAt":"2026-09-03T00:00:00.000Z"}],"conflicts":[]}
+{
+  "accepted": [
+    {
+      "operationId": "op-1",
+      "collection": "agent_preferences",
+      "recordId": "profile-1",
+      "kind": "upsert",
+      "payload": {
+        "providerId": "openai",
+        "modelSlots": { "default": "gpt-5.6", "fast": null, "advanced": null },
+        "modelCapabilities": { "gpt-5.6": { "toolCalling": true, "vision": false } },
+        "fallbackPreferences": { "enabled": false, "strategy": "manual", "maxAttempts": 0 }
+      },
+      "revision": "2",
+      "deviceId": "device-a",
+      "occurredAt": "2026-09-03T00:00:00.000Z"
+    }
+  ],
+  "conflicts": []
+}
 ```
+
+`PendingSyncMutation` 是客户端尚未获服务端 revision 的写入：它包含 `operationId`、`collection`、`recordId`、`kind`、可选 `payload`、`baseRevision`、`deviceId` 和 `occurredAt`，且**不包含** `revision`。例如首次写入的请求 body 为：
+
+```json
+{
+  "changes": [
+    {
+      "operationId": "op-1",
+      "collection": "agent_preferences",
+      "recordId": "profile-1",
+      "kind": "upsert",
+      "payload": {
+        "providerId": "openai",
+        "modelSlots": { "default": "gpt-5.6", "fast": null, "advanced": null },
+        "modelCapabilities": { "gpt-5.6": { "toolCalling": true, "vision": false } },
+        "fallbackPreferences": { "enabled": false, "strategy": "manual", "maxAttempts": 0 }
+      },
+      "baseRevision": null,
+      "deviceId": "device-a",
+      "occurredAt": "2026-09-03T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+`accepted` 与 `pull` 的 `changes` 都是服务端 canonical `SyncMutation`：服务端以 `revision` 替换 `baseRevision`，并返回完整变更供客户端确认或应用。
 
 拉取：
 

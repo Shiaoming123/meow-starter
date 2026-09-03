@@ -50,9 +50,14 @@ function isServiceRoleJwt(value: string): boolean {
 }
 
 function assertPublishableKey(value: string): void {
-  if (!value.trim()) throw new Error('Supabase publishable key is required')
+  if (typeof value !== 'string') {
+    throw new Error('Supabase publishable key must be a non-whitespace sb_publishable_ key')
+  }
   if (value.startsWith('sb_secret_') || value.startsWith('sb_service_role_') || isServiceRoleJwt(value)) {
     throw new Error('Supabase service-role and secret keys are not allowed in the client')
+  }
+  if (!/^sb_publishable_[A-Za-z0-9_-]+$/.test(value)) {
+    throw new Error('Supabase publishable key must be a non-whitespace sb_publishable_ key')
   }
 }
 
@@ -67,6 +72,7 @@ export function createSupabaseSyncClient(
       persistSession: true,
       autoRefreshToken: false,
       detectSessionInUrl: false,
+      skipAutoInitialize: true,
     },
   }).auth
 
