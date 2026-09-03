@@ -59,7 +59,7 @@
 - **自动更新（Beta）**：包含签名、下载、安装与重启代码路径；需用自己的端点和密钥完成签名发布验证
 - **设计系统**：完整 design tokens + 6 个基础组件 + 4 套风格主题
 - **模块化**：四层门控（配置 + 动态 import + 运行时能力 + 原生 Cargo feature），能力可插拔
-- **同步底座（Preview）**：默认关闭的 outbox 引擎、白名单策略与 HTTP transport；不绑定云厂商
+- **同步底座（Preview）**：默认关闭的持久化 outbox、冲突保留与 HTTP transport；可显式采用 Supabase Auth + Edge Function 参考客户端，不绑定云厂商
 - **Agent 能力（Preview）**：Vercel AI SDK inline 适配器与扩展接口；默认关闭
 - **密钥安全（Preview）**：已存密钥不可从 WebView 读回；OpenAI/Anthropic 请求由固定目标的 Rust 代理注入
 - **本地推理（Preview）**：提供 Ollama/OpenAI-compatible 预设，需开发者验证本机环境
@@ -134,7 +134,7 @@ npm run dev:web
 | `storage` | 核心 | 始终 | 领域存储契约 + 内存安全回退 |
 | `sqlite` | 平台适配 | 开 | Tauri SQLite 数据层；仅原生运行时装配 |
 | `indexedDb` | 平台适配 | 开 | Web IndexedDB 持久化；仅浏览器装配 |
-| `sync` | 可选 | 关 | 本地优先同步接口、outbox 引擎与 transport |
+| `sync` | 可选 | 关 | 本地优先同步接口、持久化 outbox 与 transport；Supabase 路径需显式配置 |
 | `tray` | 核心 | 开 | 系统托盘 |
 | `updater` | 核心 | 开 | 自动更新 |
 | `themes` | 核心 | 开 | 4 套风格主题 |

@@ -1,6 +1,6 @@
 # 账号、云端与局域网同步指南
 
-> **成熟度：Preview。** 仓库提供默认关闭的同步契约、内存 outbox 实现和安全 HTTP transport；账号后端、持久化 outbox、设备配对与冲突 UI 需要应用按业务接入。
+> **成熟度：Preview。** Sync 默认关闭。仓库提供持久化 outbox/checkpoint、冲突保留、通用 HTTP transport，以及可选的 Supabase Auth + Edge Function 参考路径；尚未提供通用的登录或同步设置 UI，也未完成部署双设备验证。
 
 ## 设计原则
 
@@ -44,7 +44,83 @@ const provider = createOutboxSyncEngine({
 await provider.syncOnce()
 ```
 
-示例中的内存 store 只用于接口演示和测试。生产应用必须实现持久化 `SyncStateStore`，确保应用退出或断电后 outbox 与 checkpoint 不丢失。
+示例中的内存 store 只用于接口演示和测试。生产应用使用 `createIndexedDbSyncStateStore()`（Web）或 `createTauriSqliteSyncStateStore()`（桌面），确保应用退出或断电后 outbox、冲突和 checkpoint 不丢失。
+
+## 选择路径
+
+| 路径 | 何时选择 | 需要什么 | 验证边界 |
+| --- | --- | --- | --- |
+| 本地优先（默认） | 尚无账号或多设备需求 | 不需要环境变量、账号、Docker 或网络 | 离线本地存储与 outbox 测试 |
+| 托管 Supabase | 需要最快的账号 + Postgres/RLS 参考后端 | Supabase 项目、跟踪的 migration、`sync` Function、用户登录 | 另行完成部署后的两设备验证 |
+| 自托管 Supabase | 需要自有基础设施/数据驻留 | 生产级 Supabase 运维、TLS、备份、升级、监控和事件响应 | 本地 CLI 栈不能替代生产验证 |
+| 兼容后端 | 已有身份/后端或不希望依赖 Supabase | 实现相同 `SyncTransport` HTTP 合约 | 后端自行证明认证、隔离和并发语义 |
+
+无论路径如何，应用先写本地；同步只传播 `agent_preferences`。Todo 仍是本地示例数据。绝不上传 API key、refresh/session token、credential reference、任意云端 URL、本地路径、提示词/回复、原始用量或原始错误。
+
+## 可选 Supabase 客户端
+
+`createSupabaseSyncClient()` 只在应用明确启用 sync 并导入后调用时创建。构造时不执行登录、同步或云连接；它只从 Auth 的当前 session 读取短期 `access_token`，并把它交给固定的 `${url}/functions/v1/sync` HTTP transport。调用者不能加入任意 Authorization header，也不能传入 service-role/secret key。
+
+Web 使用浏览器 local storage；桌面应用必须注入自己的安全存储适配器（例如 OS keychain 后的适配器）：
+
+```ts
+import {
+  createBrowserAuthStorage,
+  createAllowlistSyncPolicy,
+  createIndexedDbSyncStateStore,
+  createOutboxSyncEngine,
+  createSupabaseSyncClient,
+} from './src/sync'
+
+const client = createSupabaseSyncClient({
+  url: import.meta.env.VITE_SUPABASE_URL,
+  publishableKey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  storage: createBrowserAuthStorage(),
+})
+
+const provider = createOutboxSyncEngine({
+  store: createIndexedDbSyncStateStore(),
+  policy: createAllowlistSyncPolicy(['agent_preferences']),
+  transport: client.transport,
+  applyRemote: applyAgentPreferences,
+})
+```
+
+可暴露给 Vite 的只有以下两个**非秘密**值：
+
+```text
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+```
+
+不要提交 `.env`，也不要创建 `VITE_` service-role、secret、用户 access token 或 refresh token 变量。发布型 key 可被浏览器看到，安全性必须由用户 JWT、RLS 和 Edge Function 验证保证。
+
+### 用户可见的开关路径
+
+模板没有预置账户页面；接入者应在“设置 → 账户与同步”提供显式流程：默认显示“仅本地”，用户登录并确认要同步 `agent_preferences` 后才启用模块和创建 provider；显示当前账号与同步状态；“关闭同步”立即停止调度、卸载 provider 并保留本机 outbox/数据。“清除本机同步数据”必须是单独确认操作，不能作为关闭同步的副作用。
+
+## Supabase 采用方案
+
+### 1. 本地优先（默认）
+
+保持 `src/modules/config.ts` 的 `sync: false`，不要创建 Supabase client 或配置环境变量。Agent 偏好和用量都留在当前设备；这是首次运行和离线应用的推荐模式。
+
+### 2. 托管 Supabase
+
+1. 在自己的项目中先检查已安装 CLI 的命令：`supabase --help`、`supabase db --help`、`supabase functions --help`。
+2. 审阅并应用仓库跟踪的 `supabase/migrations/`；部署仓库的 `sync` Edge Function。该 Function 需要用户 JWT，publishable key 不能作为其 Bearer token。
+3. 只在本机开发/部署环境提供上述两个 `VITE_` 值，并实现登录、明确的同步开关和持久化 sync store。
+4. 以两个不同用户和两台设备验证 RLS 隔离、离线 outbox 重启、同 revision 冲突、tombstone 与有序 checkpoint；不要把单设备单元测试当作此证据。
+
+应用不会链接、部署或创建任何云项目；这些操作是采用者在其项目边界内显式执行的。
+
+### 3. 自托管 Supabase
+
+使用同一 migration、Function 和 publishable URL/key，但由运营方负责公开 HTTPS、备份/恢复演练、升级、监控、日志留存和事件响应。`supabase start` 的 CLI/Docker 栈仅供开发和本地集成测试；它不是公开服务、生产拓扑或生产安全证明。
+
+### 4. 自带兼容后端
+
+不需要导入 Supabase 包。实现 `POST /push` 与 `GET /pull?checkpoint=…`，返回现有 `SyncPushResult` / pull JSON，并提供：用户认证、owner 隔离、operation ID 幂等、基于 `baseRevision` 的 compare-and-swap、tombstone 与每 owner 有序 checkpoint。保持固定 HTTPS 端点和只接收短期 access token；不要让 WebView 选择任意认证 header 或后端 URL。
 
 ## HTTP 协议
 
@@ -61,7 +137,7 @@ Content-Type: application/json
 返回：
 
 ```json
-{"acceptedOperationIds":["op-1"]}
+{"accepted":[{"operationId":"op-1","collection":"agent_preferences","recordId":"profile-1","kind":"upsert","revision":"2","deviceId":"device-a","occurredAt":"2026-09-03T00:00:00.000Z"}],"conflicts":[]}
 ```
 
 拉取：
@@ -113,7 +189,7 @@ Authorization: Bearer <short-lived-session>
 - 富文本与实时协作：按文档领域使用 Automerge/Yjs，不要把整个应用数据库 CRDT 化。
 - 不同步 SQLite 数据库文件；同步变更记录或领域对象。
 
-## 方案选择与接入位置
+## 其他方案选择与接入位置
 
 | 方案 | 推荐接入 | 适用场景 | 注意事项 |
 | --- | --- | --- | --- |
@@ -124,7 +200,7 @@ Authorization: Bearer <short-lived-session>
 | LAN | 配对发现层 + `SyncTransport` | 同一网络的一次性迁移或按需同步 | 发现不等于认证，第一版不要后台自动组网 |
 | [Automerge](https://automerge.org/docs/hello/) / [Yjs](https://docs.yjs.dev/) | 文档领域独立 Provider | 实时多人文档 | 不作为通用数据库同步层 |
 
-核心仓库不默认依赖任何一项。一个适配器应能删除而不影响领域存储和其他传输。
+核心同步引擎不绑定任何一项。Supabase 客户端是显式采用的可选依赖；一个适配器应能删除而不影响领域存储和其他传输。
 
 ## 局域网同步安全基线
 
@@ -139,7 +215,15 @@ Authorization: Bearer <short-lived-session>
 
 iOS 需要本地网络隐私声明，Android 新版本的附近 Wi-Fi 能力需要相应运行时权限。权限、后台服务和防火墙规则都应留在 LAN transport 模块，不进入同步核心。
 
-## 生产验收
+## 证据等级与生产验收
+
+| 等级 | 可证明的内容 | 不能证明的内容 |
+| --- | --- | --- |
+| 离线单元/构建检查 | URL/key 拒绝规则、session token 提取、合约和本地状态行为 | Auth、RLS、Postgres 或真实网络 |
+| 本地 Supabase 集成 | CLI/Docker 环境下的 migration、Function、双用户 RLS/并发路径 | 公网 TLS、托管配置、真实两台设备 |
+| 已部署两设备验证 | 采用者项目上的登录、RLS、断网恢复、冲突与 checkpoint | 所有业务领域或正式发布就绪 |
+
+本任务只具备离线单元/构建检查；本地 Supabase 集成和已部署两设备验证需要采用者的 Docker/项目/设备，不能由此仓库的测试替代。
 
 - 断网写入后重启应用，outbox 不丢失。
 - 重复上传同一 operation 不产生重复记录。
