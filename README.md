@@ -232,6 +232,8 @@ npm run check:modules -- web   # Web 目标
 
 > 📌 每条迁移**只写一条 SQL 语句**——底层 sqlx 的 `execute` 不支持多语句。
 
+Todo 示例还提供可选、版本化的 JSON 数据端口：`await exportTodos()` 生成应用领域数据，`await importTodos(json)` 在完整校验通过后追加记录并返回数量。它不导出数据库文件、密钥、Agent 或同步状态；导入不会覆盖现有数据，重复导入会产生重复记录。产品 UI 应在调用导入前取得用户明确确认。
+
 ### 系统托盘
 
 `src-tauri/src/tray.rs` 注册左键切换窗口、右键菜单（显示/隐藏、检查更新、退出）。配合单实例，重复启动聚焦已有窗口。

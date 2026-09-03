@@ -58,6 +58,12 @@ App / domain code
 
 参考：[MDN IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) 与 [浏览器存储配额](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria)。
 
+### 可选的数据导出与导入
+
+Todo 示例提供 `await exportTodos()` 与 `await importTodos(json)`，用于让具体产品自行接入下载、文件选择或其他用户界面。JSON 只包含 Todo 的标题、完成状态和创建时间，并带有固定格式与版本；本地数据库 id、SQLite/IndexedDB 文件、密钥、Agent 状态和同步状态都不在范围内。
+
+导入会先验证整个内容，再追加新记录并返回数量：不会清空或覆盖已有数据，重复导入会追加重复项。调用者必须先向用户说明这个语义并获得明确确认。该端口不是云同步、冲突合并或完整数据库恢复功能。
+
 ### 增加新的领域存储
 
 不要抽象一个同时模仿 SQL 与 IndexedDB 的万能查询层。为业务领域定义小接口，例如：

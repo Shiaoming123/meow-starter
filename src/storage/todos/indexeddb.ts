@@ -38,5 +38,15 @@ export function createIndexedDbTodoStore(
       const database = await openMeowDatabase(databaseName)
       await database.delete('todos', id)
     },
+    async appendImported(records) {
+      const database = await openMeowDatabase(databaseName)
+      for (const record of records) {
+        await database.add('todos', {
+          title: record.title,
+          done: record.done,
+          created_at: record.createdAt,
+        })
+      }
+    },
   }
 }

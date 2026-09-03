@@ -25,5 +25,15 @@ export function createInMemoryTodoStore(initial: readonly Todo[] = []): TodoStor
       const index = todos.findIndex((candidate) => candidate.id === id)
       if (index >= 0) todos.splice(index, 1)
     },
+    async appendImported(records) {
+      for (const record of records) {
+        todos.push({
+          id: nextId++,
+          title: record.title,
+          done: record.done,
+          created_at: record.createdAt,
+        })
+      }
+    },
   }
 }

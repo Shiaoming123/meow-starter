@@ -58,7 +58,7 @@
 | local-inference.md | 本地推理：Ollama 接入 + 密钥安全 |
 | mcp.md | MCP 接入：连接外部工具到 Agent |
 | mobile.md | 移动端适配（Android/iOS）：前置依赖 + 初始化 + 降级 |
-| web.md | Web 适配：IndexedDB + 平台能力 + 静态部署 |
+| web.md | Web 适配：IndexedDB、版本化 Todo 数据端口、平台能力与静态部署 |
 | sync.md | 同步接缝：outbox + HTTP + 云端/LAN/CRDT 方案选择 |
 
 ## 架构图

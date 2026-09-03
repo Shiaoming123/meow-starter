@@ -143,6 +143,10 @@ npm run check:modules -- web   # Web target
 
 This check proves checked-in configuration consistency only. It does not change Cargo or permissions, or prove plugin behavior, packages, signing, or device behavior.
 
+### Versioned local data port
+
+The Todo example exposes an opt-in JSON boundary through `await exportTodos()` and `await importTodos(json)`. It exports only application-owned Todo fields, validates the whole payload before writes, and appends rather than overwrites local data. It does not export database files, keys, Agent state, or sync state; product UI must ask for explicit confirmation before import, and repeated imports intentionally create duplicates.
+
 ### Maturity model
 
 | Level | Meaning | Current capabilities |
