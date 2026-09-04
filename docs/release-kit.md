@@ -63,7 +63,7 @@ notarization, hosted updater availability, or a successful user installation.
 
 ## Optional local runtime smoke
 
-On Windows, `npm run smoke:windows-package` performs an explicit local package lifecycle check: it builds an unsigned NSIS installer with a transient `bundle.createUpdaterArtifacts=false` overlay, silently installs beneath a fresh `src-tauri/target/meow-windows-package-smoke-*` directory, redirects `APPDATA` and `LOCALAPPDATA` there, confirms the installed process remains alive briefly, then force-stops that child process and removes only the validated temporary directory.
+On Windows, `npm run smoke:windows-package` performs an explicit local package lifecycle check: it builds an unsigned NSIS installer with a transient `bundle.createUpdaterArtifacts=false` overlay, silently installs beneath a fresh ignored target subdirectory, redirects `APPDATA` and `LOCALAPPDATA` there, confirms the installed process remains alive briefly, then force-stops that child process and removes only the validated temporary directory.
 
 The command leaves the generated NSIS bundle under the ignored Tauri target directory and does not need a signing private key. It is deliberately not a signed release, updater-delivery, offline-installation, tray graceful-exit, store, or macOS/Linux package test.
 
@@ -81,7 +81,8 @@ checksum content differ from the staged artifact.
 Portable means no installation step; it does not make application data live
 beside the EXE, and it does not bundle WebView2. Authenticode is also distinct
 from Tauri updater signing. See [windows-distribution.md](./windows-distribution.md)
-for the fast personal-developer path and certificate options.
+for the fast personal-developer path, release prevention checklist,
+symptom-based repair sequence, and certificate options.
 
 ## Credentials and handoff
 
