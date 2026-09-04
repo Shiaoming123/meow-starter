@@ -1,6 +1,6 @@
 # 设计系统开发指引
 
-> 给下载 meow-starter 的 agent：你无需通读所有代码也能保持视觉与交互的一致性。这份文档讲解设计 token、组件用法、性能与可访问性惯例、性能优化建议，以及「你何时该新建一个组件」。
+> 给下载 meow-starter 的 agent：你无需通读所有代码也能保持视觉与交互的一致性。这份文档讲解设计 token、组件用法、性能与可访问性惯例、性能优化建议，以及「你何时该新建一个组件」。开始产品 UI 前，先读[应用开发与交付标准](./application-standard.md)确定字体、主题、默认状态与验收边界。
 
 ---
 
@@ -29,6 +29,13 @@ src/
 2. **结构 token**（`--space-*` / `--radius-*` / `--text-*` / `--font-*` / `--shadow-*` / `--motion-*` / `--z-*`）：与主题无关，在 `global.css` 里静态定义，全主题共享。
 
 > **原则**：写组件时只用 CSS 变量，绝不写死颜色、字号、间距。**改主题就能换肤**。
+
+### 0.1 产品视觉基线
+
+- 派生产品默认自托管 **Manrope Variable**（英文与数字）和 **Noto Sans SC Variable**（中文）；模板演示页当前仍使用系统字体栈，安装、导入、回退和许可证记录步骤见[字体基线](./application-standard.md#二字体基线)。
+- 视觉参考 iOS 磨砂亚克力：毛玻璃只用于需要表达空间层级的侧栏、工具栏和浮层，正文表面保持稳定可读；light/dark 和不支持 blur 时都要有不透明回退。
+- **简约 UI 与直观 UX 优于冗长突兀的文字提醒**。标准图标、布局、状态和微反馈先承担说明作用，必要文案保持短而明确。
+- 页面主标题沿用 `--text-xl`（20px）上限，不通过超大字号或粗重字重制造层级。
 
 ---
 
@@ -259,7 +266,7 @@ src/
 3. **样式 scoped**：组件内样式只影响组件本身；用 `:deep()` 穿透到子组件。
 4. **Props 类型化**：用 `withDefaults(defineProps<{…}>(), { … })`。
 5. **emit 显式**：`defineEmits<{ name: [payload: T] }>()`。
-6. **可访问性**：交互元素有可见焦点（`focus-visible` 全局已配）；有 label；icon-only 按钮配 `title`。
+6. **可访问性**：交互元素有可见焦点（`focus-visible` 全局已配）；输入有 label；icon-only 按钮必须提供 `aria-label`，`title`/tooltip 只作辅助提示。
 7. **动效**：用 `--motion-*` + `--ease`，并在 `@media (prefers-reduced-motion: reduce)` 下自动缩短（已全局配）。
 
 ### 反模式（不要这样做）
@@ -280,6 +287,8 @@ src/
 <!-- 装饰性元素加边框加阴影堆三层 -->
 <div style="border: 1px solid; box-shadow: 0 0 0 1px, 0 4px 12px rgba">…</div>
 ```
+
+同样禁止：用“点击此处”“此按钮用于”等长文解释控件、给每个容器叠加毛玻璃和圆角、只在 hover 时暴露关键操作、用 placeholder 代替 label，以及用低对比透明层换取所谓“高级感”。完整清单见[应用标准](./application-standard.md#必须避免)。
 
 ---
 
@@ -312,11 +321,11 @@ AI 类应用（Vercel AI SDK 等）建议：
 
 ---
 
-## 6. 可访问性底线（无需额外工作，已默认开启）
+## 6. 可访问性底线
 
 - 键盘 `Tab` 可遍历所有交互元素，`focus-visible` 有可见焦点环（2px accent 边）
 - `prefers-reduced-motion: reduce` 自动把所有动效缩短到 0.01ms（全局 CSS 已配）
-- 颜色对比度：4 套主题全部按 WCAG AA 级（≥ 4.5:1）调色，深色模式单独校验
+- 颜色对比度：4 套基础色板以 WCAG AA（普通文字 ≥ 4.5:1）为目标；派生应用仍须对自己的文字、透明层、状态和 light/dark 组合重新验证
 - 窗口最小尺寸 820×560，已在 `tauri.conf.json` 设好；过窄的窗口会强制缩放，按钮可能挤压
 
 ---
@@ -325,6 +334,7 @@ AI 类应用（Vercel AI SDK 等）建议：
 
 - **数据**：先定义小型领域 Store 接口，再分别实现 Tauri SQLite、Web IndexedDB 和内存测试适配器；参考 `src/storage/todos/`。
 - **设置项**：用 `tauri-plugin-store` 持久化用户偏好（主题已经存在 localStorage，可以改造到 store）。
+- **默认状态**：集中维护产品默认值、持久化偏好与会话状态，遵循[全局设置与默认状态](./application-standard.md#五全局设置与默认状态)，不要在多个组件中复制默认值。
 - **Agent（Preview）**：`src/agent/` 提供 Vercel AI SDK inline 适配器并默认关闭；启用前请完成 Provider 与安全代理验证。需要演示 UI 时可在业务入口显式引入 `ChatPanel.vue`。
 
 ---
