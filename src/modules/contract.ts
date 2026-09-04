@@ -122,7 +122,10 @@ export const moduleContracts: Record<ModuleId, ModuleContract> = {
       kind: 'cargo-feature',
       feature: 'shortcut',
       platforms: ['desktop'],
-      permissions: ['global-shortcut:default'],
+      permissions: [
+        'global-shortcut:allow-register',
+        'global-shortcut:allow-unregister',
+      ],
     },
   },
   clipboard: {
