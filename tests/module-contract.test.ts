@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import {
   auditModuleContract,
@@ -64,8 +65,34 @@ test('audit reports every missing native requirement for an enabled module', () 
 
   assert.deepEqual(result.errors, [
     'Module "shortcut" requires Cargo feature "shortcut".',
-    'Module "shortcut" requires Tauri permission "global-shortcut:default".',
+    'Module "shortcut" requires Tauri permission "global-shortcut:allow-register".',
+    'Module "shortcut" requires Tauri permission "global-shortcut:allow-unregister".',
   ])
+})
+
+test('disabled shortcut documents concrete permissions without breaking the default Cargo build', () => {
+  const shortcutPermissions = [
+    'global-shortcut:allow-register',
+    'global-shortcut:allow-unregister',
+  ]
+  const capabilities = JSON.parse(
+    readFileSync(
+      new URL('../src-tauri/capabilities/default.json', import.meta.url),
+      'utf8',
+    ),
+  ) as Array<{ identifier: string; permissions: string[] }>
+  const defaultCapability = capabilities.find(({ identifier }) => identifier === 'default')
+
+  assert.deepEqual(
+    moduleContracts.shortcut.nativeBuild.kind === 'cargo-feature'
+      ? moduleContracts.shortcut.nativeBuild.permissions
+      : undefined,
+    shortcutPermissions,
+  )
+  assert.equal(defaultCapability?.permissions.includes('global-shortcut:default'), false)
+  for (const permission of shortcutPermissions) {
+    assert.equal(defaultCapability?.permissions.includes(permission), false)
+  }
 })
 
 test('capability permissions apply only to the matching runtime targets', () => {

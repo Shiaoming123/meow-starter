@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import type { App } from 'vue'
 import { moduleContracts, type ModuleId } from '../src/modules/contract.ts'
@@ -9,6 +10,12 @@ const webRuntime = {
   platform: 'web' as const,
   capabilities: ['web-storage'] as const,
 }
+
+test('module failure still mounts the Vue shell after storage selection', async () => {
+  const source = await readFile(new URL('../src/main.ts', import.meta.url), 'utf8')
+  assert.match(source, /mountModules\(app\)[\s\S]*\.catch\([\s\S]*\.finally\(/)
+  assert.match(source, /\.finally\(\(\) => \{[\s\S]*app\.mount\("#app"\)/)
+})
 
 function testModule(id: ModuleId): Module {
   const contract = moduleContracts[id]

@@ -7,6 +7,12 @@ import "./assets/themes/global.css";
 // core 模块（设计系统 + 主题初始化）在 loader 里执行。
 const app = createApp(App);
 
-mountModules(app).then(() => {
-  app.mount("#app");
-});
+// Storage adapters are selected before App loads its state. A rejected
+// optional/native module is still non-fatal: finally always renders the shell.
+void mountModules(app)
+  .catch((error: unknown) => {
+    console.error("[modules] Module setup failed; continuing with the safe fallback.", error);
+  })
+  .finally(() => {
+    app.mount("#app");
+  });

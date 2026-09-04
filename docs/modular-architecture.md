@@ -81,6 +81,8 @@ npm run check:modules -- mobile
 
 检查会报告缺少的 Cargo feature 或 Tauri permission，但不会替开发者添加 feature、修改权限、初始化移动工程或证明插件在真实设备可用。它是源配置一致性门禁，不是打包或发布证明。
 
+`mountModules()` 位于 Vue 挂载之前，因此启用模块的 `setup()` 也是首屏启动链的一部分。`main.ts` 必须保留 `catch(...).finally(() => app.mount(...))` 的降级路径，确保模块拒绝会被记录但不会留下空白 WebView。原生插件权限仍须按前端实际调用的命令声明；不要从 `plugin:default` 这类聚合名推断它包含所需 ACL。例如快捷键模块调用 `register` 与 `unregister` 时，应在模块契约和窗口 capability 中分别声明 `global-shortcut:allow-register` 与 `global-shortcut:allow-unregister`，并同步 Cargo feature 与插件注册。权限不能早于可选插件 feature 写入 capability，否则默认未编译该插件时 Tauri 会因找不到权限清单而拒绝构建。`npm run check:modules` 负责静态一致性，`npm run tauri dev` 的可见 Vue 首屏和无权限拒绝日志才是原生启动证据；浏览器渲染或进程存活不能替代它。
+
 ---
 
 ## 2. 目标目录结构
@@ -207,10 +209,10 @@ import { mountModules } from './modules/loader'
 
 const app = createApp(App)
 
-// 只装配启用的模块
-await mountModules(app)
-
-app.mount('#app')
+// 先选择存储适配器；模块失败时仍挂载可见的降级界面
+void mountModules(app)
+  .catch((error) => console.error('[modules] setup failed', error))
+  .finally(() => app.mount('#app'))
 ```
 
 `mountModules` 内部按配置动态 import 各模块的 `setup()`，未启用的模块完全不加载。

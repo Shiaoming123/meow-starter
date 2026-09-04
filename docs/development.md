@@ -4,17 +4,31 @@ Use this guide for a credential-free local checkout. Release accounts, signing k
 
 ## Normal setup
 
-Install Node.js 22+, Rust 1.77.2+, and the platform prerequisites listed in the [Tauri documentation](https://tauri.app/start/prerequisites/). Then run:
+Install Node.js 22+, Rust 1.77.2+, and the platform prerequisites listed in the [Tauri documentation](https://tauri.app/start/prerequisites/). On Windows, this includes the Visual Studio C++ Build Tools and Microsoft Edge WebView2 Runtime. Then run:
 
 ```bash
-npm install
+npm ci
 npm run doctor
+npm run check:modules
 npm run tauri dev
 ```
 
-For the Web-only app, use `npm run dev:web`. Before sharing a frontend change, run `npm run verify`; it runs `test`, `check:protocol`, `check:csp`, desktop/Web/mobile `check:modules`, `typecheck`, `build`, `build:web`, `check:layout`, and `check:docs` in that order. Use `npm run release:check` to inspect versions, identifiers, bundle icons, updater configuration, and signing-related configuration in template mode.
+The development server uses the fixed port `1420`. SQLite is embedded through the Tauri plugin (`sqlite:app.db`), so ordinary local development does not require a separate database service or a `.env` file. Credentials and environment variables belong only to optional integrations that explicitly document them; leaving those integrations disabled must not block the core app.
+
+For the Web-only app, use `npm run dev:web`. A successful browser render proves only the Web path, which uses browser capabilities and fallbacks; it does not prove that the native plugin, Cargo feature, or Tauri ACL is correct. Before sharing a frontend change, run `npm run verify`; it runs `test`, `check:protocol`, `check:csp`, desktop/Web/mobile `check:modules`, `typecheck`, `build`, `build:web`, `check:layout`, and `check:docs` in that order. Use `npm run release:check` to inspect versions, identifiers, bundle icons, updater configuration, and signing-related configuration in template mode.
 
 `npm run doctor` reports the Node, npm, Rust, Cargo, and local Tauri CLI versions, the official Tauri platform-prerequisite guide, and the locations of `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json`. Missing tools include installation guidance. The command does not enumerate environment variables, secrets, or keychains.
+
+## Native startup acceptance checklist
+
+Treat module initialization as part of the native startup critical path. Storage adapters are selected before Vue mounts, but `src/main.ts` catches setup failures and mounts the shell from `finally`, so a rejected optional capability degrades visibly instead of leaving a blank WebView. Keep that fail-safe when customizing startup.
+
+When enabling or changing a native module:
+
+1. Match the commands the module actually invokes against explicit Tauri permissions. Do not assume an aggregate permission such as `plugin-name:default` grants every command—or any command. For example, code that calls the global-shortcut plugin's `register` and `unregister` commands needs `global-shortcut:allow-register` and `global-shortcut:allow-unregister` in the capability assigned to the main window. Add those permissions only when the Cargo feature is enabled: Tauri also rejects capability permissions for an optional plugin that is not compiled.
+2. Keep all four declarations aligned: `src/modules/config.ts`, `src/modules/contract.ts`, the corresponding Cargo feature/plugin registration, and `src-tauri/capabilities/*.json`. Run `npm run check:modules` after each change.
+3. Start the real desktop runtime with `npm run tauri dev`, keep its startup log visible, and exercise the native control that caused the permission request. A running process, an open window, a successful Web build, or browser rendering alone is not native UI evidence.
+4. Accept the startup only when the Vue UI is visibly mounted and the Tauri log has no rejected module setup or `not allowed` ACL error. If the window is blank, inspect the first module/setup rejection before debugging CSS or packaging.
 
 ## exFAT checkouts on macOS
 
