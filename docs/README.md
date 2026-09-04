@@ -18,10 +18,12 @@
 | 我想… | 文档 |
 | --- | --- |
 | 快速了解项目定位与适配场景 | [project-guide.md](./project-guide.md) |
+| 把模板做成可双击交付的产品，并统一字体、视觉与默认设置 | [application-standard.md](./application-standard.md) |
 | 配置本地开发与 exFAT 工作区 | [development.md](./development.md) |
 | 定义产品目标、数据与交付边界 | [application-protocol.md](./application-protocol.md) |
 | 了解 Release Kit 与发布边界 | [release-kit.md](./release-kit.md) |
 | 生成 Windows Portable EXE、做发布检查与故障排查 | [windows-distribution.md](./windows-distribution.md) |
+| 从本地应用走到服务、更新与平台发布 | [delivery-path.md](./delivery-path.md) |
 | 从模板做出第一个应用 | [blueprints/README.md](./blueprints/README.md) |
 | 用设计系统、写组件、加主题 | [design-system.md](./design-system.md) |
 | 理解模块化架构、扩展模块 | [modular-architecture.md](./modular-architecture.md) |
@@ -37,6 +39,7 @@
 ## 按角色导航
 
 - **新用户 / 决策者** → 先读 [project-guide.md](./project-guide.md)，判断项目是否适合
+- **应用开发者 / Agent** → 先读 [application-standard.md](./application-standard.md)，固定产品体验与双击交付基线
 - **贡献者 / Agent** → 先读 [development.md](./development.md)，再遵守 [../AGENTS.md](../AGENTS.md)
 - **发布负责人** → 先读 [release-kit.md](./release-kit.md)，再按 [windows-distribution.md](./windows-distribution.md) 完成 Windows 防错检查与故障排查
 - **准备做首个应用的开发者** → 先读 [blueprints/README.md](./blueprints/README.md)，按产品类型选择一条窄路径
@@ -51,10 +54,12 @@
 | 文档 | 一句话说明 |
 | --- | --- |
 | project-guide.md | 项目适配指南：适合做什么 + 分类型注意事项 |
+| application-standard.md | 应用标准：双击交付、字体、iOS 亚克力视觉、主题与默认设置 |
 | development.md | 本地开发：环境诊断、验证命令与 exFAT 处理 |
 | application-protocol.md | 应用协议：产品意图、能力、数据、降级与证据边界 |
 | release-kit.md | Release Kit：配置检查与发布成熟度边界 |
 | windows-distribution.md | Windows 单文件交付、GitHub Release、Authenticode 与故障修复手册 |
+| delivery-path.md | 从本地脚手架到同步服务、更新与平台发布的采用顺序 |
 | blueprints/ | 首个应用蓝图：本地笔记、开发者工具、本地 AI 伴侣 |
 | design-system.md | 设计系统：tokens + 组件 + 主题 + 性能 + 可达性 |
 | modular-architecture.md | 模块化架构：运行时与原生构建双平面契约 + 平台能力 |

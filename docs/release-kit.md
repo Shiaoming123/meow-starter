@@ -69,6 +69,8 @@ The command leaves the generated NSIS bundle under the ignored Tauri target dire
 
 ## Windows single-file delivery
 
+For downstream product acceptance, “runs locally” means a non-developer can double-click a verified installer or Portable EXE; `tauri dev`, a browser render, or a successful compile is not that evidence. Apply the product-wide checklist in [application-standard.md](./application-standard.md) before release preparation.
+
 `npm run package:windows` builds an unsigned NSIS installer, MSI installer, and
 single-file Portable EXE into `release-artifacts/windows/<version>/`, together
 with a manifest and SHA-256 checksums. `npm run package:windows:audit` rechecks

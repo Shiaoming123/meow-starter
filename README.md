@@ -92,6 +92,7 @@ Shixue is a personal learning record assistant built from `meow-starter` and the
 | I want to… | Go to |
 | --- | --- |
 | 🚀 Run the project | [Quick start](#-quick-start) → [Rename checklist](#-create-a-new-project-rename-checklist) |
+| ✅ Turn the scaffold into a double-clickable product with consistent UI and defaults | [docs/application-standard.md](./docs/application-standard.md) |
 | 🛠 Configure local development / an exFAT workspace | [docs/development.md](./docs/development.md) |
 | 🧭 Define product intent, capabilities, and data boundaries | [docs/application-protocol.md](./docs/application-protocol.md) |
 | 📦 Understand the Release Kit and release boundary | [docs/release-kit.md](./docs/release-kit.md) |
@@ -118,11 +119,11 @@ Shixue is a personal learning record assistant built from `meow-starter` and the
 ```bash
 # Option 1: clone the repository
 git clone https://github.com/Shiaoming123/meow-starter.git my-app
-cd my-app && npm install && npm run tauri dev
+cd my-app && npm ci && npm run tauri dev
 
 # Option 2: use degit for a clean copy without Git history (recommended)
 npx degit Shiaoming123/meow-starter my-app
-cd my-app && npm install && npm run tauri dev
+cd my-app && npm ci && npm run tauri dev
 ```
 
 Web only:
@@ -132,6 +133,8 @@ npm run dev:web
 ```
 
 **Prerequisites:** Node.js 22+, Rust 1.77.2+, and platform dependencies. macOS requires Xcode Command Line Tools, Windows requires MSVC and WebView2, and Linux requires webkit2gtk and related packages. See the [Tauri prerequisites](https://tauri.app/start/prerequisites/).
+
+`tauri dev` is a developer workflow, not an end-user delivery format. Before calling a downstream app usable, follow the [application development and delivery standard](./docs/application-standard.md) and verify a package or Portable executable that a non-developer can launch by double-clicking.
 
 ## 🧩 Create a new project (rename checklist)
 
@@ -211,6 +214,7 @@ The same Vue codebase targets **Web / macOS / Windows / Linux / Android / iOS**.
 ├── .github/               # CI gates and a three-desktop-platform release template
 ├── docs/                  # Documentation hub
 │   ├── architecture.svg        # Architecture diagram
+│   ├── application-standard.md # Product UI, defaults, and double-click delivery standard
 │   ├── development.md          # Local development, verification, and exFAT guidance
 │   ├── release-kit.md          # Release Kit and release maturity boundaries
 │   ├── windows-distribution.md # Windows Portable and Authenticode guidance
@@ -302,7 +306,7 @@ See [docs/mcp.md](./docs/mcp.md).
 
 ## 🎨 Design system
 
-The design system provides spacing, radius, typography, shadow, motion, and layer tokens; six base components; and four themes. Components consume CSS variables, so themes can change without rewriting component styles. See [docs/design-system.md](./docs/design-system.md).
+The design system provides restrained typography, spacing, radius, shadow, motion, and layer tokens; six base components; and four themes. Downstream products use self-hosted Manrope Variable for Latin text and numbers, Noto Sans SC Variable for Chinese, and a restrained iOS-inspired acrylic treatment. See the [application standard](./docs/application-standard.md) and [design system](./docs/design-system.md).
 
 ## 🛠 Common commands
 
@@ -314,6 +318,8 @@ The design system provides spacing, radius, typography, shadow, motion, and laye
 | `npm run build:web` | Type-check and create the Web static build |
 | `npm run smoke:web-persistence` | Optional: add a Todo in a real browser and verify IndexedDB persistence after reload |
 | `npm run smoke:windows-package` | Optional: build an unsigned NSIS package, install it in an isolated directory, and verify process liveness on Windows |
+| `npm run package:windows` | Build the versioned NSIS, MSI, Portable EXE, manifest, README, and SHA-256 delivery kit |
+| `npm run package:windows:audit` | Recheck an existing Windows delivery kit without rebuilding |
 | `npm test` | Run behavior tests without an additional test framework |
 | `npm run typecheck` | Run TypeScript/Vue type checking only |
 | `npm run check:modules` | Validate module catalog, defaults, and native build requirements |

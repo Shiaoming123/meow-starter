@@ -2,6 +2,8 @@
 
 Use this guide for a credential-free local checkout. Release accounts, signing keys, and platform certificates are not required for ordinary development.
 
+Running from source is not the product handoff. A downstream application is user-ready only after it also meets the [application development and delivery standard](./application-standard.md), including a package or Portable executable that a non-developer can launch by double-clicking.
+
 ## Normal setup
 
 Install Node.js 22+, Rust 1.77.2+, and the platform prerequisites listed in the [Tauri documentation](https://tauri.app/start/prerequisites/). On Windows, this includes the Visual Studio C++ Build Tools and Microsoft Edge WebView2 Runtime. Then run:
@@ -18,6 +20,12 @@ The development server uses the fixed port `1420`. SQLite is embedded through th
 For the Web-only app, use `npm run dev:web`. A successful browser render proves only the Web path, which uses browser capabilities and fallbacks; it does not prove that the native plugin, Cargo feature, or Tauri ACL is correct. Before sharing a frontend change, run `npm run verify`; it runs `test`, `check:protocol`, `check:csp`, desktop/Web/mobile `check:modules`, `typecheck`, `build`, `build:web`, `check:layout`, and `check:docs` in that order. Use `npm run release:check` to inspect versions, identifiers, bundle icons, updater configuration, and signing-related configuration in template mode.
 
 `npm run doctor` reports the Node, npm, Rust, Cargo, and local Tauri CLI versions, the official Tauri platform-prerequisite guide, and the locations of `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json`. Missing tools include installation guidance. The command does not enumerate environment variables, secrets, or keychains.
+
+## Windows workspace hygiene
+
+Keep temporary clones, reference repositories, and disposable build experiments in a dedicated directory on a non-system volume, for example `D:\DevTemp\meow\`. Do not place them under the Windows system drive by default. Remove a temporary clone after the comparison or experiment is complete, but first resolve and confirm the exact directory; never recursively delete a drive root, user profile, repository root, or an unresolved environment-variable path.
+
+When Rust output is large, a project-specific `CARGO_TARGET_DIR` on the same non-system development volume can also prevent the system drive from filling. The packaging, audit, staging, and smoke commands intentionally share the effective Cargo target directory; keep that invariant when changing scripts.
 
 ## Native startup acceptance checklist
 
@@ -62,6 +70,8 @@ CARGO_TARGET_DIR=/absolute/path/on/apfs npm run rust:verify
 | Check desktop, Web, or mobile module compatibility | `npm run check:modules [-- web|mobile]` |
 | Run all frontend quality gates | `npm run verify` |
 | Check release configuration in template mode | `npm run release:check` |
+| Build the Windows double-click delivery kit | `npm run package:windows` |
+| Audit an existing Windows delivery kit | `npm run package:windows:audit` |
 | Remove only AppleDouble sidecars | `npm run clean:appledouble` |
 | Run the desktop app | `npm run tauri dev` |
 
