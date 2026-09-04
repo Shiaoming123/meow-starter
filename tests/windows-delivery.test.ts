@@ -49,9 +49,10 @@ test('derives stable ASCII artifact names with a package-name fallback', () => {
 
 test('uses one deterministic Cargo target root for custom and default builds', () => {
   const root = resolve('D:/repo')
+  const absoluteTarget = resolve(root, '..', 'shared', 'cargo')
   assert.equal(resolveCargoTargetRoot(root, {}), resolve(root, 'src-tauri', 'target'))
   assert.equal(resolveCargoTargetRoot(root, { CARGO_TARGET_DIR: 'build/cargo' }), resolve(root, 'build/cargo'))
-  assert.equal(resolveCargoTargetRoot(root, { CARGO_TARGET_DIR: 'D:/shared/cargo' }), resolve('D:/shared/cargo'))
+  assert.equal(resolveCargoTargetRoot(root, { CARGO_TARGET_DIR: absoluteTarget }), absoluteTarget)
 })
 
 test('uses Tauri mainBinaryName when a derived app renames its executable', async (t) => {
