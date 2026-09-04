@@ -21,6 +21,7 @@
 | 配置本地开发与 exFAT 工作区 | [development.md](./development.md) |
 | 定义产品目标、数据与交付边界 | [application-protocol.md](./application-protocol.md) |
 | 了解 Release Kit 与发布边界 | [release-kit.md](./release-kit.md) |
+| 生成 Windows Portable EXE、选择 Authenticode 路径 | [windows-distribution.md](./windows-distribution.md) |
 | 从模板做出第一个应用 | [blueprints/README.md](./blueprints/README.md) |
 | 用设计系统、写组件、加主题 | [design-system.md](./design-system.md) |
 | 理解模块化架构、扩展模块 | [modular-architecture.md](./modular-architecture.md) |
@@ -53,6 +54,7 @@
 | development.md | 本地开发：环境诊断、验证命令与 exFAT 处理 |
 | application-protocol.md | 应用协议：产品意图、能力、数据、降级与证据边界 |
 | release-kit.md | Release Kit：配置检查与发布成熟度边界 |
+| windows-distribution.md | Windows 单文件交付、GitHub Release 与 Authenticode 选择指南 |
 | blueprints/ | 首个应用蓝图：本地笔记、开发者工具、本地 AI 伴侣 |
 | design-system.md | 设计系统：tokens + 组件 + 主题 + 性能 + 可达性 |
 | modular-architecture.md | 模块化架构：运行时与原生构建双平面契约 + 平台能力 |

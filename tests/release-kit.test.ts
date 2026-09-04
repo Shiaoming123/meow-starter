@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import test from 'node:test'
 import { findAppleDoubleFiles, removeAppleDoubleFiles } from '../scripts/release-kit/appledouble.mjs'
-import { inspectReleaseConfig } from '../scripts/release-kit/config.mjs'
+import { inspectReleaseConfig, validateWindowsReleaseWorkflow } from '../scripts/release-kit/config.mjs'
 import { inspectEnvironment, prepareCargoEnvironment } from '../scripts/release-kit/environment.mjs'
 import { getNpmInvocation, runNpmCommand } from '../scripts/release-kit/npm-command.mjs'
 import { createReleaseProvenance } from '../scripts/release-kit/provenance.mjs'
@@ -274,10 +274,69 @@ test('accepts a non-placeholder HTTPS updater endpoint', async (t) => {
       },
     },
   }))
+  await mkdir(join(fixtureRoot, '.github', 'workflows'), { recursive: true })
+  await writeFile(join(fixtureRoot, '.github', 'workflows', 'release.yml'), `
+- platform: windows-latest
+uses: tauri-apps/tauri-action@v0
+- name: Require version tag source
+  if: github.ref_type != 'tag'
+- name: Stage portable Windows EXE
+  if: matrix.platform == 'windows-latest'
+  run: node scripts/stage-windows-portable.mjs
+- name: Upload and verify portable Windows EXE
+  if: matrix.platform == 'windows-latest'
+  run: |
+    gh release upload tag path --clobber
+    gh release view tag --json assets
+    if ($portableAsset.digest -ne $expectedDigest) { throw 'steps.portable.outputs.sha256' }
+    gh release download tag
+    if ($uploadedChecksum -ne $expectedChecksum) { throw 'steps.portable.outputs.portable_name' }
+`)
 
   const result = await inspectReleaseConfig(fixtureRoot, 'release')
   assert.deepEqual(result.errors, [])
   assert.deepEqual(result.warnings, [])
+})
+
+test('formal releases keep portable Windows staging, upload, and verification', () => {
+  const validWorkflow = `
+- platform: windows-latest
+uses: tauri-apps/tauri-action@v0
+- name: Require version tag source
+  if: github.ref_type != 'tag'
+- name: Stage portable Windows EXE
+  if: matrix.platform == 'windows-latest'
+  run: node scripts/stage-windows-portable.mjs
+- name: Upload and verify portable Windows EXE
+  if: matrix.platform == 'windows-latest'
+  run: |
+    gh release upload tag path --clobber
+    gh release view tag --json assets
+    if ($portableAsset.digest -ne $expectedDigest) { throw 'steps.portable.outputs.sha256' }
+    gh release download tag
+    if ($uploadedChecksum -ne $expectedChecksum) { throw 'steps.portable.outputs.portable_name' }
+`
+  assert.deepEqual(validateWindowsReleaseWorkflow(validWorkflow), [])
+  assert.match(
+    validateWindowsReleaseWorkflow(validWorkflow.replace(/gh release upload[^\n]+/, '')).join('\n'),
+    /upload the staged portable EXE/,
+  )
+  assert.match(
+    validateWindowsReleaseWorkflow(validWorkflow.replace(/gh release view[^\n]+/, '')).join('\n'),
+    /verify uploaded portable bytes and checksum content/,
+  )
+  assert.match(
+    validateWindowsReleaseWorkflow(validWorkflow.replace('$portableAsset.digest', '$portableAsset.name')).join('\n'),
+    /verify uploaded portable bytes and checksum content/,
+  )
+  assert.match(
+    validateWindowsReleaseWorkflow(validWorkflow.replace("github.ref_type != 'tag'", "github.ref_type == 'branch'")).join('\n'),
+    /reject branch-based manual dispatches/,
+  )
+  assert.notDeepEqual(
+    validateWindowsReleaseWorkflow(validWorkflow.split('\n').map((line) => `# ${line}`).join('\n')),
+    [],
+  )
 })
 
 test('reports missing updater signing configuration according to inspection mode', async (t) => {

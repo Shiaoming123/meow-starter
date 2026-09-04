@@ -1,12 +1,26 @@
 import { existsSync } from 'node:fs'
 import { spawn } from 'node:child_process'
+import { createServer } from 'node:net'
 import { resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { getNpmInvocation } from './release-kit/npm-command.mjs'
 
 const projectRoot = resolve(fileURLToPath(new URL('..', import.meta.url)))
-const previewPort = 4175
+
+export async function findAvailableLoopbackPort() {
+  const server = createServer()
+  await new Promise((resolveListen, rejectListen) => {
+    server.once('error', rejectListen)
+    server.listen(0, '127.0.0.1', resolveListen)
+  })
+  const address = server.address()
+  await new Promise((resolveClose, rejectClose) => server.close((error) => (
+    error ? rejectClose(error) : resolveClose()
+  )))
+  if (!address || typeof address === 'string') throw new Error('Could not allocate a loopback smoke port.')
+  return address.port
+}
 
 export function webSmokeUrl(port) {
   return `http://127.0.0.1:${port}/`
@@ -86,6 +100,7 @@ async function main() {
   const npm = getNpmInvocation(['run', 'build:web'])
   await runCommand(npm.command, npm.args, npm.options)
 
+  const previewPort = await findAvailableLoopbackPort()
   const url = webSmokeUrl(previewPort)
   const viteCli = resolve(projectRoot, 'node_modules', 'vite', 'bin', 'vite.js')
   const preview = spawn(

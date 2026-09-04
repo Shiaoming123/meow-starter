@@ -30,8 +30,8 @@ export function selectNsisInstaller(candidates, productName, version) {
   return matches[0]
 }
 
-export function resolveInstalledExecutable(installPath, cargoPackageName) {
-  return resolve(installPath, `${cargoPackageName}.exe`)
+export function resolveInstalledExecutable(installPath, binaryName) {
+  return resolve(installPath, `${binaryName}.exe`)
 }
 
 export async function removeSmokeRoot(
@@ -123,6 +123,7 @@ async function main() {
     const cargoManifest = await readFile(resolve(projectRoot, 'src-tauri', 'Cargo.toml'), 'utf8')
     const cargoPackageName = cargoManifest.match(/^name\s*=\s*"([^"]+)"/m)?.[1]
     if (!cargoPackageName) throw new Error('Could not read the Cargo package name for the installed executable.')
+    const binaryName = tauriConfig.mainBinaryName?.trim() || cargoPackageName
     await runCommand(process.execPath, [
       tauriCli,
       'build',
@@ -143,7 +144,7 @@ async function main() {
 
     const executablePath = assertSmokePath(
       installPath,
-      resolveInstalledExecutable(installPath, cargoPackageName),
+      resolveInstalledExecutable(installPath, binaryName),
     )
     const executableStat = await stat(executablePath)
     if (!executableStat.isFile()) throw new Error(`Installed application is missing: ${executablePath}`)

@@ -38,6 +38,24 @@
 
 **Core philosophy**: lightweight core, optional capabilities, on-demand inclusion. Write zero agent code and it is a clean desktop scaffold; a Preview capability becomes product functionality only after explicit project configuration and verification.
 
+## 🌱 Template ecosystem · Built with meow-starter
+
+### [Shixue · 拾学](https://github.com/Shiaoming123/shixue)
+
+> Turn something you want to learn into a small step you can finish, prove, and revisit.
+
+Shixue is a personal learning record assistant built from `meow-starter` and the first public reference application in this ecosystem. It shows how the general scaffold can be shaped into a focused product while preserving its data, module, security, and release boundaries.
+
+| From scaffold to product | Shixue implementation |
+| --- | --- |
+| Domain and data | A capture → organize → schedule → focus → evidence-backed completion → review loop, with IndexedDB on Web and SQLite on desktop |
+| UI / UX | An iOS-inspired warm-paper, deep-ink, and sage visual language with desktop drawers, mobile full-screen flows, bottom sheets, and responsive four-tab navigation |
+| Windows delivery | Tauri-based x64 NSIS, localized MSI, and Portable EXE packaging, checksums, install-and-launch smoke checks, and an updater configuration path |
+
+[Explore the Shixue source, product screenshots, and setup guide →](https://github.com/Shiaoming123/shixue)
+
+> Shixue's locally produced Windows artifacts are currently unsigned. Code signing, SmartScreen reputation, and hosted updater artifacts still require each publisher's own certificate and private key. The case study demonstrates a verifiable productization path; it is not a blanket release-readiness claim for downstream apps.
+
 ## ✨ Features
 
 - **Frontend**: Vue 3.5 + TypeScript + Vite 8, follows system dark mode
@@ -62,9 +80,11 @@
 | 🛠 Set up local development / exFAT workspace | [docs/development.md](./docs/development.md) |
 | 🧭 Define product intent, capabilities, and data boundaries | [docs/application-protocol.md](./docs/application-protocol.md) |
 | 📦 Understand the Release Kit and release boundary | [docs/release-kit.md](./docs/release-kit.md) |
+| 🪟 Build a Portable EXE / choose an Authenticode path | [docs/windows-distribution.md](./docs/windows-distribution.md) |
 | 🛤️ Move from local scaffold to service and release | [docs/delivery-path.md](./docs/delivery-path.md) |
 | 🎯 Check project fit | [docs/project-guide.md](./docs/project-guide.md) |
 | 🧭 Build a first application from the scaffold | [docs/blueprints/README.md](./docs/blueprints/README.md) |
+| 🌱 Explore a real application built from the template | [Shixue · 拾学](https://github.com/Shiaoming123/shixue) |
 | 🏗 Understand architecture | [Architecture](#-architecture) + [modular-architecture.md](./docs/modular-architecture.md) |
 | 🎨 Use design system/components | [docs/design-system.md](./docs/design-system.md) |
 | 🤖 Integrate Agent | [docs/agent-integration.md](./docs/agent-integration.md) |

@@ -8,10 +8,10 @@ The Release Kit makes a checkout diagnosable and validates release configuration
 | --- | --- | --- | --- |
 | Local checks | Available | `npm run doctor`, `npm run verify`, and `npm run release:check` | Project-specific platform validation |
 | Desktop build/package | Local Windows smoke available, not release proof | The existing release workflow has macOS arm64/x64, Windows, and Linux draft-release build jobs; Windows can locally build an unsigned NSIS installer, install it beneath the ignored target tree, and check short process liveness | Run and inspect a real build for every target and installer format; signing and distribution remain separate |
-| Desktop code signing | Deferred | Workflow accepts optional signing inputs | Certificate ownership, secret provisioning, signed-artifact verification |
+| Desktop code signing | Deferred | Tauri updater signing inputs are wired; Authenticode options are documented separately | Certificate ownership, Authenticode integration, secret provisioning, signed-artifact verification |
 | macOS notarization | Deferred | Workflow accepts optional Apple signing/notarization inputs | Apple account, certificates, notarization submission, and installed-artifact validation |
 | Updater signing/delivery | Template only | Updater code and signing configuration are present | A real HTTPS endpoint, public key, private-key signing, hosted artifacts, and update-path validation |
-| Windows/Linux distribution | Deferred | Desktop build jobs exist | Distributor/signing decisions and installation validation |
+| Windows/Linux distribution | Windows portable path available | Windows builds can stage a stable-name Portable EXE with SHA-256 proof and verify its GitHub Release asset | Authenticode, clean-device validation, and Linux distribution decisions |
 | Android package | Local debug evidence | Android emulator `tauri android dev` and local universal debug APK/AAB build have completed | Recreate the ignored generated project on a clean checkout; real-device smoke, signing, Play Console, and store submission |
 | iOS package and store | Deferred | Responsive UI and desktop-capability degradation only | Native project initialization, Xcode/CocoaPods, accounts, certificates, device testing, and store submission |
 | Web deployment | Deferred | `npm run build:web` creates a static build | Select/configure a provider and validate a deployed site |
@@ -66,6 +66,22 @@ notarization, hosted updater availability, or a successful user installation.
 On Windows, `npm run smoke:windows-package` performs an explicit local package lifecycle check: it builds an unsigned NSIS installer with a transient `bundle.createUpdaterArtifacts=false` overlay, silently installs beneath a fresh `src-tauri/target/meow-windows-package-smoke-*` directory, redirects `APPDATA` and `LOCALAPPDATA` there, confirms the installed process remains alive briefly, then force-stops that child process and removes only the validated temporary directory.
 
 The command leaves the generated NSIS bundle under the ignored Tauri target directory and does not need a signing private key. It is deliberately not a signed release, updater-delivery, offline-installation, tray graceful-exit, store, or macOS/Linux package test.
+
+## Windows single-file delivery
+
+`npm run package:windows` builds an unsigned NSIS installer, MSI installer, and
+single-file Portable EXE into `release-artifacts/windows/<version>/`, together
+with a manifest and SHA-256 checksums. `npm run package:windows:audit` rechecks
+the existing kit without rebuilding it. The release workflow stages the raw
+Windows executable under a stable ASCII name in the separate
+`release-artifacts/github-release/windows/<version>/` tree, uploads it and its
+checksum to the draft GitHub Release, then fails if the uploaded bytes or
+checksum content differ from the staged artifact.
+
+Portable means no installation step; it does not make application data live
+beside the EXE, and it does not bundle WebView2. Authenticode is also distinct
+from Tauri updater signing. See [windows-distribution.md](./windows-distribution.md)
+for the fast personal-developer path and certificate options.
 
 ## Credentials and handoff
 

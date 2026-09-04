@@ -38,6 +38,24 @@
 
 **核心理念**：核心轻量、能力可选、按需引入。不写一行 Agent 代码，它就是干净的桌面脚手架；Preview 能力须由项目显式配置并完成验证后才能成为产品功能。
 
+## 🌱 模板生态 · 案例展示
+
+### [拾学 Shixue](https://github.com/Shiaoming123/shixue)
+
+> 把想学会的事，变成每天能完成、能证明、会复习的一小步。
+
+拾学是基于 `meow-starter` 完成的个人学习记录助手，也是当前公开的参考子项目。它展示了如何从通用脚手架收敛出完整产品，而不绕过模板的数据、模块、安全和发布边界。
+
+| 从模板到产品 | 拾学中的实现 |
+| --- | --- |
+| 领域与数据 | 捕捉 → 整理 → 安排 → 专注 → 证据式完成 → 复习的学习任务闭环；Web 使用 IndexedDB，桌面使用 SQLite |
+| UI / UX | 对齐 iOS 质感的暖白、深墨与鼠尾草绿视觉；桌面抽屉、移动全屏推进、底部 Sheet 与响应式四栏导航 |
+| Windows 交付 | 基于 Tauri 的 x64 NSIS、中文 MSI 与 Portable EXE 打包、哈希清单、安装运行 smoke 和 updater 配置链路 |
+
+[查看拾学源码、产品截图与运行说明 →](https://github.com/Shiaoming123/shixue)
+
+> 拾学的本地 Windows 产物目前是未签名交付；代码签名、SmartScreen 信誉和线上 updater 制品仍需各发布者用自己的证书与私钥完成。这一案例展示的是可验证的产品化链路，不替模板使用者作外部发布承诺。
+
 ### Web + 五端覆盖
 
 | 平台 | 状态 | 说明 |
@@ -77,9 +95,11 @@
 | 🛠 配置本地开发 / exFAT 工作区 | [docs/development.md](./docs/development.md) |
 | 🧭 定义产品目标、能力与数据边界 | [docs/application-protocol.md](./docs/application-protocol.md) |
 | 📦 了解 Release Kit 与发布边界 | [docs/release-kit.md](./docs/release-kit.md) |
+| 🪟 生成 Portable EXE / 选择 Authenticode | [docs/windows-distribution.md](./docs/windows-distribution.md) |
 | 🛤️ 从本地脚手架走到服务与发布 | [docs/delivery-path.md](./docs/delivery-path.md) |
 | 🎯 判断适不适合我的项目 | [docs/project-guide.md](./docs/project-guide.md) |
 | 🧭 从模板做出第一个应用 | [docs/blueprints/README.md](./docs/blueprints/README.md) |
+| 🌱 查看真实模板案例 | [拾学 Shixue](https://github.com/Shiaoming123/shixue) |
 | 🏗 理解架构 | [架构图](#-架构) + [模块化架构](./docs/modular-architecture.md) |
 | 🎨 用设计系统/组件 | [docs/design-system.md](./docs/design-system.md) |
 | 🤖 接入 Agent（对话/工具） | [docs/agent-integration.md](./docs/agent-integration.md) |

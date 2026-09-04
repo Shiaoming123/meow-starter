@@ -14,6 +14,8 @@ jobs:
   publish:
     permissions:
       contents: write
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/src-tauri/target
     strategy:
       fail-fast: false
       matrix:
@@ -31,6 +33,13 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Require version tag source
+        if: github.ref_type != 'tag'
+        shell: bash
+        run: |
+          echo "Release workflow must run from an existing version tag." >&2
+          exit 1
 
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -81,3 +90,45 @@ jobs:
           args: ${{ matrix.args }}
           # 让 Windows 优先分发 NSIS 安装包（.exe）而不是 MSI
           updaterJsonPreferNsis: true
+
+      - name: Stage portable Windows EXE
+        if: matrix.platform == 'windows-latest'
+        id: portable
+        shell: pwsh
+        run: node scripts/stage-windows-portable.mjs
+
+      - name: Upload and verify portable Windows EXE
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ steps.portable.outputs.tag }}" `
+            "${{ steps.portable.outputs.portable_path }}" `
+            "${{ steps.portable.outputs.checksum_path }}" `
+            --clobber
+          $release = gh release view "${{ steps.portable.outputs.tag }}" --json assets | ConvertFrom-Json
+          $portableName = "${{ steps.portable.outputs.portable_name }}"
+          $checksumName = "${{ steps.portable.outputs.checksum_name }}"
+          $portableAsset = $release.assets | Where-Object name -eq $portableName | Select-Object -First 1
+          if (-not $portableAsset) {
+            throw "GitHub Release is missing required portable asset: $portableName"
+          }
+          $expectedDigest = "sha256:${{ steps.portable.outputs.sha256 }}"
+          if ($portableAsset.digest -ne $expectedDigest) {
+            throw "Portable asset digest mismatch: expected $expectedDigest, got $($portableAsset.digest)"
+          }
+          if ($release.assets.name -notcontains $checksumName) {
+            throw "GitHub Release is missing required checksum asset: $checksumName"
+          }
+          $checksumDirectory = Join-Path $env:RUNNER_TEMP 'meow-portable-verification'
+          New-Item -ItemType Directory -Path $checksumDirectory -Force | Out-Null
+          gh release download "${{ steps.portable.outputs.tag }}" `
+            --pattern $checksumName `
+            --dir $checksumDirectory `
+            --clobber
+          $uploadedChecksum = (Get-Content -Raw (Join-Path $checksumDirectory $checksumName)).Trim()
+          $expectedChecksum = "${{ steps.portable.outputs.sha256 }}  $portableName"
+          if ($uploadedChecksum -ne $expectedChecksum) {
+            throw "Portable checksum asset content does not match the staged executable"
+          }
