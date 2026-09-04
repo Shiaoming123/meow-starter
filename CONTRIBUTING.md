@@ -30,6 +30,19 @@ refactor: 重构（无功能变化）
 3. 提交 PR，并填写 PR 模板中的检查清单。
 4. 至少一次 review 通过后合并。
 
+`README.md` 是 GitHub 默认英文版，`README.zh-CN.md` 是中文版。修改任一 README 时，必须在同一个 PR 中同步另一语言，并保持功能声明、成熟度、命令和链接一致。
+
+### 发布与 Windows 交付类 PR
+
+修改 Release workflow、Tauri 打包、updater、Windows 资产命名或签名接入时，先阅读 [Windows 单文件交付与 Authenticode](./docs/windows-distribution.md) 的“发布前防错清单”和“按症状排障”。PR 至少应附上：
+
+- `npm run check:docs` 与 `npm run release:check` 的结果；准备正式发布的派生项目使用 `npm run release:check -- --mode=release`。
+- 涉及脚本逻辑时的 `npm test`，并说明 Windows/POSIX 路径、`CARGO_TARGET_DIR` 与 `mainBinaryName` 的覆盖情况。
+- Windows 产物变化时的 `npm run package:windows:audit` 结果；签名或运行时变化还要附对应的 Authenticode 或 smoke 证据。
+- workflow action 的固定版本及其输入来源；对照该版本的 README/`action.yml`，不要凭相似参数名推断。
+
+不要在 PR、日志或测试夹具中放入真实证书路径、PFX 内容、密码、Token PIN、云签名凭据或 updater 私钥。
+
 ## 报告问题
 
 - 功能请求与可复现的缺陷，请使用 Issue 模板。

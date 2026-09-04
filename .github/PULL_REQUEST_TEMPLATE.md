@@ -10,7 +10,7 @@
 
 - [ ] `npm run build` 通过
 - [ ] 新增功能已在 `npm run tauri dev` 下自测
-- [ ] 文档（README / CONTRIBUTING）已同步更新
+- [ ] 文档（README / CONTRIBUTING）已同步更新；README 变更已同时更新英文 `README.md` 与中文 `README.zh-CN.md`
 - [ ] 提交信息符合 Conventional Commits
 
 ## 补充说明

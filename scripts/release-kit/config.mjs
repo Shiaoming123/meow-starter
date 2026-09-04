@@ -33,6 +33,47 @@ function isPlaceholderEndpoint(endpoint) {
   }
 }
 
+export function validateWindowsReleaseWorkflow(workflow) {
+  if (typeof workflow !== 'string') {
+    return ['Missing .github/workflows/release.yml for formal release validation']
+  }
+
+  const activeWorkflow = workflow
+    .split(/\r?\n/)
+    .filter((line) => !line.trimStart().startsWith('#'))
+    .join('\n')
+  const errors = []
+  if (!activeWorkflow.includes('platform: windows-latest')) {
+    errors.push('Release workflow must retain a windows-latest build')
+  }
+  if (!activeWorkflow.includes('tauri-apps/tauri-action@v0')) {
+    errors.push('Release workflow must retain the Tauri build action')
+  }
+  if (!activeWorkflow.includes('- name: Require version tag source') || !activeWorkflow.includes("github.ref_type != 'tag'")) {
+    errors.push('Release workflow must reject branch-based manual dispatches')
+  }
+  const stageIndex = activeWorkflow.indexOf('- name: Stage portable Windows EXE')
+  const publishIndex = activeWorkflow.indexOf('- name: Upload and verify portable Windows EXE')
+  const stageStep = stageIndex < 0 ? '' : activeWorkflow.slice(stageIndex, publishIndex > stageIndex ? publishIndex : undefined)
+  if (!stageStep.includes('node scripts/stage-windows-portable.mjs') || !stageStep.includes("matrix.platform == 'windows-latest'")) {
+    errors.push('Windows release workflow must stage the portable EXE')
+  }
+  const publishStep = publishIndex < 0 ? '' : activeWorkflow.slice(publishIndex)
+  if (!publishStep.includes('gh release upload') || !publishStep.includes('--clobber')) {
+    errors.push('Windows release workflow must upload the staged portable EXE')
+  }
+  if (!publishStep.includes('gh release view')
+    || !publishStep.includes('portableAsset.digest')
+    || !publishStep.includes('expectedDigest')
+    || !publishStep.includes('gh release download')
+    || !publishStep.includes('expectedChecksum')
+    || !publishStep.includes('steps.portable.outputs')
+    || !publishStep.includes("matrix.platform == 'windows-latest'")) {
+    errors.push('Windows release workflow must verify uploaded portable bytes and checksum content')
+  }
+  return errors
+}
+
 export async function inspectReleaseConfig(root, mode) {
   if (mode !== 'template' && mode !== 'release') {
     throw new TypeError(`Unknown release check mode: ${mode}`)
@@ -134,6 +175,17 @@ export async function inspectReleaseConfig(root, mode) {
   }
 
   ;(mode === 'release' ? errors : warnings).push(...signingIssues)
+
+  if (mode === 'release') {
+    const workflow = await readText(
+      join(root, '.github', 'workflows', 'release.yml'),
+      errors,
+      '.github/workflows/release.yml',
+    )
+    const workflowErrors = validateWindowsReleaseWorkflow(workflow)
+    errors.push(...workflowErrors)
+    if (workflowErrors.length === 0) summary.push('Portable Windows release asset: enforced')
+  }
 
   return { errors, warnings, summary }
 }
