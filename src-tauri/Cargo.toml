@@ -42,7 +42,7 @@ tauri-plugin-autostart = { version = "2", optional = true }
 # 默认 feature "v1" 已包含三端原生后端，按目标平台自动选择
 keyring = { version = "4", optional = true }
 # reqwest：LLM 请求流式透传代理，避免 API Key 暴露在前端
-reqwest = { version = "0.12", features = ["stream", "json"], optional = true }
+reqwest = { version = "0.13", features = ["stream", "json"], optional = true }
 # futures-util：流式代理里消费 bytes_stream
 futures-util = { version = "0.3", optional = true }
 
