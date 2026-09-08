@@ -1,11 +1,4 @@
-import type { SyncMutation, SyncStateStore } from './types'
-
-function copyMutation(mutation: SyncMutation): SyncMutation {
-  return {
-    ...mutation,
-    payload: mutation.payload ? { ...mutation.payload } : undefined,
-  }
-}
+import { copyMutation, type SyncMutation, type SyncStateStore } from './types.ts'
 
 export function createInMemorySyncStateStore(
   initial: readonly SyncMutation[] = [],

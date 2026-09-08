@@ -47,6 +47,26 @@ test('in-memory sync store enqueues by id and replaces duplicate operations', as
   )
 })
 
+test('sync stores keep their own copies of mutation payloads', async () => {
+  const databaseName = `meow-test-sync-copy-${Date.now()}`
+  await deleteDB(databaseName)
+  const stores = [
+    createInMemorySyncStateStore(),
+    createIndexedDbSyncStateStore({ databaseName }),
+  ]
+
+  for (const store of stores) {
+    const change = mutation()
+    await store.enqueue(change)
+    change.payload!.title = 'changed after enqueue'
+
+    const [saved] = await store.listPending(1)
+    assert.equal(saved.payload?.title, 'hello')
+    saved.payload!.title = 'changed after read'
+    assert.equal((await store.listPending(1))[0].payload?.title, 'hello')
+  }
+})
+
 test('IndexedDB sync store preserves pending changes and checkpoint after reopening', async () => {
   const databaseName = `meow-test-sync-${Date.now()}`
   await deleteDB(databaseName)

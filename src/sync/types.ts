@@ -9,6 +9,13 @@ export interface SyncMutation {
   occurredAt: string
 }
 
+export function copyMutation(mutation: SyncMutation): SyncMutation {
+  return {
+    ...mutation,
+    payload: mutation.payload ? { ...mutation.payload } : undefined,
+  }
+}
+
 export interface SyncTransport {
   push(
     changes: readonly SyncMutation[],

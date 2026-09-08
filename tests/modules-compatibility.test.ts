@@ -47,20 +47,18 @@ test('accepts a module when platform and capabilities match', () => {
 })
 
 test('rejects a module on an unsupported platform', () => {
-  assert.match(
-    moduleCompatibility(module({ platforms: ['desktop'] }), runtime('web')).reason ?? '',
-    /platform web/,
-  )
+  const result = moduleCompatibility(module({ platforms: ['desktop'] }), runtime('web'))
+  assert.equal(result.supported, false)
+  if (!result.supported) assert.match(result.reason, /platform web/)
 })
 
 test('rejects a module when a required capability is absent', () => {
-  assert.match(
-    moduleCompatibility(
-      module({ requiredCapabilities: ['system-tray'] }),
-      runtime('desktop'),
-    ).reason ?? '',
-    /system-tray/,
+  const result = moduleCompatibility(
+    module({ requiredCapabilities: ['system-tray'] }),
+    runtime('desktop'),
   )
+  assert.equal(result.supported, false)
+  if (!result.supported) assert.match(result.reason, /system-tray/)
 })
 
 test('selects only modules supported by the current runtime', () => {

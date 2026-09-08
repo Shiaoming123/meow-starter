@@ -148,9 +148,6 @@ export function createInlineRuntime(cfg: AgentConfig): AgentRuntime {
             };
             break;
           case 'tool-error':
-            hooks.emitError(String(part.error));
-            yield { type: 'error', message: String(part.error) };
-            break;
           case 'error':
             hooks.emitError(String(part.error));
             yield { type: 'error', message: String(part.error) };

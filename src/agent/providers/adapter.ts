@@ -4,6 +4,7 @@ import type { LanguageModel } from 'ai';
 import type { ProviderConfig } from '../config';
 import { resolveProviderTransport } from './proxy-policy';
 import { createSecureProxyFetch } from './secure-fetch';
+import { toProviderInstance } from './types';
 
 /** 保存密钥到 OS 钥匙串（供设置页调用）。 */
 export async function saveApiKey(
@@ -32,7 +33,7 @@ export function createLanguageModel(
   modelId: string,
   secureProxy: boolean,
 ): LanguageModel {
-  const provider = { models: [], ...cfg };
+  const provider = toProviderInstance(cfg);
   const transport = resolveProviderTransport(provider, secureProxy);
   const proxyFetch = transport === 'rust-proxy' ? createSecureProxyFetch(provider) : undefined;
   const apiKey = transport === 'rust-proxy' ? 'managed-by-rust-keychain' : undefined;

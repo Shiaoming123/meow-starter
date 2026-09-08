@@ -16,7 +16,7 @@ export function assertSmokePath(targetRoot, candidate) {
   return resolvedCandidate
 }
 
-export function createNsisInstallArgs(_installerPath, installPath) {
+export function createNsisInstallArgs(installPath) {
   return ['/S', `/D=${installPath}`]
 }
 
@@ -140,7 +140,7 @@ async function main() {
       tauriConfig.version,
     )
     const installerPath = resolve(nsisDirectory, installerName)
-    await runCommand(installerPath, createNsisInstallArgs(installerPath, installPath))
+    await runCommand(installerPath, createNsisInstallArgs(installPath))
 
     const executablePath = assertSmokePath(
       installPath,

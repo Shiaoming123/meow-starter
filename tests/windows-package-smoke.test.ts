@@ -21,7 +21,6 @@ test('rejects cleanup outside the dedicated target subtree', () => {
 test('keeps the NSIS destination argument last', () => {
   assert.deepEqual(
     createNsisInstallArgs(
-      'D:/bundle/setup.exe',
       'D:/repo/src-tauri/target/meow-windows-package-smoke-a/install',
     ),
     ['/S', '/D=D:/repo/src-tauri/target/meow-windows-package-smoke-a/install'],
