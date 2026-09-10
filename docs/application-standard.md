@@ -1,6 +1,6 @@
 # 应用开发与交付标准
 
-这份文档是把 `meow-starter` 做成真实产品时的默认标准。开发者和 Agent 在改业务 UI、默认设置或交付方式前应先读本页；具体实现细节再分别查阅 [设计系统](./design-system.md)、[开发指南](./development.md) 与 [Windows 交付指南](./windows-distribution.md)。
+这份文档是把 `meow-starter` 做成真实产品时的默认标准。开发者和 Agent 在改业务 UI、默认设置或交付方式前应先读本页；桌面首个业务页面还必须先固定[桌面应用交互标准](./desktop-interaction-standard.md)。具体实现细节再分别查阅 [设计系统](./design-system.md)、[开发指南](./development.md) 与 [Windows 交付指南](./windows-distribution.md)。
 
 > 本页定义派生应用应达到的产品基线，不表示模板演示页已经替每个应用完成字体安装、品牌设计、签名或发布验证。
 
@@ -147,7 +147,7 @@ Manrope 放在前面，使其优先承担英文与数字；缺失的中文字形
 
 ## 六、推荐落地路径
 
-1. 固定产品目标、非目标、平台优先级和数据边界，更新 `app.protocol.json`。
+1. 固定产品目标、非目标、平台优先级和数据边界，更新 `app.protocol.json`；桌面产品同时写清窗口壳、工作区、对象编辑、设置同步和原生行为，见[桌面应用交互标准](./desktop-interaction-standard.md)。
 2. 完成改名、identifier、图标、版本和仓库元数据；identifier 发布后不再修改。
 3. 选主题并配置字体、产品默认值、light/dark 与可访问性回退。
 4. 只完成一个可端到端使用的核心旅程，先验证真实数据持久化与重启恢复。

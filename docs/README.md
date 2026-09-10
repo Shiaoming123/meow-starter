@@ -19,6 +19,7 @@
 | --- | --- |
 | 快速了解项目定位与适配场景 | [project-guide.md](./project-guide.md) |
 | 把模板做成可双击交付的产品，并统一字体、视觉与默认设置 | [application-standard.md](./application-standard.md) |
+| 在首个业务页面前固定桌面工作区、面板和原生交互 | [desktop-interaction-standard.md](./desktop-interaction-standard.md) |
 | 配置本地开发与 exFAT 工作区 | [development.md](./development.md) |
 | 定义产品目标、数据与交付边界 | [application-protocol.md](./application-protocol.md) |
 | 了解 Release Kit 与发布边界 | [release-kit.md](./release-kit.md) |
@@ -40,6 +41,7 @@
 
 - **新用户 / 决策者** → 先读 [project-guide.md](./project-guide.md)，判断项目是否适合
 - **应用开发者 / Agent** → 先读 [application-standard.md](./application-standard.md)，固定产品体验与双击交付基线
+- **桌面产品开发者 / Agent** → 在首个业务页面前读 [desktop-interaction-standard.md](./desktop-interaction-standard.md)，固定窗口壳、工作区、对象面板和原生交互
 - **贡献者 / Agent** → 先读 [development.md](./development.md)，再遵守 [../AGENTS.md](../AGENTS.md)
 - **发布负责人** → 先读 [release-kit.md](./release-kit.md)，再按 [windows-distribution.md](./windows-distribution.md) 完成 Windows 防错检查与故障排查
 - **准备做首个应用的开发者** → 先读 [blueprints/README.md](./blueprints/README.md)，按产品类型选择一条窄路径
@@ -55,6 +57,7 @@
 | --- | --- |
 | project-guide.md | 项目适配指南：适合做什么 + 分类型注意事项 |
 | application-standard.md | 应用标准：双击交付、字体、iOS 亚克力视觉、主题与默认设置 |
+| desktop-interaction-standard.md | 桌面交互标准：窗口壳、工作区、对象面板、设置同步与原生验收 |
 | development.md | 本地开发：环境诊断、验证命令与 exFAT 处理 |
 | application-protocol.md | 应用协议：产品意图、能力、数据、降级与证据边界 |
 | release-kit.md | Release Kit：配置检查与发布成熟度边界 |
