@@ -122,3 +122,22 @@ npm run smoke:web-persistence
 该命令会构建 Web 模式，只监听 `127.0.0.1:4175`，用临时浏览器上下文新增一个唯一 Todo、刷新页面后确认它仍存在，并检查首屏、桌面专属「自动更新」入口与页面错误。它不下载浏览器；自动发现失败时，请把 `MEOW_BROWSER_PATH` 设为浏览器可执行文件的绝对路径。
 
 这是本机 Chrome/Edge 的持久化 smoke，不代表跨浏览器、无痕模式、配额回收、已部署站点或 Web 发布的验证。
+
+### 可选的已部署站点 smoke
+
+部署完成后，由调用者显式提供公开 HTTPS 地址：
+
+```bash
+MEOW_DEPLOYMENT_URL=https://app.example.com npm run smoke:web-deployment
+```
+
+PowerShell：
+
+```powershell
+$env:MEOW_DEPLOYMENT_URL = 'https://app.example.com'
+npm run smoke:web-deployment
+```
+
+该命令使用全新的本地 Edge/Chrome 临时上下文，检查主文档成功响应、可见应用外壳、Web 端没有「自动更新」入口，以及「数据层」页的 Todo 输入框、添加按钮和 IndexedDB 标识。它只读取公开页面，不新增 Todo、不登录也不部署；主页面跳离原 HTTPS 源会失败。输出中的 URL 会移除查询参数和片段，浏览器错误仅报告类别和数量。
+
+未设置 `MEOW_DEPLOYMENT_URL` 会返回非零的 `prerequisite_failed`，表示尚未进行线上验收，不是成功。命令不会下载浏览器；浏览器发现规则与本地 persistence smoke 相同，可通过 `MEOW_BROWSER_PATH` 指定已有可执行文件。

@@ -14,7 +14,7 @@ The Release Kit makes a checkout diagnosable and validates release configuration
 | Windows/Linux distribution | Windows portable path available | Windows builds can stage a stable-name Portable EXE with SHA-256 proof and verify its GitHub Release asset | Authenticode, clean-device validation, and Linux distribution decisions |
 | Android package | Local debug evidence | Android emulator `tauri android dev` and local universal debug APK/AAB build have completed | Recreate the ignored generated project on a clean checkout; real-device smoke, signing, Play Console, and store submission |
 | iOS package and store | Deferred | Responsive UI and desktop-capability degradation only | Native project initialization, Xcode/CocoaPods, accounts, certificates, device testing, and store submission |
-| Web deployment | Deferred | `npm run build:web` creates a static build | Select/configure a provider and validate a deployed site |
+| Web deployment | Acceptance available; host unverified | `npm run build:web` creates a static build; `npm run smoke:web-deployment` can inspect an explicit public HTTPS URL | Select/configure a provider and run the smoke against the deployed site |
 
 An unsigned desktop artifact is not evidence of a signed, notarized, store-ready, or auto-updatable release. Likewise, a responsive mobile interface is not an APK, AAB, IPA, TestFlight build, or store submission.
 
