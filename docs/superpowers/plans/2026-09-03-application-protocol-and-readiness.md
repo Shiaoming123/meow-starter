@@ -20,10 +20,12 @@ The original checkboxes below describe the historical execution recipe; use this
 | 2 — Guide and normal gates | Implemented | `docs/application-protocol.md`, `scripts/verify.mjs`, and frontend CI include the protocol boundary. |
 | 3 — Release evidence cross-check | Implemented | Shared JavaScript delivery validation is used by both checkers; both release modes reject invalid protocol evidence. `npm run verify` passed (120 tests), template `release:check` passed with its expected placeholder warning, and task review passed. |
 | 4 — Windows prerequisite classification | Implemented; local smoke passed | Final JSON reports passed/failed/specific symlink-privilege skip with exit codes 0/1/2. Shared Cargo target resolution and fresh temporary-root setup are implemented. Tests and review passed; real unsigned NSIS build/install/start/cleanup passed on 2026-09-12. |
-| 5 — Deployed Web acceptance | Pending | Local Web persistence smoke exists; the HTTPS deployment smoke and its package command do not. |
-| 6 — Mobile toolchain and device smoke | Diagnostics implemented; device acceptance pending | `mobile:doctor` and Android artifact tests passed (4 tests) on 2026-09-12. This session has no SDK/NDK/JDK environment configuration or connected device; iOS requires macOS/Xcode. Existing debug workflow does not replace current real-device acceptance. |
+| 5 — Deployed Web acceptance | Runner implemented; live acceptance pending | `smoke:web-deployment` requires an explicit HTTPS URL and reports sanitized visible-page/error evidence. Full verification passed (126 tests); 8 local intercepted-production Edge scenarios passed. No live URL was supplied, so hosting/TLS/DNS remain unverified. |
+| 6 — Mobile toolchain and device smoke | Diagnostics implemented; Android tools ready with temporary configuration | `mobile:doctor` and Android artifact tests passed (4 tests) on 2026-09-12. Installed SDK/NDK/JDK were located and supplied to one subprocess: Android reports ready, but no device/emulator is connected; iOS requires macOS/Xcode. No persistent environment settings were changed. Existing debug workflow does not replace current real-device acceptance. |
 
 Task 3 implementation decision: reuse the protocol checker's delivery rules through a shared JavaScript validator. Keep configuration readiness separate from delivery proof; a configured endpoint alone never upgrades evidence. The existing conservative protocol values require no change. Future React work is tracked in the [overall roadmap](../specs/2026-09-03-lightweight-interaction-scaffold.md).
+
+The current readiness implementation increment is complete through the Windows and Web runners. Remaining external acceptance needs a caller-selected HTTPS deployment, configured mobile toolchains, and selected devices. React remains planned and has no implementation or release-date claim.
 
 ## Global Constraints
 
