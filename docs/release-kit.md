@@ -38,7 +38,9 @@ npm run release:check
 npm run verify
 ```
 
-`npm run release:check` defaults to template mode. In that mode, the starter's `OWNER/REPO` updater endpoint and incomplete updater-signing preparation are reported explicitly as warnings rather than accepted as release-ready. The check inspects the non-secret `plugins.updater.pubkey` and `bundle.createUpdaterArtifacts` fields; it never reads a private signing key or secret. When a project has supplied a real endpoint and signing configuration, use the stricter check:
+`npm run release:check` defaults to template mode. Both modes require a valid `app.protocol.json` schema version and the exact supported `delivery` boundary; missing, malformed, unsupported, or extended delivery evidence fails the check. Delivery fields are compared semantically, so their JSON key order does not matter. A real endpoint or signing configuration does not upgrade protocol evidence, and the check never infers signed or hosted delivery.
+
+In template mode, the starter's `OWNER/REPO` updater endpoint and incomplete updater-signing preparation are reported explicitly as warnings rather than accepted as release-ready. The check inspects the non-secret `plugins.updater.pubkey` and `bundle.createUpdaterArtifacts` fields; it never reads a private signing key or secret. When a project has supplied a real endpoint and signing configuration, use the stricter check:
 
 ```bash
 npm run release:check -- --mode=release

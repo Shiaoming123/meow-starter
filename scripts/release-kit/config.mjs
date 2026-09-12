@@ -1,5 +1,6 @@
 import { readFile, stat } from 'node:fs/promises'
 import { isAbsolute, join } from 'node:path'
+import { validateProtocolDelivery } from '../app-protocol-delivery.mjs'
 
 const versionPattern = /^version\s*=\s*"([^"]+)"/m
 
@@ -82,6 +83,12 @@ export async function inspectReleaseConfig(root, mode) {
   const errors = []
   const warnings = []
   const summary = [`Release configuration mode: ${mode}`]
+  const protocol = parseJson(
+    await readText(join(root, 'app.protocol.json'), errors, 'app.protocol.json'),
+    errors,
+    'app.protocol.json',
+  )
+  if (protocol !== undefined) errors.push(...validateProtocolDelivery(protocol))
   const packageJson = parseJson(
     await readText(join(root, 'package.json'), errors, 'package.json'),
     errors,
