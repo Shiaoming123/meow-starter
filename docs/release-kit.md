@@ -65,9 +65,11 @@ notarization, hosted updater availability, or a successful user installation.
 
 ## Optional local runtime smoke
 
-On Windows, `npm run smoke:windows-package` performs an explicit local package lifecycle check: it builds an unsigned NSIS installer with a transient `bundle.createUpdaterArtifacts=false` overlay, silently installs beneath a fresh ignored target subdirectory, redirects `APPDATA` and `LOCALAPPDATA` there, confirms the installed process remains alive briefly, then force-stops that child process and removes only the validated temporary directory.
+On Windows, `npm run smoke:windows-package` performs an explicit local package lifecycle check: it builds an unsigned NSIS installer with a transient `bundle.createUpdaterArtifacts=false` overlay, silently installs beneath a fresh ignored `src-tauri/target` subdirectory, redirects `APPDATA` and `LOCALAPPDATA` there, confirms the installed process remains alive briefly, then force-stops that child process and removes only the validated temporary directory. A configured `CARGO_TARGET_DIR` controls build output and installer lookup, but never widens the disposable installation-data boundary.
 
-The command leaves the generated NSIS bundle under the ignored Tauri target directory and does not need a signing private key. It is deliberately not a signed release, updater-delivery, offline-installation, tray graceful-exit, store, or macOS/Linux package test.
+The final output is one JSON status record after cleanup: `passed` exits `0`, a directly observed `EPERM` from the `symlink` system call (or captured build output that names both a symbolic link and Windows error 1314) reports `skipped` with reason `symbolic-link-permission` and exits `2`, and all other build, installer, launch, early-exit, or cleanup errors report `failed` and exit `1`. A generic permission error is a failure, not a skip. No pass record is printed unless cleanup succeeds.
+
+The command leaves the generated NSIS bundle under the resolved Cargo target directory and does not need a signing private key. It is deliberately not a signed release, updater-delivery, offline-installation, tray graceful-exit, store, or macOS/Linux package test.
 
 ## Windows single-file delivery
 
