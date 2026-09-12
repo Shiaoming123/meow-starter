@@ -10,6 +10,21 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-03-application-protocol.md`
 
+## Progress snapshot — 2026-09-12
+
+The original checkboxes below describe the historical execution recipe; use this table for current milestone status. Source inspection does not reproduce earlier platform acceptance runs.
+
+| Task | Current status | Evidence / remaining work |
+| --- | --- | --- |
+| 1 — Application protocol v1 | Implemented | `app.protocol.json`, checker, and focused tests exist. |
+| 2 — Guide and normal gates | Implemented | `docs/application-protocol.md`, `scripts/verify.mjs`, and frontend CI include the protocol boundary. |
+| 3 — Release evidence cross-check | Implemented | Shared JavaScript delivery validation is used by both checkers; both release modes reject invalid protocol evidence. `npm run verify` passed (120 tests), template `release:check` passed with its expected placeholder warning, and task review passed. |
+| 4 — Windows prerequisite classification | Pending | The unsigned installation smoke exists; the planned explicit prerequisite/skip classification is not implemented. |
+| 5 — Deployed Web acceptance | Pending | Local Web persistence smoke exists; the HTTPS deployment smoke and its package command do not. |
+| 6 — Mobile toolchain and device smoke | Partially implemented | `mobile:doctor`, tests, Android artifact checks, and debug workflow exist; real-device and iOS acceptance remain separate work. |
+
+Task 3 implementation decision: reuse the protocol checker's delivery rules through a shared JavaScript validator. Keep configuration readiness separate from delivery proof; a configured endpoint alone never upgrades evidence. The existing conservative protocol values require no change. Future React work is tracked in the [overall roadmap](../specs/2026-09-03-lightweight-interaction-scaffold.md).
+
 ## Global Constraints
 
 - Keep desktop primary, Web/mobile Beta, sync/Agent/MCP Preview, and do not upgrade claims without fresh platform evidence.

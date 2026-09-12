@@ -18,6 +18,8 @@
 | 我想… | 文档 |
 | --- | --- |
 | 快速了解项目定位与适配场景 | [project-guide.md](./project-guide.md) |
+| 查看脚手架总体路线图（含后续 React 版本） | [Lightweight Interaction Scaffold Direction](./superpowers/specs/2026-09-03-lightweight-interaction-scaffold.md) |
+| 查看应用协议与交付就绪实施计划 | [Application Protocol and Readiness](./superpowers/plans/2026-09-03-application-protocol-and-readiness.md)；以开头的进度表为准，历史复选框保留作执行步骤参考 |
 | 把模板做成可双击交付的产品，并统一字体、视觉与默认设置 | [application-standard.md](./application-standard.md) |
 | 在首个业务页面前固定桌面工作区、面板和原生交互 | [desktop-interaction-standard.md](./desktop-interaction-standard.md) |
 | 配置本地开发与 exFAT 工作区 | [development.md](./development.md) |
