@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import {
+  inspectWebDeployment,
   parseDeploymentUrl,
   summarizeDeploymentInspection,
 } from '../scripts/smoke-web-deployment.mjs'
@@ -15,6 +16,39 @@ test('deployment URL requires credential-free HTTPS and removes non-origin displ
   assert.equal(parsed.href, 'https://example.test/app?token=secret#private')
   assert.equal(parsed.safeUrl, 'https://example.test/app')
   assert.equal(parsed.origin, 'https://example.test')
+})
+
+function pageThatNavigatesAfterDataClick(finalUrl: string) {
+  let currentUrl = 'https://example.test/app'
+  const visible = { isVisible: async () => true }
+  return {
+    on() {},
+    setDefaultTimeout() {},
+    setDefaultNavigationTimeout() {},
+    async route() {},
+    mainFrame: () => ({}),
+    goto: async () => ({ ok: () => true }),
+    url: () => currentUrl,
+    locator: () => visible,
+    getByPlaceholder: () => visible,
+    getByText: (text: string | RegExp) => text === '自动更新'
+      ? { count: async () => 0 }
+      : { first: () => visible },
+    getByRole: (_role: string, options: { name: string }) => options.name === '数据层'
+      ? { first: () => ({ click: async () => { currentUrl = finalUrl } }) }
+      : visible,
+  }
+}
+
+test('inspection fails when the data interaction ends off-origin or outside HTTPS', async () => {
+  for (const finalUrl of ['https://other.test/app', 'http://example.test/app']) {
+    const result = await inspectWebDeployment(
+      pageThatNavigatesAfterDataClick(finalUrl),
+      'https://example.test/app',
+    )
+    assert.equal(result.status, 'failed')
+    assert.match(result.errors.join('\n'), /Final page URL/)
+  }
 })
 
 test('inspection status passes only with complete visible evidence and no browser errors', () => {

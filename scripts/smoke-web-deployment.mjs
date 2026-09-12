@@ -44,6 +44,11 @@ export function summarizeDeploymentInspection(url, evidence, errors) {
   }
 }
 
+function isAuthorizedPageUrl(candidate, origin) {
+  const url = new URL(candidate)
+  return url.protocol === 'https:' && url.origin === origin
+}
+
 export async function inspectWebDeployment(page, deploymentUrl, { timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
   const url = typeof deploymentUrl === 'string' ? parseDeploymentUrl(deploymentUrl) : deploymentUrl
   const errors = []
@@ -83,8 +88,7 @@ export async function inspectWebDeployment(page, deploymentUrl, { timeoutMs = DE
 
   try {
     const response = await page.goto(url.href, { waitUntil: 'networkidle', timeout: timeoutMs })
-    const finalUrl = new URL(page.url())
-    if (finalUrl.protocol !== 'https:' || finalUrl.origin !== url.origin) {
+    if (!isAuthorizedPageUrl(page.url(), url.origin)) {
       errors.push('Final page URL left the authorized HTTPS origin.')
       return summarizeDeploymentInspection(url, evidence, errors)
     }
@@ -97,6 +101,9 @@ export async function inspectWebDeployment(page, deploymentUrl, { timeoutMs = DE
     evidence.todoInputVisible = await page.getByPlaceholder('写点什么…', { exact: true }).isVisible()
     evidence.todoAddVisible = await page.getByRole('button', { name: '添加', exact: true }).isVisible()
     evidence.indexedDbLabelVisible = await page.getByText(/IndexedDB/).first().isVisible()
+    if (!isAuthorizedPageUrl(page.url(), url.origin)) {
+      errors.push('Final page URL left the authorized HTTPS origin.')
+    }
   } catch {
     errors.push('Deployment inspection could not complete within the allowed page flow.')
   }
