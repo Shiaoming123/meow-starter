@@ -243,6 +243,13 @@ export interface AgentRuntime {
 }
 ```
 
+`ChatPanel.vue` 每次只允许一轮请求占用发送控件。点击“停止”会标记当前请求取消；
+若仍在加载运行时，加载结束后不会启动该轮对话；若已开始流式生成，则请求运行时中断，
+并忽略之后到达的输出。发送控件会等该轮流、迭代器清理与中断调用结束后恢复，避免新旧
+请求重叠；重复点击“停止”不会重复中断。运行时初始化、生成及中断失败仍会显示错误。
+中断属于协作式请求：若运行时或工具不响应，界面会继续等待其结束。这些行为由不访问网络的
+组件脚本测试覆盖，不代表真实 Provider、原生代理或浏览器交互已完成端到端验证。
+
 - `inline.ts`：AI SDK `ToolLoopAgent` + `streamText` 实现。
 - `sidecar.ts`：spawn `pi --mode rpc`，按 [rpc.md](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/rpc.md) 的 JSONL 协议收发，并把 `select/confirm/input/notify/setStatus` 等 Extension UI 请求转成 Vue 组件。
 
