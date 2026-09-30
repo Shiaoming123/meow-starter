@@ -109,11 +109,11 @@ tauri-plugin-clipboard-manager = "2"
 - `tantivy`：Rust 全文检索，性能强
 - 嵌入模型：本地小模型（如 bge-small）或调云端 embedding API
 
-### 2.5 MCP 接入（P3，可选，观察）
+### 2.5 MCP 接入（P3，可选，Preview）
 
 **价值**：让脚手架作为 MCP host 接入外部工具，或作为 MCP server 暴露给 Cursor/Claude Code。
 
-**现状**：社区有 `tauri-plugin-mcp`（nicolasschoonbroodt），但仍在早期。**建议观察**，待官方或成熟方案出现再集成。
+**现状**：仓库已提供 `@ai-sdk/mcp` HTTP/SSE client adapter 与显式连接/断开生命周期，默认关闭。工具映射仍需业务方显式接入 Agent 并配置审批；不支持 WebView 内的 `stdio`，也没有完整 MCP host、MCP server 或自动审批闭环。用法与验收边界见 [MCP 接入指南](./mcp.md)。社区原生插件和更完整的 host/server 能力仍按具体产品需要评估，不能将本适配器视为这些能力已经落地。
 
 ---
 
