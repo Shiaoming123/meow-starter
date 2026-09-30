@@ -292,8 +292,15 @@ registerProvider({
 | 接缝 | 职责 | 默认实现 | 可替换实现 |
 |---|---|---|---|
 | `MemoryStore` | 会话/消息持久化 | SQLite（复用 `tauri-plugin-sql`） | 内存 / JSONL / 远端 |
-| `ContextAssembler` | 组装发给模型的 messages | 最近 N 轮 + 系统提示 | RAG 检索注入 / 自定义裁剪 |
-| `Compaction` | 长会话压缩 | 摘要式压缩 | 工具结果裁剪 / 无需压缩 |
+| `ContextAssembler` | 组装发给模型的 messages | 按轮数限制的历史 + 系统提示 | RAG 检索注入 / 自定义裁剪 |
+| `CompactionStrategy` | 长会话压缩 | 尚未实现；仅预留接口与配置 | 摘要式压缩 / 工具结果裁剪，需业务方明确接入并验证 |
+
+当前 inline runtime 的 `capabilities.compaction` 为 `false`，默认
+`memory.compaction.enabled` 也为 `false`。保留配置字段是为了兼容扩展；即使
+手动设为 `true`，当前运行时也不会执行压缩或限制 `thresholdTokens`。
+`memory.maxTurns` 只限制发送给模型的历史轮数，不是单条消息或总 token
+上限，也不会删除已存储的历史。不要据此向用户宣称已具备自动摘要、token
+预算或存储容量保护；实现这些功能需单独的策略、接入与行为测试。
 
 - 对应 Pi 的 `context`（可过滤 messages）与 `session_before_compact`（可自定义压缩）钩子、dsh 的 `ctx.compaction` / `ctx.toolResultPruner` seam。
 
@@ -418,7 +425,7 @@ agent-sidecar = ["agent"] # + Pi RPC 子进程管理
 | **sidecar 三端打包复杂度** | 某平台 Node 运行时缺失或路径异常 | P3 才引入；优先 `nodeRuntime: 'bundled'` 自带运行时；CI 三端矩阵必须验证 sidecar 启动；提供降级到 inline 轨的开关 |
 | **Pi RPC 协议变更** | sidecar 轨失效 | Pi 版本锁定；`sidecar.ts` 内做协议版本握手与能力探测，不匹配时降级并告警 |
 | **前端 bundle 膨胀** | 首屏变慢 | `src/agent/index.ts` 作为唯一动态 import 边界，Vite 自动代码分割；仅在用户首次打开 AI 功能时加载 |
-| **上下文/记忆无限增长** | token 成本失控 | `memory.maxTurns` + `compaction.thresholdTokens` 双重限制 |
+| **上下文/记忆无限增长** | token 成本与存储可能增长 | 当前仅以 `memory.maxTurns` 裁剪发送的历史轮数；压缩与 token/持久化容量限制尚未实现，需业务方另行补齐 |
 | **下游项目被强加依赖** | 违背"脚手架轻量"初衷 | AI SDK 声明为 optional peer，模板 devDependencies 用于验证；`enabled: false` 时默认运行时不加载 Agent |
 
 设置页首次录入密钥时，用户输入和值传入 `set_api_key` 的 IPC 参数会短暂存在于 WebView 内存，这是桌面表单无法消除的边界；安全保证是“不写入前端持久化、不提供已存密钥读回命令、后续模型请求不把密钥交给 JavaScript”。

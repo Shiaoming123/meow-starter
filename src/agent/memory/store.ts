@@ -1,9 +1,9 @@
 import Database from '@tauri-apps/plugin-sql';
-import { isTauri } from '../../lib/platform';
-import { browserMemoryStore } from './in-memory';
+import { isTauri } from '../../lib/platform.ts';
+import { browserMemoryStore } from './in-memory.ts';
 import type { AgentMessage, MemoryStore } from './types';
 
-export { createMemoryStore } from './in-memory';
+export { createMemoryStore } from './in-memory.ts';
 
 const DB_URL = 'sqlite:app.db';
 
