@@ -46,13 +46,27 @@ export function createTauriSqliteTodoStore(
       await database.execute('DELETE FROM todos WHERE id = $1', [id])
     },
     async appendImported(records) {
+      if (records.length === 0) return
+      const content = JSON.stringify(records.map(({ title, done, createdAt }) => {
+        // JSON can escape lone surrogates that direct IPC string binding rejects.
+        // SQLite JSON extraction must never persist them as invalid UTF-8 text.
+        // In Unicode mode, this range matches only unpaired surrogate code units.
+        if (/[\uD800-\uDFFF]/u.test(title) || /[\uD800-\uDFFF]/u.test(createdAt)) {
+          throw new Error('SQLite Todo imports require well-formed Unicode text.')
+        }
+        return { title, done, createdAt }
+      }))
       const database = await loadDatabase()
-      for (const record of records) {
-        await database.execute(
-          'INSERT INTO todos (title, done, created_at) VALUES ($1, $2, $3)',
-          [record.title, record.done, record.createdAt],
-        )
-      }
+      // One statement is atomic and stays on one pooled connection. Binding a
+      // JSON array also avoids a parameter per field at the 10,000-record limit.
+      await database.execute(
+        `INSERT INTO todos (title, done, created_at)
+         SELECT json_extract(value, '$.title'),
+                json_extract(value, '$.done'),
+                json_extract(value, '$.createdAt')
+         FROM json_each($1)`,
+        [content],
+      )
     },
   }
 }
