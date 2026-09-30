@@ -50,6 +50,7 @@ export interface AgentConfig {
   memory: {
     backend: 'sqlite' | 'memory';
     maxTurns: number;
+    /** Reserved extension settings; inline does not compact or enforce token thresholds. */
     compaction: { enabled: boolean; thresholdTokens: number };
   };
   approval: {
@@ -76,7 +77,7 @@ export const defaultAgentConfig: AgentConfig = {
   memory: {
     backend: 'sqlite',
     maxTurns: 20,
-    compaction: { enabled: true, thresholdTokens: 32000 },
+    compaction: { enabled: false, thresholdTokens: 32000 },
   },
   approval: { mode: 'confirm' },
   secureProxy: true,

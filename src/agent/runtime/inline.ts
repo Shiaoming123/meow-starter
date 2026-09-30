@@ -3,12 +3,12 @@ import type { FlexibleSchema, ModelMessage } from 'ai';
 import { z } from 'zod';
 import type { AgentConfig } from '../config';
 import type { HookBus } from '../hooks/bus';
-import { conversationMessages } from '../memory/conversation';
-import { browserMemoryStore } from '../memory/in-memory';
-import { initAgentTables, sqliteMemoryStore } from '../memory/store';
-import { resolveModel } from '../providers/adapter';
-import { decideToolApproval } from '../tools/approval';
-import { listTools } from '../tools/registry';
+import { conversationMessages } from '../memory/conversation.ts';
+import { browserMemoryStore } from '../memory/in-memory.ts';
+import { initAgentTables, sqliteMemoryStore } from '../memory/store.ts';
+import { resolveModel } from '../providers/adapter.ts';
+import { decideToolApproval } from '../tools/approval.ts';
+import { listTools } from '../tools/registry.ts';
 import type { AgentEvent, AgentRequest, AgentRuntime } from './types';
 
 /**
@@ -16,14 +16,14 @@ import type { AgentEvent, AgentRequest, AgentRuntime } from './types';
  *
  * 能力边界（对应方案 §2.3）：
  * - 会话树 / 沙箱 需进阶轨（Pi sidecar）
- * - 压缩由 memory 层的 CompactionStrategy 承担，非运行时内置
+ * - CompactionStrategy 仅为预留接口，当前没有接入压缩实现
  */
 export function createInlineRuntime(cfg: AgentConfig): AgentRuntime {
   let controller: AbortController | null = null;
 
   return {
     kind: 'inline',
-    capabilities: { sessionTree: false, compaction: true, sandbox: false },
+    capabilities: { sessionTree: false, compaction: false, sandbox: false },
 
     abort: async (reason?: string) => {
       controller?.abort(reason);
