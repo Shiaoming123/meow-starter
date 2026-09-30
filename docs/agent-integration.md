@@ -295,6 +295,10 @@ registerProvider({
 | `ContextAssembler` | 组装发给模型的 messages | 按轮数限制的历史 + 系统提示 | RAG 检索注入 / 自定义裁剪 |
 | `CompactionStrategy` | 长会话压缩 | 尚未实现；仅预留接口与配置 | 摘要式压缩 / 工具结果裁剪，需业务方明确接入并验证 |
 
+SQLite 的 `MemoryStore.list(sessionId, limit)` 按会话取最近 `limit` 条消息，
+再按插入顺序返回给上下文组装层；不再从最早消息开始截取，也不会删除或
+覆盖已存历史。该查询有真实 SQLite 行为测试，原生 IPC/设备验收仍独立进行。
+
 当前 inline runtime 的 `capabilities.compaction` 为 `false`，默认
 `memory.compaction.enabled` 也为 `false`。保留配置字段是为了兼容扩展；即使
 手动设为 `true`，当前运行时也不会执行压缩或限制 `thresholdTokens`。
