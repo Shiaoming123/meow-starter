@@ -2,7 +2,7 @@
 
 > P2 阶段：让 Agent 跑本地模型，数据不出设备。无需 API Key、无云端依赖。
 >
-> **成熟度：Preview。** 仓库提供 Ollama/OpenAI-compatible 配置预设，但尚未在 CI 中启动真实 Ollama 完成端到端对话；使用者需要自行验证模型、端口和跨域/代理边界。
+> **成熟度：Preview。** 仓库提供 Ollama/OpenAI-compatible 配置预设与无密钥 Chat Completions 适配；测试通过实际 SDK 和本机临时 HTTP 服务验证请求/响应，但未启动真实 Ollama 完成端到端对话。使用者仍需自行验证模型、端口和跨域/代理边界。
 
 ## 1. 为什么用 Ollama 而不是内置 llama.cpp
 
@@ -80,7 +80,7 @@ await saveApiKey('openai', 'default', 'sk-...')  // 存入系统钥匙串；不�
 
 ## 5. 技术要点
 
-- **openai-compatible 通道**：无密钥的本地 Ollama/vLLM 可直接设置 `baseURL`；带密钥的任意兼容云端在本阶段默认拒绝，需先新增 Rust 侧显式白名单。
+- **openai-compatible 通道**：必须明确设置 `baseUrl`，使用 `/chat/completions` 而非 SDK 默认的 Responses 模式。无密钥端点使用公开占位值 `not-required` 满足 SDK 的参数要求，不读取或转发 `OPENAI_API_KEY`；它不是有效凭据，也不能访问要求真实密钥的服务。配置了 keychain/env 密钥引用的兼容端点仍按原策略拒绝，需先设计受信的凭据与目标边界。
 - **Rust 密钥代理**：`src-tauri/src/agent/{secrets,proxy}.rs`，keyring（OS 钥匙串）+ reqwest（流式透传），由 Cargo feature `agent` 门控。
 - **安全边界**：Rust 只接受 OpenAI/Anthropic 的 HTTPS 官方主机与 `/v1/**` 路径，禁重定向并限制请求体；禁止重新添加可从 WebView 读取明文密钥的通用命令。
 
@@ -92,3 +92,7 @@ await saveApiKey('openai', 'default', 'sk-...')  // 存入系统钥匙串；不�
 | OpenAI/Anthropic + `kind: 'keychain'` | 固定目标 Rust 流式代理 | Preview，需真实账号 smoke test |
 | 任意兼容云端 + 密钥 | 拒绝 | 等待 Rust 显式白名单机制 |
 | `kind: 'env'` | 拒绝 | WebView 无可信环境变量边界 |
+
+OpenAI 的原生 provider 仍使用 Responses；Anthropic 仍使用 Messages，二者的 keychain 配置继续走原来的 Rust 安全代理。兼容通道选择 Chat Completions 是明确的协议约定，不意味着所有本地服务都不支持 Responses。Ollama 当前也支持部分 Responses 请求，官方 [OpenAI 兼容指南](https://docs.ollama.com/api/openai-compatibility) 的本机示例同样使用客户端要求、服务端忽略的占位 key。
+
+无密钥不等于本地：`baseUrl` 决定请求目的地。使用远端或局域网端点前，业务方必须确认数据传输、认证和精确 CSP 配置；本修复不新增域名许可、不放宽 Rust 代理白名单，也不改变默认关闭状态。
