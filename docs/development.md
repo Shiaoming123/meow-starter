@@ -21,6 +21,22 @@ For the Web-only app, use `npm run dev:web`. A successful browser render proves 
 
 `npm run doctor` reports the Node, npm, Rust, Cargo, and local Tauri CLI versions, the official Tauri platform-prerequisite guide, and the locations of `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json`. Missing tools include installation guidance. The command does not enumerate environment variables, secrets, or keychains.
 
+For coding agents and other scripts, use `npm run --silent doctor -- --json`
+(or `node scripts/doctor.mjs --json`). Standard output contains one JSON object
+with `schemaVersion: 1`, `platform`, `tools`, `configPaths`, `prerequisites`,
+`filesystemType`, `warnings`, and the human-readable `summary`. Tool values are
+version strings or the literal `missing`; configuration paths identify expected
+locations and do not validate their contents. JSON mode includes warnings in
+the report instead of printing them to standard error. npm itself may still
+print its own configuration warnings to standard error.
+
+Like the default text mode, JSON diagnostics exit successfully even when tools
+are missing. Unknown arguments fail with exit code `1`. Consumers should inspect
+the structured tool values and warnings, then run the applicable verification
+commands below. The report does not establish native system-library availability,
+version compatibility, build success, signing, or release readiness. It contains
+local checkout paths, so review it before sharing it externally.
+
 ## Match each check to the evidence it provides
 
 Do not treat one green command as proof of every runtime. Record the smallest

@@ -105,6 +105,6 @@ test('Tauri SQLite adapter preserves the existing SQL boundary', async () => {
     ['new'],
     [1, 7],
     [7],
-    ['restored', 1, '2026-09-02 00:00:00'],
+    [JSON.stringify([{ title: 'restored', done: 1, createdAt: '2026-09-02 00:00:00' }])],
   ])
 })

@@ -89,7 +89,19 @@ export async function inspectEnvironment(root, options = {}) {
     warnings.push('The local Tauri CLI is missing; run npm install, then retry npm run doctor.')
   }
 
+  const prerequisites = 'https://tauri.app/start/prerequisites/'
+  const configPaths = {
+    package: join(root, 'package.json'),
+    rust: join(root, 'src-tauri', 'Cargo.toml'),
+    tauri: join(root, 'src-tauri', 'tauri.conf.json'),
+  }
+
   return {
+    schemaVersion: 1,
+    platform,
+    tools,
+    configPaths,
+    prerequisites,
     filesystemType,
     warnings,
     summary: [
@@ -99,10 +111,10 @@ export async function inspectEnvironment(root, options = {}) {
       `Cargo: ${tools.cargo}`,
       `Tauri CLI: ${tools.tauri}`,
       `Filesystem: ${filesystemType}`,
-      'Tauri prerequisites: https://tauri.app/start/prerequisites/',
-      `Package config: ${join(root, 'package.json')}`,
-      `Rust config: ${join(root, 'src-tauri', 'Cargo.toml')}`,
-      `Tauri config: ${join(root, 'src-tauri', 'tauri.conf.json')}`,
+      `Tauri prerequisites: ${prerequisites}`,
+      `Package config: ${configPaths.package}`,
+      `Rust config: ${configPaths.rust}`,
+      `Tauri config: ${configPaths.tauri}`,
     ],
   }
 }

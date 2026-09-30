@@ -16,6 +16,10 @@ test('module failure still mounts the Vue shell after storage selection', async 
   assert.match(source, /mountModules\(app\)[\s\S]*\.catch\([\s\S]*\.finally\(/)
   assert.match(source, /\.finally\(\(\) => \{[\s\S]*app\.mount\("#app"\)/)
 })
+const mobileRuntime = {
+  platform: 'mobile' as const,
+  capabilities: ['native-sql', 'native-clipboard', 'native-notification'] as const,
+}
 
 function testModule(id: ModuleId): Module {
   const contract = moduleContracts[id]
@@ -70,4 +74,26 @@ test('loader rejects a dynamic module that differs from its static contract', as
   } finally {
     Object.assign(moduleRegistry, originalRegistry)
   }
+})
+
+test('Mobile skips desktop-only optional modules but loads compatible modules', async () => {
+  const originalRegistry = { ...moduleRegistry }
+  const loaded: string[] = []
+  const moduleKeys = Object.keys(moduleRegistry) as (keyof ModuleConfig)[]
+
+  try {
+    for (const key of moduleKeys) {
+      moduleRegistry[key] = async () => {
+        loaded.push(key)
+        return { default: testModule(key) }
+      }
+    }
+
+    await mountModules({} as App, { shortcut: true, clipboard: true }, mobileRuntime)
+  } finally {
+    Object.assign(moduleRegistry, originalRegistry)
+  }
+
+  assert.equal(loaded.includes('shortcut'), false)
+  assert.equal(loaded.includes('clipboard'), true)
 })
