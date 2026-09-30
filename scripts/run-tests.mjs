@@ -23,7 +23,7 @@ function main() {
 
   const result = spawnSync(
     process.execPath,
-    ['--experimental-strip-types', '--test', ...files],
+    ['--experimental-strip-types', '--experimental-sqlite', '--test', ...files],
     { stdio: 'inherit' },
   )
 
