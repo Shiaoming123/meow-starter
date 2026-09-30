@@ -19,6 +19,8 @@ The protocol deliberately summarizes rather than replaces implementation facts:
 | Enabled modules | `src/modules/config.ts` | Declare the matching product policy |
 | Dependencies, platforms, capabilities, native requirements | `src/modules/contract.ts` | Point readers to the compatibility boundary |
 | Runtime selection | `src/modules/loader.ts` and `src/lib/platform.ts` | State target and fallback expectations |
+| Visual baseline | `docs/application-standard.md` and `docs/design-system.md` | State the product theme and accessibility expectations |
+| Build defaults and current theme preference | `src/modules/config.ts` and `src/assets/themes/apply.ts` | State only defaults that affect capability or fallback policy; downstream apps consolidate other defaults per the application standard |
 | Todo import/export | `src/storage/todos/data-port.ts` | State the public format/version and exclusions |
 | Sync | `src/sync/` and `docs/sync.md` | State whether a provider is enabled by default |
 | Release configuration | `scripts/release-check.mjs` and `docs/release-kit.md` | State evidence, never infer delivery proof |
@@ -52,11 +54,15 @@ adaptations with documented capability degradation.
 
 1. Change the implementation source of truth first: module contract/config,
    data-port, or release boundary.
-2. Update `app.protocol.json` in the same change, including product goal,
+2. Keep build-time modules, product defaults, persisted user preferences, and
+   session-only UI state separate as defined in the
+   [application standard](./application-standard.md). A default must not be
+   copied into multiple components.
+3. Update `app.protocol.json` in the same change, including product goal,
    non-goal, platform fallback, or data/privacy boundary when applicable.
-3. Add a focused behavioural test before implementation changes. Keep protocol
+4. Add a focused behavioural test before implementation changes. Keep protocol
    checker tests fixture-based; do not test JSON text with grep.
-4. Run the corresponding checks:
+5. Run the corresponding checks:
 
 ```bash
 npm run check:protocol

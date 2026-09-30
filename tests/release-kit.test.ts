@@ -14,6 +14,20 @@ import { createReleaseProvenance } from '../scripts/release-kit/provenance.mjs'
 import { isRunnableTestFile } from '../scripts/run-tests.mjs'
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url))
+const protocolDelivery = {
+  desktopPackage: 'local-smoke',
+  signing: 'unverified',
+  updater: 'template-only',
+  webDeployment: 'unverified',
+  mobileNative: 'local-debug',
+}
+
+async function writeProtocol(root: string, delivery = protocolDelivery) {
+  await writeFile(join(root, 'app.protocol.json'), JSON.stringify({
+    schemaVersion: 1,
+    delivery,
+  }))
+}
 
 test('publishes development and release-kit guidance', () => {
   assert.equal(existsSync(join(projectRoot, 'AGENTS.md')), true)
@@ -207,6 +221,7 @@ test('reports a placeholder updater endpoint according to inspection mode', asyn
 
   await mkdir(join(fixtureRoot, 'src-tauri', 'icons'), { recursive: true })
   await writeFile(join(fixtureRoot, 'package.json'), JSON.stringify({ version: '1.2.3' }))
+  await writeProtocol(fixtureRoot)
   await writeFile(join(fixtureRoot, 'src-tauri', 'Cargo.toml'), '[package]\nversion = "1.2.3"\n')
   await writeFile(join(fixtureRoot, 'src-tauri', 'icons', 'icon.png'), 'icon')
   await writeFile(join(fixtureRoot, 'src-tauri', 'tauri.conf.json'), JSON.stringify({
@@ -233,6 +248,7 @@ test('reports field-specific release configuration failures', async (t) => {
 
   await mkdir(join(fixtureRoot, 'src-tauri', 'icons'), { recursive: true })
   await writeFile(join(fixtureRoot, 'package.json'), JSON.stringify({ version: '1.2.3' }))
+  await writeProtocol(fixtureRoot)
   await writeFile(join(fixtureRoot, 'src-tauri', 'Cargo.toml'), '[package]\nversion = "2.3.4"\n')
   await writeFile(join(fixtureRoot, 'src-tauri', 'tauri.conf.json'), JSON.stringify({
     version: '3.4.5',
@@ -261,6 +277,13 @@ test('accepts a non-placeholder HTTPS updater endpoint', async (t) => {
 
   await mkdir(join(fixtureRoot, 'src-tauri', 'icons'), { recursive: true })
   await writeFile(join(fixtureRoot, 'package.json'), JSON.stringify({ version: '1.2.3' }))
+  await writeProtocol(fixtureRoot, {
+    mobileNative: 'local-debug',
+    webDeployment: 'unverified',
+    updater: 'template-only',
+    signing: 'unverified',
+    desktopPackage: 'local-smoke',
+  })
   await writeFile(join(fixtureRoot, 'src-tauri', 'Cargo.toml'), '[package]\nversion = "1.2.3"\n')
   await writeFile(join(fixtureRoot, 'src-tauri', 'icons', 'icon.png'), 'icon')
   await writeFile(join(fixtureRoot, 'src-tauri', 'tauri.conf.json'), JSON.stringify({
@@ -293,9 +316,11 @@ uses: tauri-apps/tauri-action@v0
     if ($uploadedChecksum -ne $expectedChecksum) { throw 'steps.portable.outputs.portable_name' }
 `)
 
-  const result = await inspectReleaseConfig(fixtureRoot, 'release')
-  assert.deepEqual(result.errors, [])
-  assert.deepEqual(result.warnings, [])
+  for (const mode of ['template', 'release'] as const) {
+    const result = await inspectReleaseConfig(fixtureRoot, mode)
+    assert.deepEqual(result.errors, [])
+    assert.deepEqual(result.warnings, [])
+  }
 })
 
 test('formal releases keep portable Windows staging, upload, and verification', () => {
@@ -348,6 +373,7 @@ test('reports missing updater signing configuration according to inspection mode
 
   await mkdir(join(fixtureRoot, 'src-tauri', 'icons'), { recursive: true })
   await writeFile(join(fixtureRoot, 'package.json'), JSON.stringify({ version: '1.2.3' }))
+  await writeProtocol(fixtureRoot)
   await writeFile(join(fixtureRoot, 'src-tauri', 'Cargo.toml'), '[package]\nversion = "1.2.3"\n')
   await writeFile(join(fixtureRoot, 'src-tauri', 'icons', 'icon.png'), 'icon')
   await writeFile(join(fixtureRoot, 'src-tauri', 'tauri.conf.json'), JSON.stringify({
@@ -365,6 +391,63 @@ test('reports missing updater signing configuration according to inspection mode
   const releaseResult = await inspectReleaseConfig(fixtureRoot, 'release')
   assert.match(releaseResult.errors.join('\n'), /plugins\.updater\.pubkey/)
   assert.match(releaseResult.errors.join('\n'), /bundle\.createUpdaterArtifacts/)
+})
+
+test('rejects release evidence beyond the protocol release boundary in both modes', async (t) => {
+  const fixtureRoot = await mkdtemp(join(tmpdir(), 'meow-release-protocol-mismatch-'))
+
+  t.after(async () => {
+    await rm(fixtureRoot, { force: true, recursive: true })
+  })
+
+  await writeProtocol(fixtureRoot, { ...protocolDelivery, signing: 'verified' })
+
+  for (const mode of ['template', 'release'] as const) {
+    const result = await inspectReleaseConfig(fixtureRoot, mode)
+    assert.match(result.errors.join('\n'), /protocol release boundary/)
+  }
+})
+
+test('rejects missing, malformed, schema-invalid, and extended protocol delivery in both modes', async (t) => {
+  const cases = [
+    {
+      name: 'missing',
+      expected: /Unable to read app\.protocol\.json/,
+    },
+    {
+      name: 'malformed',
+      contents: '{',
+      expected: /Invalid JSON in app\.protocol\.json/,
+    },
+    {
+      name: 'schema-invalid',
+      contents: JSON.stringify({ schemaVersion: 2, delivery: protocolDelivery }),
+      expected: /schemaVersion must be 1/,
+    },
+    {
+      name: 'extended-delivery',
+      contents: JSON.stringify({
+        schemaVersion: 1,
+        delivery: { ...protocolDelivery, hosted: false },
+      }),
+      expected: /protocol release boundary/,
+    },
+  ]
+
+  for (const fixture of cases) {
+    const fixtureRoot = await mkdtemp(join(tmpdir(), `meow-release-protocol-${fixture.name}-`))
+    t.after(async () => {
+      await rm(fixtureRoot, { force: true, recursive: true })
+    })
+    if (fixture.contents !== undefined) {
+      await writeFile(join(fixtureRoot, 'app.protocol.json'), fixture.contents)
+    }
+
+    for (const mode of ['template', 'release'] as const) {
+      const result = await inspectReleaseConfig(fixtureRoot, mode)
+      assert.match(result.errors.join('\n'), fixture.expected, `${fixture.name} in ${mode} mode`)
+    }
+  }
 })
 
 test('release check rejects unknown modes', () => {

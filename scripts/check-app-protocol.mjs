@@ -7,15 +7,9 @@ import {
   TODO_EXPORT_FORMAT,
   TODO_EXPORT_VERSION,
 } from '../src/storage/todos/data-port.ts'
+import { validateProtocolDelivery } from './app-protocol-delivery.mjs'
 
 const EXPECTED_MATURITY = { desktop: 'stable', web: 'beta', mobile: 'beta' }
-const EXPECTED_DELIVERY = {
-  desktopPackage: 'local-smoke',
-  signing: 'unverified',
-  updater: 'template-only',
-  webDeployment: 'unverified',
-  mobileNative: 'local-debug',
-}
 
 export function validateApplicationProtocol({
   protocol,
@@ -28,15 +22,12 @@ export function validateApplicationProtocol({
   const errors = []
   if (!isRecord(protocol)) return { errors: ['Protocol must be a JSON object.'] }
 
-  if (protocol.schemaVersion !== 1) {
-    errors.push('schemaVersion must be 1.')
-  }
+  errors.push(...validateProtocolDelivery(protocol))
 
   validateProduct(protocol.product, packageJson, errors)
   validateTargets(protocol.targets, errors)
   validateModulePolicy(protocol.modulePolicy, config, contracts, expectedModuleIds, errors)
   validateDataBoundary(protocol.data, dataPort, errors)
-  validateDelivery(protocol.delivery, errors)
   validateAcceptance(protocol.acceptance, packageJson, errors)
   validateEvolution(protocol.evolution, errors)
 
@@ -109,12 +100,6 @@ function validateDataBoundary(data, dataPort, errors) {
   }
   if (!isStringArray(data.exclusions) || !data.exclusions.includes('secrets') || !data.exclusions.includes('sync state')) {
     errors.push('data.exclusions must include secrets and sync state.')
-  }
-}
-
-function validateDelivery(delivery, errors) {
-  if (!sameRecord(delivery, EXPECTED_DELIVERY)) {
-    errors.push('delivery must retain the currently evidenced release boundary.')
   }
 }
 

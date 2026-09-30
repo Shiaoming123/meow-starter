@@ -92,6 +92,7 @@
 | 我想… | 去哪看 |
 | --- | --- |
 | 🚀 快速跑起来 | [快速开始](#-快速开始) → [改名清单](#-用它创建新项目) |
+| ✅ 把模板做成可双击交付、视觉与默认设置一致的产品 | [docs/application-standard.md](./docs/application-standard.md) |
 | 🛠 配置本地开发 / exFAT 工作区 | [docs/development.md](./docs/development.md) |
 | 🧭 定义产品目标、能力与数据边界 | [docs/application-protocol.md](./docs/application-protocol.md) |
 | 📦 了解 Release Kit 与发布边界 | [docs/release-kit.md](./docs/release-kit.md) |
@@ -118,11 +119,11 @@
 ```bash
 # 方式一：直接克隆
 git clone https://github.com/Shiaoming123/meow-starter.git my-app
-cd my-app && npm install && npm run tauri dev
+cd my-app && npm ci && npm run tauri dev
 
 # 方式二：用 degit 拉干净副本（不含 git 历史，推荐）
 npx degit Shiaoming123/meow-starter my-app
-cd my-app && npm install && npm run tauri dev
+cd my-app && npm ci && npm run tauri dev
 ```
 
 只运行 Web 版：
@@ -132,6 +133,8 @@ npm run dev:web
 ```
 
 **环境要求**：Node.js 22+ / Rust 1.77.2+ / 平台依赖（macOS 需 Xcode CLT，Windows 需 MSVC + WebView2，Linux 需 webkit2gtk 等，详见 [Tauri 官方文档](https://tauri.app/start/prerequisites/)）。
+
+`tauri dev` 是开发流程，不是面向用户的交付格式。派生应用称为“可用”前，应遵循[应用开发与交付标准](./docs/application-standard.md)，并验证非开发者可以直接双击启动的安装包或 Portable。
 
 ## 🧩 用它创建新项目（改名清单）
 
@@ -211,6 +214,7 @@ npm run check:modules -- web   # Web 目标
 ├── .github/               # CI（ci.yml 门禁 + release.yml 三端打包）
 ├── docs/                  # 📚 文档中心
 │   ├── architecture.svg        # 架构图
+│   ├── application-standard.md # 产品 UI、默认设置与双击交付标准
 │   ├── development.md          # 本地开发、验证与 exFAT 处理
 │   ├── release-kit.md          # Release Kit 与发布成熟度边界
 │   ├── design-system.md        # 设计系统（token/组件/主题/性能）
@@ -300,7 +304,7 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 
 ## 🎨 设计系统
 
-完整 design tokens（间距/圆角/字号/阴影/动效/层级）+ 6 个基础组件 + 4 套主题。所有组件走 CSS 变量，换主题零改动。详见 [docs/design-system.md](./docs/design-system.md)。
+设计系统提供克制的排版、间距、圆角、阴影、动效与层级 token，以及 6 个基础组件和 4 套主题。派生产品默认自托管 Manrope Variable 处理英文与数字、Noto Sans SC Variable 处理中文，并采用克制的 iOS 亚克力质感。详见[应用标准](./docs/application-standard.md)与[设计系统](./docs/design-system.md)。
 
 ## 🛠 常用脚本
 
@@ -312,6 +316,8 @@ npm run add:mcp     # 装 @ai-sdk/mcp
 | `npm run build:web` | 类型检查 + Web 静态构建 |
 | `npm run smoke:web-persistence` | 可选：真实浏览器新增 Todo、刷新后验证 IndexedDB 持久化 |
 | `npm run smoke:windows-package` | 可选：Windows 未签名 NSIS 打包、受限目录安装与启动存活检查 |
+| `npm run package:windows` | 生成带版本的 NSIS、MSI、Portable EXE、清单、README 与 SHA-256 交付包 |
+| `npm run package:windows:audit` | 不重新构建，仅复核已有 Windows 交付包 |
 | `npm test` | 运行无额外框架依赖的行为测试 |
 | `npm run typecheck` | 仅类型检查 |
 | `npm run check:modules` | 核对模块目录、当前默认配置与原生构建要求 |

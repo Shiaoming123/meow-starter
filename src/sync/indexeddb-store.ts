@@ -1,5 +1,5 @@
 import { openDB, type DBSchema } from 'idb'
-import type { SyncMutation, SyncStateStore } from './types'
+import { copyMutation, type SyncMutation, type SyncStateStore } from './types.ts'
 
 export const DEFAULT_SYNC_DATABASE_NAME = 'meow-starter-sync'
 
@@ -16,13 +16,6 @@ interface SyncDatabaseSchema extends DBSchema {
 
 export interface IndexedDbSyncStateStoreOptions {
   databaseName?: string
-}
-
-function copyMutation(mutation: SyncMutation): SyncMutation {
-  return {
-    ...mutation,
-    payload: mutation.payload ? { ...mutation.payload } : undefined,
-  }
 }
 
 export function createIndexedDbSyncStateStore(

@@ -14,7 +14,7 @@ The Release Kit makes a checkout diagnosable and validates release configuration
 | Windows/Linux distribution | Windows portable path available | Windows builds can stage a stable-name Portable EXE with SHA-256 proof and verify its GitHub Release asset | Authenticode, clean-device validation, and Linux distribution decisions |
 | Android package | Local debug evidence | Android emulator `tauri android dev` and local universal debug APK/AAB build have completed | Recreate the ignored generated project on a clean checkout; real-device smoke, signing, Play Console, and store submission |
 | iOS package and store | Deferred | Responsive UI and desktop-capability degradation only | Native project initialization, Xcode/CocoaPods, accounts, certificates, device testing, and store submission |
-| Web deployment | Deferred | `npm run build:web` creates a static build | Select/configure a provider and validate a deployed site |
+| Web deployment | Acceptance available; host unverified | `npm run build:web` creates a static build; `npm run smoke:web-deployment` can inspect an explicit public HTTPS URL | Select/configure a provider and run the smoke against the deployed site |
 
 An unsigned desktop artifact is not evidence of a signed, notarized, store-ready, or auto-updatable release. Likewise, a responsive mobile interface is not an APK, AAB, IPA, TestFlight build, or store submission.
 
@@ -38,7 +38,9 @@ npm run release:check
 npm run verify
 ```
 
-`npm run release:check` defaults to template mode. In that mode, the starter's `OWNER/REPO` updater endpoint and incomplete updater-signing preparation are reported explicitly as warnings rather than accepted as release-ready. The check inspects the non-secret `plugins.updater.pubkey` and `bundle.createUpdaterArtifacts` fields; it never reads a private signing key or secret. When a project has supplied a real endpoint and signing configuration, use the stricter check:
+`npm run release:check` defaults to template mode. Both modes require a valid `app.protocol.json` schema version and the exact supported `delivery` boundary; missing, malformed, unsupported, or extended delivery evidence fails the check. Delivery fields are compared semantically, so their JSON key order does not matter. A real endpoint or signing configuration does not upgrade protocol evidence, and the check never infers signed or hosted delivery.
+
+In template mode, the starter's `OWNER/REPO` updater endpoint and incomplete updater-signing preparation are reported explicitly as warnings rather than accepted as release-ready. The check inspects the non-secret `plugins.updater.pubkey` and `bundle.createUpdaterArtifacts` fields; it never reads a private signing key or secret. When a project has supplied a real endpoint and signing configuration, use the stricter check:
 
 ```bash
 npm run release:check -- --mode=release
@@ -63,11 +65,15 @@ notarization, hosted updater availability, or a successful user installation.
 
 ## Optional local runtime smoke
 
-On Windows, `npm run smoke:windows-package` performs an explicit local package lifecycle check: it builds an unsigned NSIS installer with a transient `bundle.createUpdaterArtifacts=false` overlay, silently installs beneath a fresh ignored target subdirectory, redirects `APPDATA` and `LOCALAPPDATA` there, confirms the installed process remains alive briefly, then force-stops that child process and removes only the validated temporary directory.
+On Windows, `npm run smoke:windows-package` performs an explicit local package lifecycle check: it builds an unsigned NSIS installer with a transient `bundle.createUpdaterArtifacts=false` overlay, silently installs beneath a fresh ignored `src-tauri/target` subdirectory, redirects `APPDATA` and `LOCALAPPDATA` there, confirms the installed process remains alive briefly, then force-stops that child process and removes only the validated temporary directory. A configured `CARGO_TARGET_DIR` controls build output and installer lookup, but never widens the disposable installation-data boundary.
 
-The command leaves the generated NSIS bundle under the ignored Tauri target directory and does not need a signing private key. It is deliberately not a signed release, updater-delivery, offline-installation, tray graceful-exit, store, or macOS/Linux package test.
+The final output is one JSON status record after cleanup: `passed` exits `0`, a directly observed `EPERM` from the `symlink` system call (or captured build output that names both a symbolic link and Windows error 1314) reports `skipped` with reason `symbolic-link-permission` and exits `2`, and all other build, installer, launch, early-exit, or cleanup errors report `failed` and exit `1`. A generic permission error is a failure, not a skip. No pass record is printed unless cleanup succeeds.
+
+The command leaves the generated NSIS bundle under the resolved Cargo target directory and does not need a signing private key. It is deliberately not a signed release, updater-delivery, offline-installation, tray graceful-exit, store, or macOS/Linux package test.
 
 ## Windows single-file delivery
+
+For downstream product acceptance, “runs locally” means a non-developer can double-click a verified installer or Portable EXE; `tauri dev`, a browser render, or a successful compile is not that evidence. Apply the product-wide checklist in [application-standard.md](./application-standard.md) before release preparation.
 
 `npm run package:windows` builds an unsigned NSIS installer, MSI installer, and
 single-file Portable EXE into `release-artifacts/windows/<version>/`, together

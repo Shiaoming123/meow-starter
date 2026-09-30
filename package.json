@@ -25,6 +25,7 @@
     "mobile:doctor": "node scripts/mobile-doctor.mjs",
     "rust:verify": "node scripts/rust-verify.mjs",
     "smoke:web-persistence": "node scripts/smoke-web-persistence.mjs",
+    "smoke:web-deployment": "node scripts/smoke-web-deployment.mjs",
     "smoke:windows-package": "node scripts/smoke-windows-package.mjs",
     "package:windows": "node scripts/package-windows.mjs",
     "package:windows:audit": "node scripts/package-windows.mjs --audit-only",

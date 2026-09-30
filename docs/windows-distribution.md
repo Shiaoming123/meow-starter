@@ -2,6 +2,8 @@
 
 > 成熟度：Portable、NSIS、MSI 的本地构建与校验链路已提供；模板默认未配置 Authenticode 证书，也不会代替开发者完成身份验证或证书采购。
 
+> **产品门槛**：`tauri dev` 不是交付。首个可体验版本必须让非开发者拿到安装包或 Portable 后直接双击运行，并完成真实启动与持久化检查；总体验清单见[应用开发与交付标准](./application-standard.md)。
+
 这条路径面向希望先让应用可用、再逐步补齐商业发布能力的个人开发者。请把三个目标分开理解：
 
 1. **能运行**：本地生成一个无需安装的 Portable EXE。
@@ -26,12 +28,15 @@ npm run package:windows
 | `*_Installer.msi` | Windows Installer 安装包 |
 | `SHA256SUMS.txt` | 三个二进制的 SHA-256 校验值 |
 | `manifest.json` | 产品、版本、架构和签名状态 |
+| `README.txt` | 面向接收者的文件用途、签名与数据目录说明 |
 
 只想复核已有本地产物时运行：
 
 ```powershell
 npm run package:windows:audit
 ```
+
+自动 smoke 只证明隔离安装后的 NSIS 进程能短暂存活。交付验收还要在普通非管理员账户中，从资源管理器分别双击每种实际公开的 Portable 或安装器，观察真实窗口与日志，并验证首次启动、关闭重开、托盘隐藏/真正退出、覆盖安装、卸载及用户数据保留策略。
 
 Portable 的含义只是“应用本体无需安装”。Tauri 的 SQLite、Store 和日志仍默认写入当前用户的 AppData，而不是 EXE 旁边；若业务确实要求“U 盘带走数据”，需要另外设计数据目录和并发/备份策略，不能直接把系统数据目录改到可执行文件旁边。
 

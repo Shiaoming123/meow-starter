@@ -31,6 +31,14 @@ Define an opt-in, versioned export/import boundary for application-owned data, t
 
 Supabase synchronization, full multi-provider Agent settings, usage analytics, RAG, MCP host behavior, and mobile store delivery remain project-specific optional work. The existing Supabase/Agent plan is not a default-scaffold milestone.
 
+### Future frontend option — React flavor
+
+Added to the roadmap on 2026-09-12 following community feedback. Status: planned, implementation not started; no release date is committed. Vue remains the maintained default.
+
+Provide a React + TypeScript + Vite frontend option while retaining Tauri 2 and Rust. Reuse framework-independent domain/storage logic, native capabilities, and design tokens; adapt Vue-specific UI, state, lifecycle, and module registration where necessary. This is a frontend option, not a React Native migration.
+
+Before calling the flavor available, identify its maintenance owner and verify the core Todo flow, persistence, capability degradation, and native startup in the React frontend, with corresponding build checks and usage documentation. Decide the packaging structure during implementation after inspecting actual reusable boundaries.
+
 ## First-phase acceptance criteria
 
 - On Windows, `npm run doctor` detects npm correctly and `npm test` is green without requiring Developer Mode.

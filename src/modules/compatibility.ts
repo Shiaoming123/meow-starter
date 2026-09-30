@@ -1,10 +1,9 @@
 import type { RuntimeInfo } from '../lib/platform'
 import type { Module } from './types'
 
-export interface ModuleCompatibility {
-  supported: boolean
-  reason?: string
-}
+export type ModuleCompatibility =
+  | { supported: true }
+  | { supported: false; reason: string }
 
 /** 在 setup 前检查模块的平台与能力要求。 */
 export function moduleCompatibility(
@@ -40,7 +39,7 @@ export function selectCompatibleModules<T extends Module>(
   return modules.filter((module) => {
     const compatibility = moduleCompatibility(module, runtime)
     if (!compatibility.supported) {
-      onSkipped(compatibility.reason ?? `Module "${module.id}" is unsupported`)
+      onSkipped(compatibility.reason)
     }
     return compatibility.supported
   })

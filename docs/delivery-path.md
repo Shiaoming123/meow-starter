@@ -22,10 +22,10 @@
 ## 采用顺序
 
 1. **固定产品身份。** 替换名称、identifier、图标、仓库元数据与版本，并执行 `npm run release:check`。identifier 一旦发布不可更改。
-2. **先完成本地用户旅程。** 为领域定义小型 store 接口和迁移；用 `npm run verify`、`npm run rust:verify` 与目标平台 smoke 固定行为。
+2. **先完成本地用户旅程。** 按[应用开发与交付标准](./application-standard.md)确定字体、主题、默认状态与直观交互；为领域定义小型 store 接口和迁移，用 `npm run verify`、`npm run rust:verify` 与目标平台 smoke 固定行为。
 3. **选择服务模型。** 在“用户账号 + HTTPS API”“受控局域网配对”“独立协作文档”中选一个。不要把 SQLite 文件、钥匙串、token、日志或更新密钥放进通用同步层。
 4. **把领域映射到同步契约。** 为每个可同步记录设计全局 id、owner/device、revision、tombstone、schema version 与幂等 operation id；先在隔离环境验证断网写入、重复上传、远端失败和冲突。
-5. **配置受控交付。** 给桌面更新器配置自有 HTTPS endpoint 与匹配的签名密钥，再让 `npm run release:check -- --mode=release` 通过；仅随后才创建 tag release。
+5. **配置受控交付。** Windows 先生成并亲自双击验证安装包与 Portable；公开更新前再给桌面更新器配置自有 HTTPS endpoint 与匹配的签名密钥，让 `npm run release:check -- --mode=release` 通过；仅随后才创建 tag release。
 6. **完成平台发布。** Android 需要 upload keystore、别名/密码、真实设备和 Play Console；iOS 需要 macOS、Xcode、签名身份、TestFlight/App Store 权限。它们都不能写入仓库或 CI 日志。
 
 ## Android 本地链路
