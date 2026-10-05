@@ -1,0 +1,55 @@
+name: security-backport-build
+
+on:
+  push:
+    branches: ['verify/tauri-2.11.6-build']
+
+permissions:
+  contents: read
+
+jobs:
+  linux-native-build:
+    name: Unsigned Linux Tauri build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CARGO_PROFILE_DEV_DEBUG: '0'
+      CARGO_BUILD_JOBS: '2'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: 5fccae2bb4ae364c2d512dd33a246b0c4bd0f50e
+          persist-credentials: false
+
+      - name: Verify candidate source
+        run: |
+          test "$(git rev-parse HEAD)" = 5fccae2bb4ae364c2d512dd33a246b0c4bd0f50e
+          test "$(git rev-parse 'HEAD^{tree}')" = be30e24b8c2c4338ae7024422922ead92c4bdf1c
+          test -z "$(git status --porcelain)"
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - run: npm ci
+
+      - name: Build candidate without signing or publishing
+        run: npm run tauri -- build --debug --no-bundle --config '{"bundle":{"createUpdaterArtifacts":false}}'
+
+      - name: Verify binary and unchanged tracked source
+        run: |
+          test -s src-tauri/target/debug/meow-starter
+          file src-tauri/target/debug/meow-starter
+          git diff --exit-code
