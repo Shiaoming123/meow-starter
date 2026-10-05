@@ -18,6 +18,7 @@ export type AgentEvent =
 export interface AgentCapabilities {
   /** Pi sidecar 支持会话树，inline 轨默认不支持 */
   sessionTree: boolean;
+  /** True only when the runtime actually performs context compaction. */
   compaction: boolean;
   sandbox: boolean;
 }

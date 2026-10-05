@@ -19,6 +19,13 @@ const draft = ref('')
 const busy = ref(false)
 const error = ref<string | null>(null)
 
+interface ActiveRequest {
+  cancelled: boolean
+  runtime?: AgentRuntime
+  stopping?: Promise<void>
+}
+
+let activeRequest: ActiveRequest | null = null
 let runtime: AgentRuntime | null = null
 const sessionId = globalThis.crypto?.randomUUID?.() ?? `agent-${Date.now()}`
 
@@ -32,7 +39,10 @@ async function ensureRuntime(): Promise<AgentRuntime> {
 
 async function send() {
   const text = draft.value.trim()
-  if (!text || busy.value) return
+  if (!text || activeRequest) return
+
+  const request: ActiveRequest = { cancelled: false }
+  activeRequest = request
 
   draft.value = ''
   error.value = null
@@ -43,6 +53,8 @@ async function send() {
 
   try {
     const r = await ensureRuntime()
+    if (request.cancelled) return
+    request.runtime = r
     const hooks = new HookBus()
     hooks.register({
       onApprovalRequired: ({ name, args }) =>
@@ -50,6 +62,7 @@ async function send() {
     })
 
     for await (const event of r.stream({ prompt: text, sessionId }, hooks)) {
+      if (request.cancelled) break
       if (event.type === 'text-delta') {
         bubbles.value[index].content += event.text
       } else if (event.type === 'tool-call') {
@@ -59,15 +72,30 @@ async function send() {
       }
     }
   } catch (e) {
-    error.value = e instanceof Error ? e.message : String(e)
+    if (activeRequest === request) error.value = e instanceof Error ? e.message : String(e)
   } finally {
-    busy.value = false
+    // Abort is only a request to stop. Keep ownership until both it and the
+    // stream (including iterator cleanup) settle, so neither can affect a retry.
+    if (request.stopping) await request.stopping
+    if (activeRequest === request) {
+      activeRequest = null
+      busy.value = false
+    }
   }
 }
 
 async function stop() {
-  await runtime?.abort('user stopped')
-  busy.value = false
+  const request = activeRequest
+  if (!request) return
+  request.cancelled = true
+  const ownedRuntime = request.runtime
+  if (!ownedRuntime) return // send() will stop after pending initialization.
+  request.stopping ??= Promise.resolve()
+    .then(() => ownedRuntime.abort('user stopped'))
+    .catch((e: unknown) => {
+      if (activeRequest === request) error.value = e instanceof Error ? e.message : String(e)
+    })
+  await request.stopping
 }
 </script>
 

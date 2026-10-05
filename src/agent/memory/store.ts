@@ -1,9 +1,9 @@
 import Database from '@tauri-apps/plugin-sql';
-import { isTauri } from '../../lib/platform';
-import { browserMemoryStore } from './in-memory';
+import { isTauri } from '../../lib/platform.ts';
+import { browserMemoryStore } from './in-memory.ts';
 import type { AgentMessage, MemoryStore } from './types';
 
-export { createMemoryStore } from './in-memory';
+export { createMemoryStore } from './in-memory.ts';
 
 const DB_URL = 'sqlite:app.db';
 
@@ -50,7 +50,7 @@ export const sqliteMemoryStore: MemoryStore = {
   async list(sessionId: string, limit = 200): Promise<AgentMessage[]> {
     if (!isTauri()) return browserMemoryStore.list(sessionId, limit);
     const d = await db();
-    return d.select<AgentMessage[]>(
+    const messages = await d.select<AgentMessage[]>(
       `SELECT id,
               session_id AS sessionId,
               role,
@@ -58,10 +58,12 @@ export const sqliteMemoryStore: MemoryStore = {
               created_at AS createdAt
          FROM agent_messages
         WHERE session_id = $1
-        ORDER BY id ASC
+        ORDER BY id DESC
         LIMIT $2`,
       [sessionId, limit],
     );
+    // Select the newest window first, then present it in conversation order.
+    return messages.reverse();
   },
 
   async clear(sessionId: string): Promise<void> {

@@ -2,9 +2,9 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAI } from '@ai-sdk/openai';
 import type { LanguageModel } from 'ai';
 import type { ProviderConfig } from '../config';
-import { resolveProviderTransport } from './proxy-policy';
-import { createSecureProxyFetch } from './secure-fetch';
-import { toProviderInstance } from './types';
+import { resolveProviderTransport } from './proxy-policy.ts';
+import { createSecureProxyFetch } from './secure-fetch.ts';
+import { toProviderInstance } from './types.ts';
 
 /** 保存密钥到 OS 钥匙串（供设置页调用）。 */
 export async function saveApiKey(
@@ -40,9 +40,17 @@ export function createLanguageModel(
 
   switch (cfg.type) {
     case 'openai':
-    case 'openai-compatible':
-      // createOpenAI 同时承担 openai-compatible：换 baseURL 即可接 Ollama / vLLM
       return createOpenAI({ apiKey, baseURL: cfg.baseUrl, fetch: proxyFetch })(modelId);
+    case 'openai-compatible': {
+      const baseURL = cfg.baseUrl?.trim();
+      if (!baseURL) {
+        throw new Error('[agent] openai-compatible provider 必须配置明确的 baseUrl');
+      }
+      // Credential-bearing compatible providers were rejected by the transport
+      // policy above. This public placeholder prevents SDK environment-key lookup
+      // for no-key endpoints; it is not a credential or authentication bypass.
+      return createOpenAI({ apiKey: 'not-required', baseURL }).chat(modelId);
+    }
     case 'anthropic':
       return createAnthropic({ apiKey, baseURL: cfg.baseUrl, fetch: proxyFetch })(modelId);
     case 'google':
@@ -61,7 +69,7 @@ export async function resolveModel(ref: string, secureProxy: boolean): Promise<L
   const providerId = ref.slice(0, idx);
   const modelId = ref.slice(idx + 1);
 
-  const { getProvider } = await import('./registry');
+  const { getProvider } = await import('./registry.ts');
   const cfg = getProvider(providerId);
   if (!cfg) {
     throw new Error(

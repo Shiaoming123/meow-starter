@@ -1,5 +1,5 @@
 import type { ProviderInstance } from './types'
-import { createSecureProxyRequest } from './proxy-policy'
+import { createSecureProxyRequest } from './proxy-policy.ts'
 
 export function createSecureProxyFetch(provider: ProviderInstance): typeof fetch {
   return async (input, init) => {
