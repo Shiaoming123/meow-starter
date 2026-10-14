@@ -132,7 +132,9 @@ cd my-app && npm ci && npm run tauri dev
 npm run dev:web
 ```
 
-**环境要求**：Node.js 22+ / Rust 1.77.2+ / 平台依赖（macOS 需 Xcode CLT，Windows 需 MSVC + WebView2，Linux 需 webkit2gtk 等，详见 [Tauri 官方文档](https://tauri.app/start/prerequisites/)）。
+**环境要求**：Node.js 22+ / Rust 1.90.0+ / 平台依赖（macOS 需 Xcode CLT，Windows 需 MSVC + WebView2，Linux 需 webkit2gtk 等，详见 [Tauri 官方文档](https://tauri.app/start/prerequisites/)）。
+
+Tauri 2.12 不再正式支持 Windows 7。现有 Android debug 证据早于本次工具链升级；SDK 37 / Gradle 9 / Kotlin 2 构建仍需重新验证。详见[开发指南](./docs/development.md)和[移动端配置](./docs/mobile.md)。
 
 `tauri dev` 是开发流程，不是面向用户的交付格式。派生应用称为“可用”前，应遵循[应用开发与交付标准](./docs/application-standard.md)，并验证非开发者可以直接双击启动的安装包或 Portable。
 

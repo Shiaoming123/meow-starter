@@ -6,6 +6,7 @@ authors = ["Shiaoming123"]
 license = "MIT"
 repository = "https://github.com/Shiaoming123/meow-starter"
 edition = "2021"
+rust-version = "1.90.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -17,25 +18,25 @@ name = "meow_starter_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+tauri-build = { version = "=2.7.2", features = [] }
 
 [dependencies]
 # tray-icon: 系统托盘; image-png: 让 default_window_icon() 能解码 PNG 图标
-tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri = { version = "=2.12.3", features = ["tray-icon", "image-png"] }
 # —— 核心能力（始终启用，是脚手架的立身之本） ——
-tauri-plugin-opener = "2"
-tauri-plugin-process = "2"
-tauri-plugin-dialog = "2"
-tauri-plugin-sql = { version = "2", features = ["sqlite"] }
-tauri-plugin-store = "2"
+tauri-plugin-opener = "=2.5.5"
+tauri-plugin-process = "=2.3.1"
+tauri-plugin-dialog = "=2.8.2"
+tauri-plugin-sql = { version = "=2.5.0", features = ["sqlite"] }
+tauri-plugin-store = "=2.5.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 # —— 可选能力模块（P1，由 feature 门控，未启用不编译、不占体积） ——
-tauri-plugin-global-shortcut = { version = "2", optional = true }
-tauri-plugin-clipboard-manager = { version = "2", optional = true }
-tauri-plugin-notification = { version = "2", optional = true }
-tauri-plugin-autostart = { version = "2", optional = true }
+tauri-plugin-global-shortcut = { version = "=2.4.1", optional = true }
+tauri-plugin-clipboard-manager = { version = "=2.4.2", optional = true }
+tauri-plugin-notification = { version = "=2.6.0", optional = true }
+tauri-plugin-autostart = { version = "=2.5.1", optional = true }
 
 # —— Agent 能力（P2：密钥代理 + 本地推理，由 feature 门控） ——
 # keyring：OS 钥匙串（macOS Keychain / Windows Credential Manager / Linux Secret Service）
@@ -60,5 +61,5 @@ agent-sidecar = ["agent"]
 
 # 单实例是桌面端专有能力，移动端目标不参与编译
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-single-instance = "2"
-tauri-plugin-updater = "2"
+tauri-plugin-single-instance = "=2.4.4"
+tauri-plugin-updater = "=2.13.3"

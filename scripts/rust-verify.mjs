@@ -16,9 +16,9 @@ for (const warning of cargo.warnings) console.warn(`WARN: ${warning}`)
 
 const commands = [
   ['fmt', '--manifest-path', 'src-tauri/Cargo.toml', '--all', '--', '--check'],
-  ['clippy', '--manifest-path', 'src-tauri/Cargo.toml', '--all-targets', '--all-features', '--', '-D', 'warnings'],
-  ['test', '--manifest-path', 'src-tauri/Cargo.toml', '--all-features'],
-  ['check', '--manifest-path', 'src-tauri/Cargo.toml', '--all-features'],
+  ['clippy', '--locked', '--manifest-path', 'src-tauri/Cargo.toml', '--all-targets', '--all-features', '--', '-D', 'warnings'],
+  ['test', '--locked', '--manifest-path', 'src-tauri/Cargo.toml', '--all-features'],
+  ['check', '--locked', '--manifest-path', 'src-tauri/Cargo.toml', '--all-features'],
 ]
 
 for (const args of commands) {
