@@ -40,10 +40,10 @@ targets。`missing-prerequisites` 或 `unavailable` 是明确的环境状态，�
 **第一步：装 Android Studio + SDK 组件**
 
 1. 下载安装 [Android Studio](https://developer.android.com/studio)
-2. 打开后进入 **SDK Manager**（`Tools → SDK Manager`），在 **SDK Platforms** 页勾选最新 **Android SDK Platform**
+2. 打开后进入 **SDK Manager**（`Tools → SDK Manager`），在 **SDK Platforms** 页安装 **Android SDK Platform 37**（与固定的 Tauri CLI 2.12.2 生成模板一致）
 3. 切到 **SDK Tools** 页，勾选并安装：
    - **Android SDK Platform-Tools**
-   - **Android SDK Build-Tools**
+   - **Android SDK Build-Tools 36.0.0**（CLI 模板的 Android Gradle Plugin 9.3.1 要求）
    - **NDK（Side by side）** —— Tauri 必需
    - **Android SDK Command-line Tools**
 
@@ -67,10 +67,16 @@ Windows 可在用户环境变量中设置同样的三个值：`JAVA_HOME` 应指
 `cmdline-tools\latest\bin` 加入用户 `Path`，然后重新打开终端再运行
 `adb` 或 `npm run mobile:doctor`。
 
-Android Studio 的内置 JBR 可能比生成工程的 Gradle 支持得更早；例如 JBR
-为 Java 25 而 Gradle 8.14 时，会在 `Unsupported class file major version 69`
-处失败。此时安装一个独立的 JDK 21，并将 `JAVA_HOME` 指向它，而不是修改
-项目的 Gradle wrapper。
+Tauri CLI 2.12.2 生成工程使用 SDK 37、Gradle 9 和 Kotlin 2；手动
+`android-debug` 工作流仍使用 JDK 21。`src-tauri/gen/` 不入库，旧生成工程
+不能代替新工具链的验证。保留任何手工修改后，在干净 checkout 中运行
+`npm run tauri -- android init --ci`，重新构建并检查 APK。之前的模拟器和
+debug APK/AAB 证据属于旧工具链，本次升级尚不证明新 Android 构建或设备行为。
+
+如果仍使用旧的 Gradle 8.14 生成工程，Java 25 可能报
+`Unsupported class file major version 69`；可先使用兼容的 JDK 21，再按
+[上游迁移说明](https://tauri.app/blog/tauri-2.12/#android)处理生成工程，
+不要把旧 wrapper 的结果当作 CLI 2.12.2 模板的结果。
 
 > Windows 上的 `tauri android dev` 需要将 Rust `.so` 链接进生成的
 > Android 工程。启用 Windows **Developer Mode**（或由管理员授予创建符号

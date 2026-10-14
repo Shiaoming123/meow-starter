@@ -26,7 +26,9 @@ After a debug build, run `npm run check:android-artifact -- --apk <path>` to
 check its package identity, version, SDK metadata, and included ABI list. The
 manual `android-debug` workflow runs the same check and uploads its debug APK;
 it deliberately does not sign or publish anything. Its clean-runner path has
-been executed successfully once for the current Android debug baseline.
+been executed successfully once for the earlier Android debug baseline. Tauri
+CLI 2.12.2 now generates SDK 37 / Gradle 9 / Kotlin 2 projects; that updated
+workflow and native device behavior require a new validation run.
 
 ## Local release preparation
 

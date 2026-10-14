@@ -83,7 +83,7 @@ export async function inspectEnvironment(root, options = {}) {
     warnings.push('npm is missing; install it with Node.js 22 or newer, then retry npm run doctor.')
   }
   if (tools.rust === 'missing' || tools.cargo === 'missing') {
-    warnings.push('Install Rust 1.77.2 or newer and Cargo via rustup from https://rustup.rs/, then retry npm run doctor.')
+    warnings.push('Install Rust 1.90.0 or newer and Cargo via rustup from https://rustup.rs/, then retry npm run doctor.')
   }
   if (tools.tauri === 'missing') {
     warnings.push('The local Tauri CLI is missing; run npm install, then retry npm run doctor.')

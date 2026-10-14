@@ -149,7 +149,7 @@ test('reports Tauri prerequisites, config locations, and missing-tool guidance',
   assert.ok(summary.includes(`Rust config: ${join(fixtureRoot, 'src-tauri', 'Cargo.toml')}`))
   assert.ok(summary.includes(`Tauri config: ${join(fixtureRoot, 'src-tauri', 'tauri.conf.json')}`))
   assert.match(warnings, /Install Node\.js 22 or newer/)
-  assert.match(warnings, /rustup/)
+  assert.match(warnings, /Install Rust 1\.90\.0 or newer and Cargo via rustup/)
   assert.match(warnings, /npm install/)
 })
 

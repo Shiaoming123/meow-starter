@@ -6,7 +6,7 @@ Running from source is not the product handoff. A downstream application is user
 
 ## Normal setup
 
-Install Node.js 22+, Rust 1.77.2+, and the platform prerequisites listed in the [Tauri documentation](https://tauri.app/start/prerequisites/). On Windows, this includes the Visual Studio C++ Build Tools and Microsoft Edge WebView2 Runtime. Then run:
+Install Node.js 22+, Rust 1.90.0+, and the platform prerequisites listed in the [Tauri documentation](https://tauri.app/start/prerequisites/). On Windows, this includes the Visual Studio C++ Build Tools and Microsoft Edge WebView2 Runtime. Then run:
 
 ```bash
 npm ci
@@ -14,6 +14,29 @@ npm run doctor
 npm run check:modules
 npm run tauri dev
 ```
+
+### Tauri dependency baseline
+
+The Rust runtime and npm API use Tauri 2.12.3; the npm CLI uses 2.12.2.
+Tauri plugins are pinned to matching npm/Rust versions. Update the declarations
+and both lockfiles together, then run the frontend and native gates; `npm test`
+checks core minor-version compatibility and exact plugin pairs. Follow the
+[upstream version-sync guidance](https://v2.tauri.app/develop/updating-dependencies/#sync-npm-packages-and-cargo-crates-versions).
+
+`src-tauri/Cargo.toml` declares Rust 1.90.0. CI exercises the locked dependency
+graph on both 1.90.0 and stable, including default and all-feature builds. To
+repeat the minimum-toolchain check with the native system prerequisites installed:
+
+```bash
+rustup toolchain install 1.90.0 --profile minimal --component rustfmt,clippy
+RUSTUP_TOOLCHAIN=1.90.0 npm run rust:verify
+cargo +1.90.0 check --manifest-path src-tauri/Cargo.toml --locked
+```
+
+[Tauri 2.12](https://tauri.app/blog/tauri-2.12/) drops official Windows 7
+support. It also changes generated Android projects to SDK 37, Gradle 9, and
+Kotlin 2; see [mobile setup](./mobile.md). Existing native/package evidence
+from the older toolchain does not validate these new platform baselines.
 
 The development server uses the fixed port `1420`. SQLite is embedded through the Tauri plugin (`sqlite:app.db`), so ordinary local development does not require a separate database service or a `.env` file. Credentials and environment variables belong only to optional integrations that explicitly document them; leaving those integrations disabled must not block the core app.
 

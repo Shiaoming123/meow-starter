@@ -132,7 +132,9 @@ Web only:
 npm run dev:web
 ```
 
-**Prerequisites:** Node.js 22+, Rust 1.77.2+, and platform dependencies. macOS requires Xcode Command Line Tools, Windows requires MSVC and WebView2, and Linux requires webkit2gtk and related packages. See the [Tauri prerequisites](https://tauri.app/start/prerequisites/).
+**Prerequisites:** Node.js 22+, Rust 1.90.0+, and platform dependencies. macOS requires Xcode Command Line Tools, Windows requires MSVC and WebView2, and Linux requires webkit2gtk and related packages. See the [Tauri prerequisites](https://tauri.app/start/prerequisites/).
+
+Tauri 2.12 no longer officially supports Windows 7. Existing Android debug evidence predates this toolchain update; SDK 37 / Gradle 9 / Kotlin 2 builds still need fresh validation. See [development](./docs/development.md) and [mobile setup](./docs/mobile.md).
 
 `tauri dev` is a developer workflow, not an end-user delivery format. Before calling a downstream app usable, follow the [application development and delivery standard](./docs/application-standard.md) and verify a package or Portable executable that a non-developer can launch by double-clicking.
 
