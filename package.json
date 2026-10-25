@@ -80,7 +80,7 @@
   "devDependencies": {
     "@ai-sdk/anthropic": "^4.0.46",
     "@ai-sdk/mcp": "^2.0.41",
-    "@ai-sdk/openai": "^4.0.53",
+    "@ai-sdk/openai": "^4.0.66",
     "@ai-sdk/vue": "^4.0.87",
     "@tauri-apps/cli": "^2",
     "@vitejs/plugin-vue": "^6.0.8",
